@@ -64,6 +64,7 @@ class RoomFragment : Fragment() {
         var fragmentView = inflater.inflate(R.layout.fragment_room, container, false)
         var recyclerView = fragmentView.findViewById(R.id.recyclerView) as RecyclerView
         recyclerView.layoutManager = LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
+        recyclerView.scrollToPosition(cards.size - 1);
         recyclerView.adapter = adapter
 
         swipeContainer = fragmentView.findViewById(R.id.roomSwipeRefresh) as SwipeRefreshLayout

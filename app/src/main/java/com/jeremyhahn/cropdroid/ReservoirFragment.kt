@@ -17,16 +17,12 @@ import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.jeremyhahn.cropdroid.model.CardViewItem
 import com.jeremyhahn.cropdroid.model.Reservoir
-import com.jeremyhahn.cropdroid.model.Room
 import org.json.JSONObject
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.concurrent.schedule
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
+private const val ARG_1_CONTROLLER_HOSTNAME = ""
 
 /**
  * A simple [Fragment] subclass.
@@ -48,8 +44,7 @@ class ReservoirFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
+            param1 = it.getString(ARG_1_CONTROLLER_HOSTNAME)
         }
         getReservoirData()
         scheduleRefresh()
@@ -69,7 +64,6 @@ class ReservoirFragment : Fragment() {
         swipeContainer?.setOnRefreshListener(SwipeRefreshLayout.OnRefreshListener {
             getReservoirData()
         })
-        // Configure the refreshing colors
         swipeContainer?.setColorSchemeResources(
             R.color.holo_blue_bright,
             R.color.holo_green_light,
@@ -77,7 +71,6 @@ class ReservoirFragment : Fragment() {
             R.color.holo_red_light
         )
 
-        //return inflater.inflate(R.layout.fragment_reservoir, container, false)
         return fragmentView
     }
 
@@ -131,8 +124,7 @@ class ReservoirFragment : Fragment() {
         fun newInstance(param1: String, param2: String) =
             ReservoirFragment().apply {
                 arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+                    putString(ARG_1_CONTROLLER_HOSTNAME, param1)
                 }
             }
     }
