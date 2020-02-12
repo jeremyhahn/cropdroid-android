@@ -1,6 +1,5 @@
 package com.jeremyhahn.cropdroid
 
-import android.content.Intent
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -9,8 +8,16 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.jeremyhahn.cropdroid.model.CardViewItem
 
-
 class CardViewAdapter(val cards: ArrayList<CardViewItem>) : RecyclerView.Adapter<CardViewAdapter.ViewHolder>() {
+
+    fun clear() {
+        cards.clear()
+        notifyDataSetChanged()
+    }
+
+    fun addAll(list : List<CardViewItem>) {
+        cards.addAll(list)
+    }
 
     //this method is returning the view for each item in the list
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CardViewAdapter.ViewHolder {

@@ -3,14 +3,16 @@ package com.jeremyhahn.cropdroid
 import android.content.Context
 import android.net.Uri
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
@@ -18,6 +20,9 @@ import com.android.volley.toolbox.Volley
 import com.jeremyhahn.cropdroid.model.CardViewItem
 import com.jeremyhahn.cropdroid.model.Room
 import org.json.JSONObject
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.concurrent.schedule
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -39,6 +44,7 @@ class RoomFragment : Fragment() {
     private var listener: OnFragmentInteractionListener? = null
     private var cards = ArrayList<CardViewItem>()
     private var adapter: CardViewAdapter = CardViewAdapter(cards)
+    private var swipeContainer: SwipeRefreshLayout? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,6 +53,7 @@ class RoomFragment : Fragment() {
             param2 = it.getString(ARG_PARAM2)
         }
         getRoomData()
+        scheduleRefresh()
     }
 
     override fun onCreateView(
@@ -58,6 +65,18 @@ class RoomFragment : Fragment() {
         var recyclerView = fragmentView.findViewById(R.id.recyclerView) as RecyclerView
         recyclerView.layoutManager = LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
         recyclerView.adapter = adapter
+
+        swipeContainer = fragmentView.findViewById(R.id.roomSwipeRefresh) as SwipeRefreshLayout
+        swipeContainer?.setOnRefreshListener(OnRefreshListener {
+            getRoomData()
+        })
+        // Configure the refreshing colors
+        swipeContainer?.setColorSchemeResources(
+            R.color.holo_blue_bright,
+            R.color.holo_green_light,
+            R.color.holo_orange_light,
+            R.color.holo_red_light
+        )
 
         //return inflater.inflate(R.layout.fragment_room, container, false)
         return fragmentView
@@ -121,6 +140,13 @@ class RoomFragment : Fragment() {
             }
     }
 
+    fun scheduleRefresh() {
+        Timer().schedule(60000) {
+            getRoomData()
+            scheduleRefresh()
+        }
+    }
+
     fun getRoomData() {
         val queue = Volley.newRequestQueue(activity)
         val url = "http://cropdroid2.westland.dr/room"
@@ -165,8 +191,8 @@ class RoomFragment : Fragment() {
                 cards.add(CardViewItem("Lights", if (room.photo > 0) "On" else "Off"))
 
                 adapter.notifyDataSetChanged()
+                swipeContainer?.setRefreshing(false)
 
-                //Log.d("json response", response)
                 Log.d("room model", room.toString())
             },
             Response.ErrorListener { Log.d( "error", "Failed to retrieve room data from master controller!" )})

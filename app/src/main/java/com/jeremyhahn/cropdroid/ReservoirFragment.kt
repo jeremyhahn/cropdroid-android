@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
@@ -18,6 +19,9 @@ import com.jeremyhahn.cropdroid.model.CardViewItem
 import com.jeremyhahn.cropdroid.model.Reservoir
 import com.jeremyhahn.cropdroid.model.Room
 import org.json.JSONObject
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.concurrent.schedule
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -39,6 +43,7 @@ class ReservoirFragment : Fragment() {
     private var listener: OnFragmentInteractionListener? = null
     private var cards = ArrayList<CardViewItem>()
     private var adapter: CardViewAdapter = CardViewAdapter(cards)
+    private var swipeContainer: SwipeRefreshLayout? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,6 +52,7 @@ class ReservoirFragment : Fragment() {
             param2 = it.getString(ARG_PARAM2)
         }
         getReservoirData()
+        scheduleRefresh()
     }
 
     override fun onCreateView(
@@ -58,6 +64,18 @@ class ReservoirFragment : Fragment() {
         var recyclerView = fragmentView.findViewById(R.id.recyclerView) as RecyclerView
         recyclerView.layoutManager = LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
         recyclerView.adapter = adapter
+
+        swipeContainer = fragmentView.findViewById(R.id.roomSwipeRefresh) as SwipeRefreshLayout
+        swipeContainer?.setOnRefreshListener(SwipeRefreshLayout.OnRefreshListener {
+            getReservoirData()
+        })
+        // Configure the refreshing colors
+        swipeContainer?.setColorSchemeResources(
+            R.color.holo_blue_bright,
+            R.color.holo_green_light,
+            R.color.holo_orange_light,
+            R.color.holo_red_light
+        )
 
         //return inflater.inflate(R.layout.fragment_reservoir, container, false)
         return fragmentView
@@ -119,6 +137,13 @@ class ReservoirFragment : Fragment() {
             }
     }
 
+    fun scheduleRefresh() {
+        Timer().schedule(60000) {
+            getReservoirData()
+            scheduleRefresh()
+        }
+    }
+
     fun getReservoirData() {
         val queue = Volley.newRequestQueue(activity)
         val url = "http://cropdroid2.westland.dr/reservoir"
@@ -154,6 +179,7 @@ class ReservoirFragment : Fragment() {
                 cards.add(CardViewItem("Lower Float", reservoir.lowerFloat.toString()))
 
                 adapter.notifyDataSetChanged()
+                swipeContainer?.setRefreshing(false)
 
                 //Log.d("json response", response)
                 Log.d("reservoir model", reservoir.toString())

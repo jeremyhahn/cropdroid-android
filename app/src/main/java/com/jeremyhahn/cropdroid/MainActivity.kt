@@ -19,10 +19,12 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
+        /*
         fab.setOnClickListener { view ->
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show()
         }
+        */
 
         tabLayout = findViewById<TabLayout>(R.id.tabLayout)
         viewPager = findViewById<ViewPager>(R.id.viewPager)
@@ -32,7 +34,7 @@ class MainActivity : AppCompatActivity() {
         tabLayout!!.addTab(tabLayout!!.newTab().setText(getString(R.string.doser_fragment)))
         tabLayout!!.tabGravity = TabLayout.GRAVITY_FILL
 
-        val adapter = MyAdapter(this, supportFragmentManager, tabLayout!!.tabCount)
+        val adapter = TabAdapter(this, supportFragmentManager, tabLayout!!.tabCount)
         viewPager!!.adapter = adapter
 
         viewPager!!.addOnPageChangeListener(TabLayout.TabLayoutOnPageChangeListener(tabLayout))
