@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">CropDroid</string>
+    <string name="action_settings">Settings</string>
+    <string name="room_fragment">Room</string>
+    <string name="reservoir_fragment">Reservoir</string>
+    <string name="doser_fragment">Doser</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
