@@ -22,7 +22,7 @@
                 android:layout_height="wrap_content"
                 android:padding="5dp"
                 android:text="PH"
-                android:textAppearance="@style/Base.TextAppearance.AppCompat.Large" />
+                android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium" />
 
             <TextView
                 android:id="@+id/value"
@@ -30,7 +30,7 @@
                 android:layout_height="wrap_content"
                 android:padding="5dp"
                 android:text="5.98"
-                android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium" />
+                android:textAppearance="@style/Base.TextAppearance.AppCompat.Small" />
         </LinearLayout>
 
     </androidx.cardview.widget.CardView>

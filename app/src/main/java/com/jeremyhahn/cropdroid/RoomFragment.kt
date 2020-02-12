@@ -159,10 +159,10 @@ class RoomFragment : Fragment() {
                 cards.add(CardViewItem("Water Temp (Sensor 1)", room.pod0.toString()))
                 cards.add(CardViewItem("Water Temp (Sensor 2)", room.pod1.toString()))
 
-                cards.add(CardViewItem("Water Leak Detector(Sensor 1)", room.water0.toString()))
-                cards.add(CardViewItem("Water Leak Detector(Sensor 2)", room.water1.toString()))
+                cards.add(CardViewItem("Water Leak Detector (Sensor 1)", room.water0.toString()))
+                cards.add(CardViewItem("Water Leak Detector (Sensor 2)", room.water1.toString()))
 
-                cards.add(CardViewItem("Lights", if (room.photo > 0) "on" else "off"))
+                cards.add(CardViewItem("Lights", if (room.photo > 0) "On" else "Off"))
 
                 adapter.notifyDataSetChanged()
 

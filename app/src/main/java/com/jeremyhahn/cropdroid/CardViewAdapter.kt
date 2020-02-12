@@ -1,12 +1,14 @@
 package com.jeremyhahn.cropdroid
 
-import android.content.Context
+import android.content.Intent
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.jeremyhahn.cropdroid.model.CardViewItem
+
 
 class CardViewAdapter(val cards: ArrayList<CardViewItem>) : RecyclerView.Adapter<CardViewAdapter.ViewHolder>() {
 
@@ -19,6 +21,12 @@ class CardViewAdapter(val cards: ArrayList<CardViewItem>) : RecyclerView.Adapter
     //this method is binding the data on the list
     override fun onBindViewHolder(holder: CardViewAdapter.ViewHolder, position: Int) {
         holder.bindItems(cards[position])
+        holder.itemView.setOnClickListener(
+            View.OnClickListener
+            {
+                Log.i("itemView click event!", "Click-$position")
+                //context.startActivity(Intent(context, MainActivity::class.java))
+            })
     }
 
     //this method is giving the size of the list
@@ -27,7 +35,7 @@ class CardViewAdapter(val cards: ArrayList<CardViewItem>) : RecyclerView.Adapter
     }
 
     //the class is hodling the list view
-    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) /*, View.OnClickListener */ {
 
         fun bindItems(item: CardViewItem) {
             val title = itemView.findViewById(R.id.title) as TextView

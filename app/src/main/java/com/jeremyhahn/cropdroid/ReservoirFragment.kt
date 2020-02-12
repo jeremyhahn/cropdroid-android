@@ -3,10 +3,21 @@ package com.jeremyhahn.cropdroid
 import android.content.Context
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.android.volley.Request
+import com.android.volley.Response
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
+import com.jeremyhahn.cropdroid.model.CardViewItem
+import com.jeremyhahn.cropdroid.model.Reservoir
+import com.jeremyhahn.cropdroid.model.Room
+import org.json.JSONObject
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -26,6 +37,8 @@ class ReservoirFragment : Fragment() {
     private var param1: String? = null
     private var param2: String? = null
     private var listener: OnFragmentInteractionListener? = null
+    private var cards = ArrayList<CardViewItem>()
+    private var adapter: CardViewAdapter = CardViewAdapter(cards)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,14 +46,21 @@ class ReservoirFragment : Fragment() {
             param1 = it.getString(ARG_PARAM1)
             param2 = it.getString(ARG_PARAM2)
         }
+        getReservoirData()
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_reservoir, container, false)
+
+        var fragmentView = inflater.inflate(R.layout.fragment_room, container, false)
+        var recyclerView = fragmentView.findViewById(R.id.recyclerView) as RecyclerView
+        recyclerView.layoutManager = LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
+        recyclerView.adapter = adapter
+
+        //return inflater.inflate(R.layout.fragment_reservoir, container, false)
+        return fragmentView
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -97,5 +117,48 @@ class ReservoirFragment : Fragment() {
                     putString(ARG_PARAM2, param2)
                 }
             }
+    }
+
+    fun getReservoirData() {
+        val queue = Volley.newRequestQueue(activity)
+        val url = "http://cropdroid2.westland.dr/reservoir"
+
+        val roomRequest = StringRequest(
+            Request.Method.GET, url,
+            Response.Listener<String> { response ->
+
+                var response = response.toString()
+                val json = JSONObject(response)
+
+                var reservoir = Reservoir(json.getInt("mem"), json.getDouble("resTemp"),
+                    json.getDouble("PH"),json.getDouble("EC"),json.getDouble("TDS"),json.getDouble("SAL"),
+                    json.getDouble("SG"),json.getDouble("DO_mgL"),json.getDouble("DO_PER"),json.getDouble("ORP"),
+                    json.getDouble("envTemp"),json.getDouble("envHumidity"),json.getDouble("envHeatIndex"),
+                    json.getInt("upperFloat"), json.getInt("lowerFloat"))
+
+                cards.clear()
+
+                cards.add(CardViewItem("Water Temp", reservoir.waterTemp.toString()))
+                cards.add(CardViewItem("PH", reservoir.PH.toString()))
+                cards.add(CardViewItem("EC", reservoir.EC.toString()))
+                cards.add(CardViewItem("TDS", reservoir.TDS.toString()))
+                cards.add(CardViewItem("ORP", reservoir.ORP.toString()))
+                cards.add(CardViewItem("DO_mgL", reservoir.DO_mgL.toString()))
+                cards.add(CardViewItem("DO_PER", reservoir.DO_PER.toString()))
+                cards.add(CardViewItem("SAL", reservoir.SAL.toString()))
+                cards.add(CardViewItem("SG", reservoir.SG.toString()))
+                cards.add(CardViewItem("Environment Temp", reservoir.envTemp.toString()))
+                cards.add(CardViewItem("Environment Humidity", reservoir.envHumidity.toString()))
+                cards.add(CardViewItem("Environment HeatIndex", reservoir.envHeatIndex.toString()))
+                cards.add(CardViewItem("Upper Float", reservoir.upperFloat.toString()))
+                cards.add(CardViewItem("Lower Float", reservoir.lowerFloat.toString()))
+
+                adapter.notifyDataSetChanged()
+
+                //Log.d("json response", response)
+                Log.d("reservoir model", reservoir.toString())
+            },
+            Response.ErrorListener { Log.d( "error", "Failed to retrieve reservoir data from master controller!" )})
+        queue.add(roomRequest)
     }
 }
