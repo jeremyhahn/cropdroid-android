@@ -1,9 +1,9 @@
 package com.jeremyhahn.cropdroid
 
 import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import android.net.Uri
 import android.os.Bundle
-import android.os.CountDownTimer
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -17,17 +17,12 @@ import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
-import com.jeremyhahn.cropdroid.model.CardViewItem
+import com.jeremyhahn.cropdroid.model.MicroController
 import com.jeremyhahn.cropdroid.model.Room
 import org.json.JSONObject
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.concurrent.schedule
-
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
 
 /**
  * A simple [Fragment] subclass.
@@ -38,19 +33,18 @@ private const val ARG_PARAM2 = "param2"
  * create an instance of this fragment.
  */
 class RoomFragment : Fragment() {
-    // TODO: Rename and change types of parameters
+
     private var param1: String? = null
-    private var param2: String? = null
     private var listener: OnFragmentInteractionListener? = null
-    private var cards = ArrayList<CardViewItem>()
-    private var adapter: CardViewAdapter = CardViewAdapter(cards)
+    private var cards = ArrayList<MicroController>()
+    private var adapter: MicroControllerRecyclerAdapter = MicroControllerRecyclerAdapter(cards)
     private var swipeContainer: SwipeRefreshLayout? = null
+    private var controllerHostname: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
+            param1 = it.getString(PREF_CONTROLLER_HOSTNAME)
         }
         getRoomData()
         scheduleRefresh()
@@ -61,10 +55,11 @@ class RoomFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
 
+
+
         var fragmentView = inflater.inflate(R.layout.fragment_room, container, false)
         var recyclerView = fragmentView.findViewById(R.id.recyclerView) as RecyclerView
         recyclerView.layoutManager = LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
-        recyclerView.scrollToPosition(cards.size - 1);
         recyclerView.adapter = adapter
 
         swipeContainer = fragmentView.findViewById(R.id.roomSwipeRefresh) as SwipeRefreshLayout
@@ -122,21 +117,11 @@ class RoomFragment : Fragment() {
     }
 
     companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment RoomFragment.
-         */
-        // TODO: Rename and change types and number of parameters
         @JvmStatic
-        fun newInstance(param1: String, param2: String) =
+        fun newInstance(param1: String) =
             RoomFragment().apply {
                 arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+                    putString(PREF_CONTROLLER_HOSTNAME, param1)
                 }
             }
     }
@@ -150,7 +135,14 @@ class RoomFragment : Fragment() {
 
     fun getRoomData() {
         val queue = Volley.newRequestQueue(activity)
-        val url = "http://cropdroid2.westland.dr/room"
+
+        val prefs = context!!.getSharedPreferences(GLOBAL_PREFS, MODE_PRIVATE)
+        val controller = prefs.getString(PREF_CONTROLLER_HOSTNAME, "undefined")
+
+        Log.d("RoomFragment controller", controller)
+
+        val url = "http://".plus(controller).plus("/room")
+        Log.d("RoomFragment url:", url)
 
         val roomRequest = StringRequest(
             Request.Method.GET, url,
@@ -168,28 +160,28 @@ class RoomFragment : Fragment() {
 
                 cards.clear()
 
-                cards.add(CardViewItem("Air Temp (Sensor 1)", room.tempF0.toString()))
-                cards.add(CardViewItem("Relative Humidity (Sensor 1)", room.humidity0.toString()))
-                cards.add(CardViewItem("Heat Index (Sensor 1)", room.heatIndex0.toString()))
+                cards.add(MicroController("Air Temp (Sensor 1)", room.tempF0.toString()))
+                cards.add(MicroController("Relative Humidity (Sensor 1)", room.humidity0.toString()))
+                cards.add(MicroController("Heat Index (Sensor 1)", room.heatIndex0.toString()))
 
-                cards.add(CardViewItem("Air Temp (Sensor 2)", room.tempF1.toString()))
-                cards.add(CardViewItem("Relative Humidity (Sensor 2)", room.humidity1.toString()))
-                cards.add(CardViewItem("Heat Index (Sensor 2)", room.heatIndex1.toString()))
+                cards.add(MicroController("Air Temp (Sensor 2)", room.tempF1.toString()))
+                cards.add(MicroController("Relative Humidity (Sensor 2)", room.humidity1.toString()))
+                cards.add(MicroController("Heat Index (Sensor 2)", room.heatIndex1.toString()))
 
-                cards.add(CardViewItem("Air Temp (Sensor 3)", room.tempF2.toString()))
-                cards.add(CardViewItem("Relative Humidity (Sensor 3)", room.humidity2.toString()))
-                cards.add(CardViewItem("Heat Index (Sensor 3)", room.heatIndex2.toString()))
+                cards.add(MicroController("Air Temp (Sensor 3)", room.tempF2.toString()))
+                cards.add(MicroController("Relative Humidity (Sensor 3)", room.humidity2.toString()))
+                cards.add(MicroController("Heat Index (Sensor 3)", room.heatIndex2.toString()))
 
-                cards.add(CardViewItem("Co2", room.co2.toString()))
+                cards.add(MicroController("Co2", room.co2.toString()))
 
-                cards.add(CardViewItem("Vapor Pressure Deficit", room.vpd.toString()))
-                cards.add(CardViewItem("Water Temp (Sensor 1)", room.pod0.toString()))
-                cards.add(CardViewItem("Water Temp (Sensor 2)", room.pod1.toString()))
+                cards.add(MicroController("Vapor Pressure Deficit", room.vpd.toString()))
+                cards.add(MicroController("Water Temp (Sensor 1)", room.pod0.toString()))
+                cards.add(MicroController("Water Temp (Sensor 2)", room.pod1.toString()))
 
-                cards.add(CardViewItem("Water Leak Detector (Sensor 1)", room.water0.toString()))
-                cards.add(CardViewItem("Water Leak Detector (Sensor 2)", room.water1.toString()))
+                cards.add(MicroController("Water Leak Detector (Sensor 1)", room.water0.toString()))
+                cards.add(MicroController("Water Leak Detector (Sensor 2)", room.water1.toString()))
 
-                cards.add(CardViewItem("Lights", if (room.photo > 0) "On" else "Off"))
+                cards.add(MicroController("Lights", if (room.photo > 0) "On" else "Off"))
 
                 adapter.notifyDataSetChanged()
                 swipeContainer?.setRefreshing(false)

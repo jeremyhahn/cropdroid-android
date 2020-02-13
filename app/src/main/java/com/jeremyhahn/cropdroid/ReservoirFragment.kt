@@ -15,7 +15,7 @@ import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
-import com.jeremyhahn.cropdroid.model.CardViewItem
+import com.jeremyhahn.cropdroid.model.MicroController
 import com.jeremyhahn.cropdroid.model.Reservoir
 import org.json.JSONObject
 import java.util.*
@@ -37,8 +37,8 @@ class ReservoirFragment : Fragment() {
     private var param1: String? = null
     private var param2: String? = null
     private var listener: OnFragmentInteractionListener? = null
-    private var cards = ArrayList<CardViewItem>()
-    private var adapter: CardViewAdapter = CardViewAdapter(cards)
+    private var cards = ArrayList<MicroController>()
+    private var adapter: MicroControllerRecyclerAdapter = MicroControllerRecyclerAdapter(cards)
     private var swipeContainer: SwipeRefreshLayout? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -111,15 +111,6 @@ class ReservoirFragment : Fragment() {
     }
 
     companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment ReservoirFragment.
-         */
-        // TODO: Rename and change types and number of parameters
         @JvmStatic
         fun newInstance(param1: String, param2: String) =
             ReservoirFragment().apply {
@@ -155,20 +146,20 @@ class ReservoirFragment : Fragment() {
 
                 cards.clear()
 
-                cards.add(CardViewItem("Water Temp", reservoir.waterTemp.toString()))
-                cards.add(CardViewItem("PH", reservoir.PH.toString()))
-                cards.add(CardViewItem("EC", reservoir.EC.toString()))
-                cards.add(CardViewItem("TDS", reservoir.TDS.toString()))
-                cards.add(CardViewItem("ORP", reservoir.ORP.toString()))
-                cards.add(CardViewItem("DO_mgL", reservoir.DO_mgL.toString()))
-                cards.add(CardViewItem("DO_PER", reservoir.DO_PER.toString()))
-                cards.add(CardViewItem("SAL", reservoir.SAL.toString()))
-                cards.add(CardViewItem("SG", reservoir.SG.toString()))
-                cards.add(CardViewItem("Environment Temp", reservoir.envTemp.toString()))
-                cards.add(CardViewItem("Environment Humidity", reservoir.envHumidity.toString()))
-                cards.add(CardViewItem("Environment HeatIndex", reservoir.envHeatIndex.toString()))
-                cards.add(CardViewItem("Upper Float", reservoir.upperFloat.toString()))
-                cards.add(CardViewItem("Lower Float", reservoir.lowerFloat.toString()))
+                cards.add(MicroController("Water Temp", reservoir.waterTemp.toString()))
+                cards.add(MicroController("PH", reservoir.PH.toString()))
+                cards.add(MicroController("EC", reservoir.EC.toString()))
+                cards.add(MicroController("TDS", reservoir.TDS.toString()))
+                cards.add(MicroController("ORP", reservoir.ORP.toString()))
+                cards.add(MicroController("DO_mgL", reservoir.DO_mgL.toString()))
+                cards.add(MicroController("DO_PER", reservoir.DO_PER.toString()))
+                cards.add(MicroController("SAL", reservoir.SAL.toString()))
+                cards.add(MicroController("SG", reservoir.SG.toString()))
+                cards.add(MicroController("Environment Temp", reservoir.envTemp.toString()))
+                cards.add(MicroController("Environment Humidity", reservoir.envHumidity.toString()))
+                cards.add(MicroController("Environment HeatIndex", reservoir.envHeatIndex.toString()))
+                cards.add(MicroController("Upper Float", reservoir.upperFloat.toString()))
+                cards.add(MicroController("Lower Float", reservoir.lowerFloat.toString()))
 
                 adapter.notifyDataSetChanged()
                 swipeContainer?.setRefreshing(false)

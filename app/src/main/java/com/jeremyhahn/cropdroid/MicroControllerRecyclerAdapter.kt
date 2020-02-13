@@ -6,27 +6,27 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.jeremyhahn.cropdroid.model.CardViewItem
+import com.jeremyhahn.cropdroid.model.MicroController
 
-class CardViewAdapter(val cards: ArrayList<CardViewItem>) : RecyclerView.Adapter<CardViewAdapter.ViewHolder>() {
+class MicroControllerRecyclerAdapter(val cards: ArrayList<MicroController>) : RecyclerView.Adapter<MicroControllerRecyclerAdapter.ViewHolder>() {
 
     fun clear() {
         cards.clear()
         notifyDataSetChanged()
     }
 
-    fun addAll(list : List<CardViewItem>) {
+    fun addAll(list : List<MicroController>) {
         cards.addAll(list)
     }
 
     //this method is returning the view for each item in the list
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CardViewAdapter.ViewHolder {
-        val v = LayoutInflater.from(parent.context).inflate(R.layout.list_layout, parent, false)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MicroControllerRecyclerAdapter.ViewHolder {
+        val v = LayoutInflater.from(parent.context).inflate(R.layout.microcontroller_layout, parent, false)
         return ViewHolder(v)
     }
 
     //this method is binding the data on the list
-    override fun onBindViewHolder(holder: CardViewAdapter.ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: MicroControllerRecyclerAdapter.ViewHolder, position: Int) {
         holder.bindItems(cards[position])
         holder.itemView.setOnClickListener(
             View.OnClickListener
@@ -44,7 +44,7 @@ class CardViewAdapter(val cards: ArrayList<CardViewItem>) : RecyclerView.Adapter
     //the class is hodling the list view
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) /*, View.OnClickListener */ {
 
-        fun bindItems(item: CardViewItem) {
+        fun bindItems(item: MicroController) {
             val title = itemView.findViewById(R.id.title) as TextView
             val value = itemView.findViewById(R.id.value) as TextView
             title.text = item.title
