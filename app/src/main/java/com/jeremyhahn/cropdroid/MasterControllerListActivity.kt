@@ -1,5 +1,6 @@
 package com.jeremyhahn.cropdroid
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -48,9 +49,10 @@ class MasterControllerListActivity : AppCompatActivity(), OnMasterListener {
     }
 
     override fun onMasterClick(position: Int) {
-        var intent = Intent(this, MicroControllerActivity::class.java)
-        intent.putExtra("CONTROLLER_HOSTNAME", controllers.get(position).hostname)
-        startActivity(intent)
+        var editor = getSharedPreferences(GLOBAL_PREFS, Context.MODE_PRIVATE).edit()
+        editor.putString(PREF_CONTROLLER_HOSTNAME, controllers.get(position).hostname)
+        editor.apply()
+        startActivity(Intent(this, MicroControllerActivity::class.java))
     }
 
     fun getMasterControllers() {

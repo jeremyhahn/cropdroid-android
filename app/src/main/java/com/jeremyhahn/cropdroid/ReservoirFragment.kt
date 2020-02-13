@@ -129,7 +129,11 @@ class ReservoirFragment : Fragment() {
 
     fun getReservoirData() {
         val queue = Volley.newRequestQueue(activity)
-        val url = "http://cropdroid2.westland.dr/reservoir"
+
+        val prefs = context!!.getSharedPreferences(GLOBAL_PREFS, Context.MODE_PRIVATE)
+        val controller = prefs.getString(PREF_CONTROLLER_HOSTNAME, "undefined")
+
+        val url = "http://".plus(controller).plus("/reservoir")
 
         val roomRequest = StringRequest(
             Request.Method.GET, url,

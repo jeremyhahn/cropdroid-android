@@ -55,8 +55,6 @@ class RoomFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
 
-
-
         var fragmentView = inflater.inflate(R.layout.fragment_room, container, false)
         var recyclerView = fragmentView.findViewById(R.id.recyclerView) as RecyclerView
         recyclerView.layoutManager = LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
@@ -138,8 +136,6 @@ class RoomFragment : Fragment() {
 
         val prefs = context!!.getSharedPreferences(GLOBAL_PREFS, MODE_PRIVATE)
         val controller = prefs.getString(PREF_CONTROLLER_HOSTNAME, "undefined")
-
-        Log.d("RoomFragment controller", controller)
 
         val url = "http://".plus(controller).plus("/room")
         Log.d("RoomFragment url:", url)

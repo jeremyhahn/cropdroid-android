@@ -21,11 +21,6 @@ class MicroControllerActivity: AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        val intent = getIntent()
-        var editor = getSharedPreferences(GLOBAL_PREFS, Context.MODE_PRIVATE).edit()
-        editor.putString(PREF_CONTROLLER_HOSTNAME, intent.getStringExtra(PREF_CONTROLLER_HOSTNAME))
-        editor.apply()
-
         tabLayout = findViewById<TabLayout>(R.id.tabLayout)
         viewPager = findViewById<ViewPager>(R.id.viewPager)
 
