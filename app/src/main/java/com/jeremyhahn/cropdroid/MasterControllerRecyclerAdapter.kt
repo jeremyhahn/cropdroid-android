@@ -1,14 +1,20 @@
 package com.jeremyhahn.cropdroid
 
-import android.util.Log
+import android.app.AlertDialog
+import android.content.Context
+import android.content.DialogInterface
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
+import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.MasterController
 
-class MasterRecyclerAdapter(val controllers: ArrayList<MasterController>, val onMasterListener: OnMasterListener) : RecyclerView.Adapter<MasterRecyclerAdapter.ViewHolder>() {
+
+class MasterControllerRecyclerAdapter(val controllers: ArrayList<MasterController>, val onMasterListener: OnMasterListener,
+                                      val context: Context, val repository : MasterControllerRepository) : RecyclerView.Adapter<MasterControllerRecyclerAdapter.ViewHolder>() {
 
     fun clear() {
         controllers.clear()
@@ -20,14 +26,37 @@ class MasterRecyclerAdapter(val controllers: ArrayList<MasterController>, val on
     }
 
     //this method is returning the view for each item in the list
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MasterRecyclerAdapter.ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MasterControllerRecyclerAdapter.ViewHolder {
         val v = LayoutInflater.from(parent.context).inflate(R.layout.master_layout, parent, false)
         return ViewHolder(v, onMasterListener)
     }
 
     //this method is binding the data on the list
-    override fun onBindViewHolder(holder: MasterRecyclerAdapter.ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: MasterControllerRecyclerAdapter.ViewHolder, position: Int) {
         holder.bindItems(controllers[position])
+
+       holder.itemView.setOnLongClickListener { v ->
+
+           val items = arrayOf<CharSequence>("Delete")
+           val builder = AlertDialog.Builder(context)
+
+           builder.setTitle("Action")
+           builder.setItems(items,
+               DialogInterface.OnClickListener { dialog, item ->
+                   repository.deleteController(repository.getControllerByHostname(controllers[position].hostname))
+                   controllers.removeAt(position)
+                   notifyItemRemoved(position);
+                   Toast.makeText(
+                       context,
+                       "Controller deleted",
+                       Toast.LENGTH_SHORT
+                   ).show()
+               })
+           builder.show()
+
+           true
+
+       }
     }
 
     //this method is giving the size of the list
@@ -56,5 +85,9 @@ class MasterRecyclerAdapter(val controllers: ArrayList<MasterController>, val on
 
     interface OnMasterListener {
        fun onMasterClick(position : Int)
+    }
+
+    interface OnItemLongClickListener {
+        fun onItemLongClicked(position : Int);
     }
 }

@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
+import com.jeremyhahn.cropdroid.ui.login.LoginActivity
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -21,7 +22,9 @@ class MainActivity : AppCompatActivity() {
         }
         */
 
-        startActivity(Intent(this, MasterListActivity::class.java))
+        //startActivity(Intent(this, MasterControllerListActivity::class.java))
+        //startActivity(Intent(this, NewMasterControllerActivity::class.java))
+        startActivity(Intent(this, LoginActivity::class.java))
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

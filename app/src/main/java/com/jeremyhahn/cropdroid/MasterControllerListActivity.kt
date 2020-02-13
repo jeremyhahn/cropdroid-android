@@ -2,25 +2,20 @@ package com.jeremyhahn.cropdroid
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
-import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.android.volley.Request
-import com.android.volley.Response
-import com.android.volley.toolbox.StringRequest
-import com.android.volley.toolbox.Volley
-import com.jeremyhahn.cropdroid.MasterRecyclerAdapter.OnMasterListener
+import com.jeremyhahn.cropdroid.MasterControllerRecyclerAdapter.OnMasterListener
+import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.MasterController
 
 import kotlinx.android.synthetic.main.activity_masters.*
 
-class MasterListActivity : AppCompatActivity(), OnMasterListener {
+class MasterControllerListActivity : AppCompatActivity(), OnMasterListener {
 
     private var controllers = ArrayList<MasterController>()
-    private lateinit var adapter: MasterRecyclerAdapter
+    private lateinit var adapter: MasterControllerRecyclerAdapter
     private var swipeContainer: SwipeRefreshLayout? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,11 +24,10 @@ class MasterListActivity : AppCompatActivity(), OnMasterListener {
         setSupportActionBar(toolbar)
 
         fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                .setAction("Action", null).show()
+            startActivity(Intent(this, NewMasterControllerActivity::class.java))
         }
 
-        adapter = MasterRecyclerAdapter(controllers, this)
+        adapter = MasterControllerRecyclerAdapter(controllers, this, this, MasterControllerRepository(this))
 
         var recyclerView = findViewById(R.id.mastersRecyclerView) as RecyclerView
         recyclerView.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
@@ -54,7 +48,6 @@ class MasterListActivity : AppCompatActivity(), OnMasterListener {
     }
 
     override fun onMasterClick(position: Int) {
-        Log.d("MasterListActivity", "Starting MicroControllerActivity")
         var intent = Intent(this, MicroControllerActivity::class.java)
         intent.putExtra("CONTROLLER_HOSTNAME", controllers.get(position).hostname)
         startActivity(intent)
@@ -63,8 +56,8 @@ class MasterListActivity : AppCompatActivity(), OnMasterListener {
     fun getMasterControllers() {
 
         controllers.clear()
-        controllers.add(MasterController("Room 1", "cropdroid1.westland.dr"))
-        controllers.add(MasterController("Room 2", "cropdroid2.westland.dr"))
+        controllers.addAll(MasterControllerRepository(this).allControllers)
+
         adapter.notifyDataSetChanged()
         swipeContainer?.setRefreshing(false)
 
