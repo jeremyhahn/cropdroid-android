@@ -19,10 +19,9 @@ class MainActivity : AppCompatActivity() {
     public var MESSAGE_STATUS: String = "Test Message"
 
     fun createConstraints() = Constraints.Builder()
-        .setRequiredNetworkType(NetworkType.UNMETERED)  // if connected to WIFI
-        // other values(NOT_REQUIRED, CONNECTED, NOT_ROAMING, METERED)
-        .setRequiresBatteryNotLow(true)                 // if the battery is not low
-        //.setRequiresStorageNotLow(true)                 // if the storage is not low
+        .setRequiredNetworkType(NetworkType.CONNECTED) // other values(NOT_REQUIRED, UNMETERED (if connected to wifi), NOT_ROAMING, METERED)
+        .setRequiresBatteryNotLow(true)
+        //.setRequiresStorageNotLow(true)
         .build()
 
     fun createWorkRequest(data: Data) = PeriodicWorkRequest.Builder(SyncWorker::class.java, 1, TimeUnit.MINUTES)
@@ -56,8 +55,8 @@ class MainActivity : AppCompatActivity() {
             }
 
         })
+        WorkManager.getInstance().cancelWorkById(workRequest.getId());
 */
-        //WorkManager.getInstance().cancelWorkById(workRequest.getId());
 
         //startActivity(Intent(this, MasterControllerListActivity::class.java))
         //startActivity(Intent(this, NewMasterControllerActivity::class.java))

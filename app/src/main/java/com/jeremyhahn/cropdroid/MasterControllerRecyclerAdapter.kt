@@ -12,9 +12,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.MasterController
 
-
-class MasterControllerRecyclerAdapter(val controllers: ArrayList<MasterController>, val onMasterListener: OnMasterListener,
-                                      val context: Context, val repository : MasterControllerRepository) : RecyclerView.Adapter<MasterControllerRecyclerAdapter.ViewHolder>() {
+class MasterControllerRecyclerAdapter(val controllers: ArrayList<MasterController>,
+     val onMasterListener: OnMasterListener, val context: Context, val repository : MasterControllerRepository) :
+        RecyclerView.Adapter<MasterControllerRecyclerAdapter.ViewHolder>() {
 
     fun clear() {
         controllers.clear()
@@ -27,7 +27,7 @@ class MasterControllerRecyclerAdapter(val controllers: ArrayList<MasterControlle
 
     //this method is returning the view for each item in the list
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MasterControllerRecyclerAdapter.ViewHolder {
-        val v = LayoutInflater.from(parent.context).inflate(R.layout.master_layout, parent, false)
+        val v = LayoutInflater.from(parent.context).inflate(R.layout.master_cardview, parent, false)
         return ViewHolder(v, onMasterListener)
     }
 

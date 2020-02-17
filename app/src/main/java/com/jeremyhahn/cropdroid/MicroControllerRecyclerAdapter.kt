@@ -21,7 +21,7 @@ class MicroControllerRecyclerAdapter(val cards: ArrayList<MicroController>) : Re
 
     //this method is returning the view for each item in the list
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MicroControllerRecyclerAdapter.ViewHolder {
-        val v = LayoutInflater.from(parent.context).inflate(R.layout.microcontroller_layout, parent, false)
+        val v = LayoutInflater.from(parent.context).inflate(R.layout.microcontroller_cardview, parent, false)
         return ViewHolder(v)
     }
 

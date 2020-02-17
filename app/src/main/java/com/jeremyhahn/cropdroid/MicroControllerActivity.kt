@@ -26,6 +26,8 @@ class MicroControllerActivity: AppCompatActivity() {
         tabLayout!!.addTab(tabLayout!!.newTab().setText("Room"))
         tabLayout!!.addTab(tabLayout!!.newTab().setText(getString(R.string.reservoir_fragment)))
         tabLayout!!.addTab(tabLayout!!.newTab().setText(getString(R.string.doser_fragment)))
+        tabLayout!!.addTab(tabLayout!!.newTab().setText("Events"))
+
         tabLayout!!.tabGravity = TabLayout.GRAVITY_FILL
 
         val adapter = TabAdapter(this, supportFragmentManager, tabLayout!!.tabCount)

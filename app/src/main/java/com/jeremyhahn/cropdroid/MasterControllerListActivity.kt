@@ -53,6 +53,7 @@ class MasterControllerListActivity : AppCompatActivity(), OnMasterListener {
         editor.putString(PREF_CONTROLLER_HOSTNAME, controllers.get(position).hostname)
         editor.apply()
         startActivity(Intent(this, MicroControllerActivity::class.java))
+        //startActivity(Intent(this, EventListFragment::class.java))
     }
 
     fun getMasterControllers() {
@@ -78,7 +79,7 @@ class MasterControllerListActivity : AppCompatActivity(), OnMasterListener {
                 controllers.add(MasterController("Room 1", "cropdroid1.westland.dr"))
                 controllers.add(MasterController("Room 2", "cropdroid2.westland.dr"))
 
-                adapter.notifyDataSetChanged()
+                adapterEventListRecycler.notifyDataSetChanged()
                 swipeContainer?.setRefreshing(false)
 
                 Log.d("Status endpoint", response)
