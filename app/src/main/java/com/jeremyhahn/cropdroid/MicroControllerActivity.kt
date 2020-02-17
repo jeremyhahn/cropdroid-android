@@ -1,14 +1,13 @@
 package com.jeremyhahn.cropdroid
 
-import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager.widget.ViewPager
 import com.google.android.material.tabs.TabLayout
 import kotlinx.android.synthetic.main.activity_main.*
+
 
 class MicroControllerActivity: AppCompatActivity() {
 
@@ -45,6 +44,7 @@ class MicroControllerActivity: AppCompatActivity() {
 
             }
         })
+
      }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

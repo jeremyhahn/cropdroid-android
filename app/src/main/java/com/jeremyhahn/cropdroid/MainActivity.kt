@@ -1,14 +1,35 @@
 package com.jeremyhahn.cropdroid
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
+import androidx.appcompat.app.AppCompatActivity
+import androidx.work.*
 import com.jeremyhahn.cropdroid.ui.login.LoginActivity
+import com.jeremyhahn.cropdroid.worker.SyncWorker
 import kotlinx.android.synthetic.main.activity_main.*
+import java.util.concurrent.TimeUnit
 
+// https://androidwave.com/scheduling-recurring-task-in-android-workmanager/
 class MainActivity : AppCompatActivity() {
+
+    var workRequest: PeriodicWorkRequest? = null
+    public var MESSAGE_STATUS: String = "Test Message"
+
+    fun createConstraints() = Constraints.Builder()
+        .setRequiredNetworkType(NetworkType.UNMETERED)  // if connected to WIFI
+        // other values(NOT_REQUIRED, CONNECTED, NOT_ROAMING, METERED)
+        .setRequiresBatteryNotLow(true)                 // if the battery is not low
+        //.setRequiresStorageNotLow(true)                 // if the storage is not low
+        .build()
+
+    fun createWorkRequest(data: Data) = PeriodicWorkRequest.Builder(SyncWorker::class.java, 1, TimeUnit.MINUTES)
+        .setInputData(data)
+        .setConstraints(createConstraints())
+        .setBackoffCriteria(BackoffPolicy.LINEAR, PeriodicWorkRequest.MIN_BACKOFF_MILLIS, TimeUnit.MILLISECONDS)
+        .build()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -21,6 +42,22 @@ class MainActivity : AppCompatActivity() {
                 .setAction("Action", null).show()
         }
         */
+
+        val mWorkManager = WorkManager.getInstance()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            workRequest = PeriodicWorkRequest.Builder(SyncWorker::class.java, 1, TimeUnit.MINUTES).build()
+            mWorkManager.enqueueUniquePeriodicWork("", ExistingPeriodicWorkPolicy.KEEP, workRequest!!);
+        }
+/*
+        WorkManager.getInstance().getStatusByIdLiveData(requestBuilder.id).observe(this@DataActivity, android.arch.lifecycle.Observer { workerStatus ->
+            if (workerStatus != null && workerStatus.state.isFinished) {
+                Toast.makeText(this@DataActivity, workerStatus.outputData.getString(
+                    SyncStateContract.Constants.EXTRA_OUTPUT_MESSAGE), Toast.LENGTH_SHORT).show()
+            }
+
+        })
+*/
+        //WorkManager.getInstance().cancelWorkById(workRequest.getId());
 
         //startActivity(Intent(this, MasterControllerListActivity::class.java))
         //startActivity(Intent(this, NewMasterControllerActivity::class.java))
