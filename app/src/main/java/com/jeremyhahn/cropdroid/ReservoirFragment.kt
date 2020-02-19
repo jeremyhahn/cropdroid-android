@@ -131,7 +131,7 @@ class ReservoirFragment : Fragment() {
         val queue = Volley.newRequestQueue(activity)
 
         val prefs = context!!.getSharedPreferences(GLOBAL_PREFS, Context.MODE_PRIVATE)
-        val controller = prefs.getString(PREF_CONTROLLER_HOSTNAME, "undefined")
+        val controller = prefs.getString(PREF_KEY_CONTROLLER_HOSTNAME, "undefined")
 
         val url = "http://".plus(controller).plus("/reservoir")
 

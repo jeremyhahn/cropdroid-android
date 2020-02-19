@@ -3,6 +3,7 @@ package com.jeremyhahn.cropdroid
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -10,6 +11,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.jeremyhahn.cropdroid.MasterControllerRecyclerAdapter.OnMasterListener
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.MasterController
+import com.jeremyhahn.cropdroid.ui.login.LoginActivity
 
 import kotlinx.android.synthetic.main.activity_masters.*
 
@@ -46,14 +48,26 @@ class MasterControllerListActivity : AppCompatActivity(), OnMasterListener {
         )
 
         getMasterControllers()
+
+        if(controllers.size <= 0) {
+            Log.d("MasterControllerListActivity", "Redirecting back to LoginActivity; No controllers in local sqlite database.")
+            startActivity(Intent(this, LoginActivity::class.java))
+        }
     }
 
     override fun onMasterClick(position: Int) {
         var editor = getSharedPreferences(GLOBAL_PREFS, Context.MODE_PRIVATE).edit()
-        editor.putString(PREF_CONTROLLER_HOSTNAME, controllers.get(position).hostname)
+        editor.putString(PREF_KEY_CONTROLLER_HOSTNAME, controllers.get(position).hostname)
         editor.apply()
-        startActivity(Intent(this, MicroControllerActivity::class.java))
-        //startActivity(Intent(this, EventListFragment::class.java))
+
+        //startActivity(Intent(this, MicroControllerActivity::class.java))
+        //startActivity(Intent(this, WebSocketActivity::class.java))
+
+        var intent = Intent(this, WebSocketActivity::class.java)
+        intent.putExtra("controller_hostname", controllers.get(position).hostname)
+        intent.putExtra("controller_token", controllers.get(position).token)
+
+        startActivity(intent)
     }
 
     fun getMasterControllers() {

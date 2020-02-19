@@ -1,6 +1,8 @@
 package com.jeremyhahn.cropdroid.data
 
+import com.jeremyhahn.cropdroid.data.model.CropDroidAPI
 import com.jeremyhahn.cropdroid.data.model.LoggedInUser
+import okhttp3.Callback
 
 /**
  * Class that requests authentication and user information from the remote data source and
@@ -27,9 +29,10 @@ class LoginRepository(val dataSource: LoginDataSource) {
         dataSource.logout()
     }
 
-    fun login(username: String, password: String): Result<LoggedInUser> {
+    fun login(cropdroid: CropDroidAPI, username: String, password: String, callback: Callback): Result<LoggedInUser> {
         // handle login
-        val result = dataSource.login(username, password)
+
+        val result = dataSource.login(cropdroid, username, password, callback)
 
         if (result is Result.Success) {
             setLoggedInUser(result.data)

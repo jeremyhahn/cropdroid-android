@@ -18,7 +18,6 @@ import com.android.volley.toolbox.Volley
 import com.jeremyhahn.cropdroid.model.EventLog
 import com.jeremyhahn.cropdroid.model.EventsPage
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import org.json.JSONObject
 
@@ -110,7 +109,7 @@ class EventListFragment : Fragment() {
 
         val queue = Volley.newRequestQueue(context!!)
         val prefs = activity!!.getSharedPreferences(GLOBAL_PREFS, Context.MODE_PRIVATE)
-        val controller = prefs.getString(PREF_CONTROLLER_HOSTNAME, "undefined")
+        val controller = prefs.getString(PREF_KEY_CONTROLLER_HOSTNAME, "undefined")
 
         val url = "http://".plus(controller).plus("/events/${page}")
         Log.d("EventListFragment url", url)

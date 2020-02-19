@@ -37,4 +37,11 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
     implementation 'com.android.volley:volley:1.1.1'
     implementation 'androidx.work:work-runtime:2.3.1'
+    implementation 'com.squareup.okhttp3:okhttp:3.6.0'
+    api 'io.jsonwebtoken:jjwt-api:0.11.0'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.0'
+    runtimeOnly('io.jsonwebtoken:jjwt-orgjson:0.11.0') {
+        exclude group: 'org.json', module: 'json' //provided by Android natively
+    }
+    runtimeOnly 'org.bouncycastle:bcprov-jdk15on:1.60'
 }

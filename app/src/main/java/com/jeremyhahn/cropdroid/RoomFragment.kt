@@ -44,7 +44,7 @@ class RoomFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
-            param1 = it.getString(PREF_CONTROLLER_HOSTNAME)
+            param1 = it.getString(PREF_KEY_CONTROLLER_HOSTNAME)
         }
         getRoomData()
         scheduleRefresh()
@@ -119,7 +119,7 @@ class RoomFragment : Fragment() {
         fun newInstance(param1: String) =
             RoomFragment().apply {
                 arguments = Bundle().apply {
-                    putString(PREF_CONTROLLER_HOSTNAME, param1)
+                    putString(PREF_KEY_CONTROLLER_HOSTNAME, param1)
                 }
             }
     }
@@ -135,7 +135,7 @@ class RoomFragment : Fragment() {
         val queue = Volley.newRequestQueue(activity)
 
         val prefs = context!!.getSharedPreferences(GLOBAL_PREFS, MODE_PRIVATE)
-        val controller = prefs.getString(PREF_CONTROLLER_HOSTNAME, "undefined")
+        val controller = prefs.getString(PREF_KEY_CONTROLLER_HOSTNAME, "undefined")
 
         val url = "http://".plus(controller).plus("/room")
         Log.d("RoomFragment url:", url)

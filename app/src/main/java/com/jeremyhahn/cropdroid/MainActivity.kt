@@ -42,12 +42,13 @@ class MainActivity : AppCompatActivity() {
         }
         */
 
+/*
         val mWorkManager = WorkManager.getInstance()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             workRequest = PeriodicWorkRequest.Builder(SyncWorker::class.java, 1, TimeUnit.MINUTES).build()
             mWorkManager.enqueueUniquePeriodicWork("", ExistingPeriodicWorkPolicy.KEEP, workRequest!!);
         }
-/*
+
         WorkManager.getInstance().getStatusByIdLiveData(requestBuilder.id).observe(this@DataActivity, android.arch.lifecycle.Observer { workerStatus ->
             if (workerStatus != null && workerStatus.state.isFinished) {
                 Toast.makeText(this@DataActivity, workerStatus.outputData.getString(
@@ -58,9 +59,9 @@ class MainActivity : AppCompatActivity() {
         WorkManager.getInstance().cancelWorkById(workRequest.getId());
 */
 
-        //startActivity(Intent(this, MasterControllerListActivity::class.java))
+        startActivity(Intent(this, MasterControllerListActivity::class.java))
         //startActivity(Intent(this, NewMasterControllerActivity::class.java))
-        startActivity(Intent(this, LoginActivity::class.java))
+        //startActivity(Intent(this, LoginActivity::class.java))
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

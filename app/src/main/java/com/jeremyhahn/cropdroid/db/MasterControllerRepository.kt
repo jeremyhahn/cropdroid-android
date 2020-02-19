@@ -4,40 +4,47 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteDatabase.deleteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import com.jeremyhahn.cropdroid.DATABASE_NAME
 import com.jeremyhahn.cropdroid.model.MasterController
 
-private const val DATABASE_VERSION = 1
+private const val DATABASE_VERSION = 2
 private const val TABLE_MASTER_CONTROLLERS = "master_controllers"
 private const val KEY_ID = "id"
 private const val KEY_NAME = "name"
 private const val KEY_HOSTNAME = "hostname"
+private const val KEY_TOKEN = "token"
 
 class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
+    var context : Context? = null
     var controllerCount = 0
 
-    override fun onCreate(db: SQLiteDatabase) {
-        val CREATE_MasterControllerS_TABLE =
-            ("CREATE TABLE " + TABLE_MASTER_CONTROLLERS + "("
-                    + KEY_ID + " INTEGER PRIMARY KEY," + KEY_NAME + " TEXT,"
-                    + KEY_HOSTNAME + " TEXT" + ")")
-        db.execSQL(CREATE_MasterControllerS_TABLE)
+    init {
+        this.context = context
     }
 
-    // Upgrading database
-    override fun onUpgrade(
-        db: SQLiteDatabase,
-        oldVersion: Int,
-        newVersion: Int
-    ) { // Drop older table if existed
+    override fun onCreate(db: SQLiteDatabase) {
+        val createMasterControllerTableSql =
+            ("CREATE TABLE " + TABLE_MASTER_CONTROLLERS + "("
+                    + KEY_ID + " INTEGER PRIMARY KEY,"
+                    + KEY_NAME + " TEXT,"
+                    + KEY_HOSTNAME + " TEXT" + ","
+                    + KEY_TOKEN + " TEXT)")
+        db.execSQL(createMasterControllerTableSql)
+    }
+
+    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         db.execSQL("DROP TABLE IF EXISTS $TABLE_MASTER_CONTROLLERS")
-        // Create tables again
         onCreate(db)
     }
 
-    fun getCount(db: SQLiteDatabase) : Int {
+    fun drop() {
+        context!!.deleteDatabase("cropdroid")
+    }
+
+    fun getCount() : Int {
         val countQuery = "SELECT  * FROM $TABLE_MASTER_CONTROLLERS"
         val db: SQLiteDatabase = this.getReadableDatabase()
         val cursor: Cursor = db.rawQuery(countQuery, null)
@@ -45,13 +52,24 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
         return cursor.getCount()
     }
 
-    fun addController(controller: MasterController) {
+    fun getLastInsertedId(db: SQLiteDatabase) : Int {
+        val query = "SELECT  last_insert_rowid()"
+        val cursor: Cursor = db.rawQuery(query, null)
+        var id = cursor.getInt(0)
+        cursor.close()
+        return id
+    }
+
+    fun addController(controller: MasterController) : MasterController {
         val db: SQLiteDatabase = this.getWritableDatabase()
         val values = ContentValues()
         values.put(KEY_NAME, controller.name)
         values.put(KEY_HOSTNAME, controller.hostname)
+        values.put(KEY_TOKEN, controller.token)
         db.insert(TABLE_MASTER_CONTROLLERS, null, values)
+        var controller = MasterController(getLastInsertedId(db), controller.name, controller.hostname, controller.token)
         db.close()
+        return controller
     }
 
     fun getController(id: Int): MasterController {
@@ -61,7 +79,8 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
             arrayOf(
                 KEY_ID,
                 KEY_NAME,
-                KEY_HOSTNAME
+                KEY_HOSTNAME,
+                KEY_TOKEN
             ),
             "$KEY_ID=?",
             arrayOf(id.toString()),
@@ -70,11 +89,12 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
             null,
             null
         )
-        if (cursor != null) cursor.moveToFirst()
+        cursor.moveToFirst()
         return MasterController(
             cursor.getString(0).toInt(),
             cursor.getString(1),
-            cursor.getString(2)
+            cursor.getString(2),
+            cursor.getString(3)
         )
     }
 
@@ -85,7 +105,8 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
             arrayOf(
                 KEY_ID,
                 KEY_NAME,
-                KEY_HOSTNAME
+                KEY_HOSTNAME,
+                KEY_TOKEN
             ),
             "$KEY_HOSTNAME=?",
             arrayOf(hostname),
@@ -94,11 +115,12 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
             null,
             null
         )
-        if (cursor != null) cursor.moveToFirst()
+        cursor.moveToFirst()
         return MasterController(
             cursor.getString(0).toInt(),
             cursor.getString(1),
-            cursor.getString(2)
+            cursor.getString(2),
+            cursor.getString(3)
         )
     }
 
@@ -113,7 +135,8 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
                     controllerList.add(MasterController(
                         cursor.getString(0).toInt(),
                         cursor.getString(1),
-                        cursor.getString(2)
+                        cursor.getString(2),
+                        cursor.getString(3)
                     ))
                 } while (cursor.moveToNext())
             }
@@ -125,6 +148,7 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
         val values = ContentValues()
         values.put(KEY_NAME, controller.name)
         values.put(KEY_HOSTNAME, controller.hostname)
+        values.put(KEY_TOKEN, controller.token)
         return db.update(
             TABLE_MASTER_CONTROLLERS,
             values,

@@ -1,13 +1,21 @@
 package com.jeremyhahn.cropdroid.ui.login
 
+import android.util.Log
+import android.util.Patterns
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import android.util.Patterns
-import com.jeremyhahn.cropdroid.data.LoginRepository
-import com.jeremyhahn.cropdroid.data.Result
-
 import com.jeremyhahn.cropdroid.R
+import com.jeremyhahn.cropdroid.data.LoginRepository
+import com.jeremyhahn.cropdroid.data.model.CropDroidAPI
+import com.jeremyhahn.cropdroid.db.MasterControllerRepository
+import com.jeremyhahn.cropdroid.model.MasterController
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.Response
+import org.json.JSONObject
+import java.io.IOException
+import java.lang.RuntimeException
 
 class LoginViewModel(private val loginRepository: LoginRepository) : ViewModel() {
 
@@ -17,17 +25,71 @@ class LoginViewModel(private val loginRepository: LoginRepository) : ViewModel()
     private val _loginResult = MutableLiveData<LoginResult>()
     val loginResult: LiveData<LoginResult> = _loginResult
 
-    fun login(username: String, password: String) {
-        // can be launched in a separate asynchronous job
-        val result = loginRepository.login(username, password)
+    fun login(cropdroid: CropDroidAPI, username: String, password: String) {
 
-        if (result is Result.Success) {
-            _loginResult.value =
-                LoginResult(success = LoggedInUserView(displayName = result.data.displayName))
-        } else {
-            _loginResult.value = LoginResult(error = R.string.login_failed)
-        }
+        cropdroid.login(username, password, object : Callback {
+
+            override fun onFailure(call: Call?, e: IOException?) {
+                Log.d("LoginViewModel.login", "onFailure response: " + e!!.message)
+                _loginResult.postValue(LoginResult(message = e!!.message))
+                return
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+
+                Log.d("LoginViewModel.login", "login response: " + response)
+
+                var responseBody = response.body().string()
+
+
+                Log.d("LoginViewModel.login", "responseBody: " + responseBody)
+
+                var json = JSONObject(responseBody)
+
+                if (!response.isSuccessful()) {
+                    Log.d("LoginViewModel.login", "fail: " + responseBody)
+                    _loginResult.postValue(LoginResult(message = json.getString("error")))
+                    return
+                }
+
+                _loginResult.postValue(LoginResult(token = json.getString("token")))
+                //_loginResult.postValue(LoginResult(success = LoggedInUserView(displayName = username)))
+            }
+        })
     }
+
+    fun register(cropdroid: CropDroidAPI, username: String, password: String) {
+
+        cropdroid.register(username, password, object : Callback {
+
+            override fun onFailure(call: Call?, e: IOException?) {
+                Log.d("LoginViewModel.register", "onFailure response: " + e!!.message)
+                _loginResult.postValue(LoginResult(message = e!!.message))
+                return
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+
+                Log.d("LoginViewModel.register", "login response: " + response)
+
+                var responseBody = response.body().string()
+                var json = JSONObject(responseBody)
+
+                if (!response.isSuccessful()) {
+                    Log.d("LoginViewModel.register", "fail: " + responseBody)
+                    _loginResult.postValue(LoginResult(message = json.getString("error")))
+                    return
+                }
+
+                if(json.getBoolean("success")) {
+                    _loginResult.postValue(LoginResult(registered = true))
+                }
+
+                _loginResult.postValue(LoginResult(message = "Unexpected error"))
+            }
+        })
+    }
+
 
     fun loginDataChanged(username: String, password: String) {
         if (!isUserNameValid(username)) {
@@ -39,6 +101,7 @@ class LoginViewModel(private val loginRepository: LoginRepository) : ViewModel()
         }
     }
 
+
     // A placeholder username validation check
     private fun isUserNameValid(username: String): Boolean {
         return if (username.contains('@')) {
@@ -47,6 +110,7 @@ class LoginViewModel(private val loginRepository: LoginRepository) : ViewModel()
             username.isNotBlank()
         }
     }
+
 
     // A placeholder password validation check
     private fun isPasswordValid(password: String): Boolean {

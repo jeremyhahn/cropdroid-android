@@ -5,5 +5,8 @@ package com.jeremyhahn.cropdroid.ui.login
  */
 data class LoginResult(
     val success: LoggedInUserView? = null,
-    val error: Int? = null
+    val error: Int? = null,
+    val message: String? = null,
+    val registered: Boolean = false,
+    val token: String? = null
 )

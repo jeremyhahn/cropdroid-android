@@ -25,7 +25,7 @@ class NewMasterControllerActivity : AppCompatActivity() {
         var hostname = findViewById(R.id.hostname) as EditText
 
         val repository = MasterControllerRepository(this)
-        repository.addController(MasterController(0, name.text.toString(), hostname.text.toString()))
+        repository.addController(MasterController(0, name.text.toString(), hostname.text.toString(), ""))
 
         startActivity(Intent(this, MasterControllerListActivity::class.java))
     }
