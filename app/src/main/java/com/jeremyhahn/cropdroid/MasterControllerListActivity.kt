@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -48,11 +50,6 @@ class MasterControllerListActivity : AppCompatActivity(), OnMasterListener {
         )
 
         getMasterControllers()
-
-        if(controllers.size <= 0) {
-            Log.d("MasterControllerListActivity", "Redirecting back to LoginActivity; No controllers in local sqlite database.")
-            startActivity(Intent(this, LoginActivity::class.java))
-        }
     }
 
     override fun onMasterClick(position: Int) {
@@ -63,17 +60,31 @@ class MasterControllerListActivity : AppCompatActivity(), OnMasterListener {
         //startActivity(Intent(this, MicroControllerActivity::class.java))
         //startActivity(Intent(this, WebSocketActivity::class.java))
 
-        var intent = Intent(this, WebSocketActivity::class.java)
-        intent.putExtra("controller_hostname", controllers.get(position).hostname)
-        intent.putExtra("controller_token", controllers.get(position).token)
-
+        var selected = controllers.get(position)
+        var intent = Intent(this, LoginActivity::class.java)
+        intent.putExtra("controller_id", selected.id.toString())
+        intent.putExtra("controller_name", selected.name)
+        intent.putExtra("controller_hostname", selected.hostname)
         startActivity(intent)
     }
 
     fun getMasterControllers() {
 
+        var savedControllers = MasterControllerRepository(this).allControllers
+
+        for(controller in savedControllers) {
+            Log.d("savedController", controller.toString())
+        }
+
         controllers.clear()
-        controllers.addAll(MasterControllerRepository(this).allControllers)
+        controllers.addAll(savedControllers)
+
+        if(controllers.size <= 0) {
+            Log.d("MasterControllerListActivity", "No controllers in local sqlite database.")
+
+            var emptyListText = findViewById(R.id.textMasterEmptyList) as TextView
+            emptyListText.visibility = View.VISIBLE
+        }
 
         adapter.notifyDataSetChanged()
         swipeContainer?.setRefreshing(false)

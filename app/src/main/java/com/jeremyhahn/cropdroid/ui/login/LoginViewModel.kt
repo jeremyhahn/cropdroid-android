@@ -6,18 +6,15 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.jeremyhahn.cropdroid.R
-import com.jeremyhahn.cropdroid.data.LoginRepository
-import com.jeremyhahn.cropdroid.data.model.CropDroidAPI
-import com.jeremyhahn.cropdroid.db.MasterControllerRepository
-import com.jeremyhahn.cropdroid.model.MasterController
+import com.jeremyhahn.cropdroid.data.CropDroidAPI
+import com.jeremyhahn.cropdroid.model.User
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Response
 import org.json.JSONObject
 import java.io.IOException
-import java.lang.RuntimeException
 
-class LoginViewModel(private val loginRepository: LoginRepository) : ViewModel() {
+class LoginViewModel() : ViewModel() {
 
     private val _loginForm = MutableLiveData<LoginFormState>()
     val loginFormState: LiveData<LoginFormState> = _loginForm
@@ -31,7 +28,7 @@ class LoginViewModel(private val loginRepository: LoginRepository) : ViewModel()
 
             override fun onFailure(call: Call?, e: IOException?) {
                 Log.d("LoginViewModel.login", "onFailure response: " + e!!.message)
-                _loginResult.postValue(LoginResult(message = e!!.message))
+                _loginResult.postValue(LoginResult(error = e!!.message))
                 return
             }
 
@@ -40,20 +37,17 @@ class LoginViewModel(private val loginRepository: LoginRepository) : ViewModel()
                 Log.d("LoginViewModel.login", "login response: " + response)
 
                 var responseBody = response.body().string()
-
-
                 Log.d("LoginViewModel.login", "responseBody: " + responseBody)
 
                 var json = JSONObject(responseBody)
-
                 if (!response.isSuccessful()) {
                     Log.d("LoginViewModel.login", "fail: " + responseBody)
-                    _loginResult.postValue(LoginResult(message = json.getString("error")))
+                    _loginResult.postValue(LoginResult(error = json.getString("error")))
                     return
                 }
 
-                _loginResult.postValue(LoginResult(token = json.getString("token")))
-                //_loginResult.postValue(LoginResult(success = LoggedInUserView(displayName = username)))
+                var user : LoggedInUserView? = LoggedInUserView(displayName = username)
+                _loginResult.postValue(LoginResult(User("0", username, "", json.getString("token"))))
             }
         })
     }
@@ -64,7 +58,7 @@ class LoginViewModel(private val loginRepository: LoginRepository) : ViewModel()
 
             override fun onFailure(call: Call?, e: IOException?) {
                 Log.d("LoginViewModel.register", "onFailure response: " + e!!.message)
-                _loginResult.postValue(LoginResult(message = e!!.message))
+                _loginResult.postValue(LoginResult(error = e!!.message))
                 return
             }
 
@@ -77,7 +71,7 @@ class LoginViewModel(private val loginRepository: LoginRepository) : ViewModel()
 
                 if (!response.isSuccessful()) {
                     Log.d("LoginViewModel.register", "fail: " + responseBody)
-                    _loginResult.postValue(LoginResult(message = json.getString("error")))
+                    _loginResult.postValue(LoginResult(error = json.getString("error")))
                     return
                 }
 
@@ -85,7 +79,7 @@ class LoginViewModel(private val loginRepository: LoginRepository) : ViewModel()
                     _loginResult.postValue(LoginResult(registered = true))
                 }
 
-                _loginResult.postValue(LoginResult(message = "Unexpected error"))
+                _loginResult.postValue(LoginResult(error = "Unexpected error"))
             }
         })
     }

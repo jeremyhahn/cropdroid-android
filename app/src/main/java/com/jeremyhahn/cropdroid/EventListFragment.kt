@@ -128,7 +128,7 @@ class EventListFragment : Fragment() {
                     var jsonEvent = jsonArray.getJSONObject(i)
                     events.add(EventLog(
                         jsonEvent.getString("controller"),
-                        jsonEvent.getString("event"),
+                        jsonEvent.getString("type"),
                         jsonEvent.getString("message"),
                         jsonEvent.getString("timestamp")
                     ))

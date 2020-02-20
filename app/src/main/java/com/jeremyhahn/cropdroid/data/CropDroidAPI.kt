@@ -1,4 +1,4 @@
-package com.jeremyhahn.cropdroid.data.model
+package com.jeremyhahn.cropdroid.data
 
 import android.util.Log
 import com.jeremyhahn.cropdroid.API_BASE

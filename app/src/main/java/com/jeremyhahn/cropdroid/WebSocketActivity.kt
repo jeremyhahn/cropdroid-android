@@ -20,7 +20,6 @@ class WebSocketActivity : AppCompatActivity() {
     private var username: String? = null
     private var token: String? = null
 
-
     companion object {
         private const val NORMAL_CLOSURE_STATUS = 1000
     }
@@ -34,10 +33,9 @@ class WebSocketActivity : AppCompatActivity() {
         start!!.setOnClickListener {
             start()
         }
-        userid = getIntent().getStringExtra("userid");
-        username = getIntent().getStringExtra("username");
+        userid = getIntent().getStringExtra("user_id");
+        token = getIntent().getStringExtra("jwt_token");
         hostname = getIntent().getStringExtra("controller_hostname");
-        token = getIntent().getStringExtra("controller_token");
     }
 
     private fun start() {
@@ -63,7 +61,7 @@ class WebSocketActivity : AppCompatActivity() {
     inner class EchoWebSocketListener : WebSocketListener() {
 
         override fun onOpen(webSocket: WebSocket, response: Response) {
-            webSocket.send("{\"Id\":5}")
+            //webSocket.send("{\"Id\":$userid}")
             //webSocket.send(ByteString.decodeHex("deadbeef"))
             //webSocket.close(Companion.NORMAL_CLOSURE_STATUS, "Goodbye !")
         }

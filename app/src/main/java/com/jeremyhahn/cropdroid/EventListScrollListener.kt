@@ -1,6 +1,5 @@
 package com.jeremyhahn.cropdroid
 
-import android.util.Log
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
@@ -19,8 +18,8 @@ abstract class EventListScrollListener(var layoutManager: LinearLayoutManager) :
         if (!isLoading() && !isLastPage()) {
             if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount
                 && firstVisibleItemPosition >= 0
-                //&& totalItemCount >= getPageCount()
-                && totalItemCount < getPageCount()
+                && totalItemCount >= getPageCount()
+                //&& totalItemCount < getPageCount()
             ) {
                 nextPage()
             }

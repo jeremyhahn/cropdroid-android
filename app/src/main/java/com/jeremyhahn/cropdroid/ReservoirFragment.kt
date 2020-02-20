@@ -40,6 +40,7 @@ class ReservoirFragment : Fragment() {
     private var cards = ArrayList<MicroController>()
     private var adapter: MicroControllerRecyclerAdapter = MicroControllerRecyclerAdapter(cards)
     private var swipeContainer: SwipeRefreshLayout? = null
+    private var scheduleRefresh: Boolean = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,7 +48,7 @@ class ReservoirFragment : Fragment() {
             param1 = it.getString(ARG_1_CONTROLLER_HOSTNAME)
         }
         getReservoirData()
-        scheduleRefresh()
+        refresh()
     }
 
     override fun onCreateView(
@@ -120,15 +121,23 @@ class ReservoirFragment : Fragment() {
             }
     }
 
-    fun scheduleRefresh() {
-        Timer().schedule(60000) {
-            getReservoirData()
-            scheduleRefresh()
+    fun refresh() {
+        if(scheduleRefresh) {
+            Timer().schedule(60000) {
+                getReservoirData()
+                refresh()
+            }
         }
     }
 
     fun getReservoirData() {
-        val queue = Volley.newRequestQueue(activity)
+
+        if(context == null) {
+            scheduleRefresh = false
+            return
+        }
+
+        val queue = Volley.newRequestQueue(context)
 
         val prefs = context!!.getSharedPreferences(GLOBAL_PREFS, Context.MODE_PRIVATE)
         val controller = prefs.getString(PREF_KEY_CONTROLLER_HOSTNAME, "undefined")

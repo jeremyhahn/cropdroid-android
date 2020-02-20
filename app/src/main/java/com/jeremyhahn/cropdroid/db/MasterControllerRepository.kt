@@ -4,7 +4,6 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
-import android.database.sqlite.SQLiteDatabase.deleteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import com.jeremyhahn.cropdroid.DATABASE_NAME
 import com.jeremyhahn.cropdroid.model.MasterController
@@ -41,7 +40,7 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
     }
 
     fun drop() {
-        context!!.deleteDatabase("cropdroid")
+        context!!.deleteDatabase(DATABASE_NAME)
     }
 
     fun getCount() : Int {
@@ -49,12 +48,15 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
         val db: SQLiteDatabase = this.getReadableDatabase()
         val cursor: Cursor = db.rawQuery(countQuery, null)
         cursor.close()
-        return cursor.getCount()
+        var count = cursor.getCount()
+        db.close()
+        return count
     }
 
     fun getLastInsertedId(db: SQLiteDatabase) : Int {
         val query = "SELECT  last_insert_rowid()"
         val cursor: Cursor = db.rawQuery(query, null)
+        cursor.moveToFirst()
         var id = cursor.getInt(0)
         cursor.close()
         return id
@@ -67,7 +69,7 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
         values.put(KEY_HOSTNAME, controller.hostname)
         values.put(KEY_TOKEN, controller.token)
         db.insert(TABLE_MASTER_CONTROLLERS, null, values)
-        var controller = MasterController(getLastInsertedId(db), controller.name, controller.hostname, controller.token)
+        controller.id = getLastInsertedId(db)
         db.close()
         return controller
     }
@@ -90,15 +92,18 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
             null
         )
         cursor.moveToFirst()
-        return MasterController(
+        var controller  = MasterController(
             cursor.getString(0).toInt(),
             cursor.getString(1),
             cursor.getString(2),
             cursor.getString(3)
         )
+        db.close()
+        return controller
     }
 
-    fun getControllerByHostname(hostname: String): MasterController {
+    fun getControllerByHostname(hostname: String): MasterController? {
+        var controller : MasterController? = null
         val db: SQLiteDatabase = this.getReadableDatabase()
         val cursor: Cursor = db.query(
             TABLE_MASTER_CONTROLLERS,
@@ -116,12 +121,16 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
             null
         )
         cursor.moveToFirst()
-        return MasterController(
-            cursor.getString(0).toInt(),
-            cursor.getString(1),
-            cursor.getString(2),
-            cursor.getString(3)
-        )
+        if(cursor.count > 0) {
+            controller = MasterController(
+                cursor.getString(0).toInt(),
+                cursor.getString(1),
+                cursor.getString(2),
+                cursor.getString(3)
+            )
+        }
+        db.close()
+        return controller
     }
 
     val allControllers: ArrayList<MasterController>
@@ -140,6 +149,7 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
                     ))
                 } while (cursor.moveToNext())
             }
+            db.close()
             return controllerList
         }
 
@@ -149,12 +159,14 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
         values.put(KEY_NAME, controller.name)
         values.put(KEY_HOSTNAME, controller.hostname)
         values.put(KEY_TOKEN, controller.token)
-        return db.update(
+        var response = db.update(
             TABLE_MASTER_CONTROLLERS,
             values,
             "$KEY_ID = ?",
             arrayOf<String>(java.lang.String.valueOf(controller.id))
         )
+        db.close()
+        return response
     }
 
     fun deleteController(controller: MasterController) {

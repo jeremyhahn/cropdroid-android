@@ -3,8 +3,10 @@ package com.jeremyhahn.cropdroid
 import android.app.AlertDialog
 import android.content.Context
 import android.content.DialogInterface
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
+import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
@@ -23,6 +25,7 @@ class MasterControllerRecyclerAdapter(val controllers: ArrayList<MasterControlle
 
     fun addAll(list : List<MasterController>) {
         controllers.addAll(list)
+        notifyDataSetChanged()
     }
 
     //this method is returning the view for each item in the list
@@ -43,7 +46,8 @@ class MasterControllerRecyclerAdapter(val controllers: ArrayList<MasterControlle
            builder.setTitle("Action")
            builder.setItems(items,
                DialogInterface.OnClickListener { dialog, item ->
-                   repository.deleteController(repository.getControllerByHostname(controllers[position].hostname))
+                   var selectedController = repository.getControllerByHostname(controllers[position].hostname)
+                   repository.deleteController(selectedController!!)
                    controllers.removeAt(position)
                    notifyItemRemoved(position);
                    Toast.makeText(
@@ -51,9 +55,10 @@ class MasterControllerRecyclerAdapter(val controllers: ArrayList<MasterControlle
                        "Controller deleted",
                        Toast.LENGTH_SHORT
                    ).show()
+                   //var emptyListTest = v.findViewById(R.id.textMasterEmptyList) as TextView
+                   //emptyListTest.visibility = VISIBLE
                })
            builder.show()
-
            true
 
        }

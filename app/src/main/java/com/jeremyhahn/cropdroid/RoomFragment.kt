@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener
 import com.android.volley.Request
+import com.android.volley.RequestQueue
 import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
@@ -40,14 +41,16 @@ class RoomFragment : Fragment() {
     private var adapter: MicroControllerRecyclerAdapter = MicroControllerRecyclerAdapter(cards)
     private var swipeContainer: SwipeRefreshLayout? = null
     private var controllerHostname: String? = null
+    private var volley: RequestQueue? = null
+    private var scheduleRefresh: Boolean = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
             param1 = it.getString(PREF_KEY_CONTROLLER_HOSTNAME)
         }
+        volley = Volley.newRequestQueue(context)
         getRoomData()
-        scheduleRefresh()
     }
 
     override fun onCreateView(
@@ -124,15 +127,21 @@ class RoomFragment : Fragment() {
             }
     }
 
-    fun scheduleRefresh() {
-        Timer().schedule(60000) {
-            getRoomData()
-            scheduleRefresh()
+    fun refresh() {
+        if(scheduleRefresh) {
+            Timer().schedule(60000) {
+                getRoomData()
+                refresh()
+            }
         }
     }
 
     fun getRoomData() {
-        val queue = Volley.newRequestQueue(activity)
+
+        if(context == null) {
+            scheduleRefresh = false
+            return
+        }
 
         val prefs = context!!.getSharedPreferences(GLOBAL_PREFS, MODE_PRIVATE)
         val controller = prefs.getString(PREF_KEY_CONTROLLER_HOSTNAME, "undefined")
@@ -181,10 +190,11 @@ class RoomFragment : Fragment() {
 
                 adapter.notifyDataSetChanged()
                 swipeContainer?.setRefreshing(false)
+                refresh()
 
                 Log.d("room model", room.toString())
             },
             Response.ErrorListener { Log.d( "error", "Failed to retrieve room data from master controller!" )})
-        queue.add(roomRequest)
+        volley!!.add(roomRequest)
     }
 }
