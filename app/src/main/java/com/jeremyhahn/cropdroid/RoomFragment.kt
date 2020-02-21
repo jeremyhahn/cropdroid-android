@@ -41,8 +41,10 @@ class RoomFragment : Fragment() {
     private var adapter: MicroControllerRecyclerAdapter = MicroControllerRecyclerAdapter(cards)
     private var swipeContainer: SwipeRefreshLayout? = null
     private var controllerHostname: String? = null
-    private var volley: RequestQueue? = null
     private var scheduleRefresh: Boolean = true
+    private var volley: RequestQueue? = null
+    private val VOLLEY_TAG = "RoomFragment"
+    private var refreshTimer: Timer = Timer()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,7 +52,6 @@ class RoomFragment : Fragment() {
             param1 = it.getString(PREF_KEY_CONTROLLER_HOSTNAME)
         }
         volley = Volley.newRequestQueue(context)
-        getRoomData()
     }
 
     override fun onCreateView(
@@ -75,6 +76,12 @@ class RoomFragment : Fragment() {
             R.color.holo_red_light
         )
 
+        refreshTimer.schedule(60000) {
+            getRoomData()
+        }
+
+        getRoomData()
+
         //return inflater.inflate(R.layout.fragment_room, container, false)
         return fragmentView
 
@@ -93,6 +100,14 @@ class RoomFragment : Fragment() {
         } else {
             throw RuntimeException(context.toString() + " must implement OnFragmentInteractionListener")
         }*/
+    }
+
+    override fun onDestroyView() {
+        Log.d("RoomFragment.onDestroyView()", "called")
+        super.onDestroyView()
+        volley!!.cancelAll(VOLLEY_TAG)
+        refreshTimer.cancel()
+        refreshTimer.purge()
     }
 
     override fun onDetach() {
@@ -127,22 +142,9 @@ class RoomFragment : Fragment() {
             }
     }
 
-    fun refresh() {
-        if(scheduleRefresh) {
-            Timer().schedule(60000) {
-                getRoomData()
-                refresh()
-            }
-        }
-    }
-
     fun getRoomData() {
 
-        if(context == null) {
-            scheduleRefresh = false
-            return
-        }
-
+        var volley = Volley.newRequestQueue(context)
         val prefs = context!!.getSharedPreferences(GLOBAL_PREFS, MODE_PRIVATE)
         val controller = prefs.getString(PREF_KEY_CONTROLLER_HOSTNAME, "undefined")
 
@@ -190,11 +192,11 @@ class RoomFragment : Fragment() {
 
                 adapter.notifyDataSetChanged()
                 swipeContainer?.setRefreshing(false)
-                refresh()
 
                 Log.d("room model", room.toString())
             },
             Response.ErrorListener { Log.d( "error", "Failed to retrieve room data from master controller!" )})
+        roomRequest.setTag(VOLLEY_TAG)
         volley!!.add(roomRequest)
     }
 }

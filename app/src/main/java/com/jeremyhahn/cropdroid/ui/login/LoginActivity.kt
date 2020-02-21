@@ -26,6 +26,7 @@ import com.jeremyhahn.cropdroid.model.MasterController
 import com.jeremyhahn.cropdroid.model.User
 import com.jeremyhahn.cropdroid.service.NotificationService
 import com.jeremyhahn.cropdroid.utils.JsonWebToken
+import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.Jwts
 import kotlinx.android.synthetic.main.activity_login.*
 import org.apache.commons.io.IOUtils
@@ -57,10 +58,22 @@ class LoginActivity : AppCompatActivity() {
         var repo = MasterControllerRepository(this)
         val selectedController = repo.getControllerByHostname(controllerHostname)
         if(!selectedController!!.token.isNullOrEmpty()) {
-            var userid = JsonWebToken(this).parse(selectedController.token).body.get("id").toString()
-            var user = User(userid, username.text.toString(), password.text.toString(), selectedController.token)
-            updateUiWithUser(user, selectedController, true)
-            return
+            try {
+                var userid =
+                    JsonWebToken(this).parse(selectedController.token).body.get("id").toString()
+                var user = User(
+                    userid,
+                    username.text.toString(),
+                    password.text.toString(),
+                    selectedController.token
+                )
+                updateUiWithUser(user, selectedController, true)
+                return
+            }
+            catch(e: ExpiredJwtException) {
+                Log.d("LoginActivity.onCreate", "JWT expired")
+                selectedController.token = ""
+            }
         }
         for(controller in repo.allControllers) {
             Log.d("LoginActivity.onCreate", "registered controller: " + controller.toString())

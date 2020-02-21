@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.android.volley.Request
+import com.android.volley.RequestQueue
 import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
@@ -40,15 +41,17 @@ class ReservoirFragment : Fragment() {
     private var cards = ArrayList<MicroController>()
     private var adapter: MicroControllerRecyclerAdapter = MicroControllerRecyclerAdapter(cards)
     private var swipeContainer: SwipeRefreshLayout? = null
+    private val volley: RequestQueue? = null
+    private val VOLLEY_TAG : String = "ReservoirFragment"
     private var scheduleRefresh: Boolean = true
+    private val refreshTimer: Timer = Timer()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
             param1 = it.getString(ARG_1_CONTROLLER_HOSTNAME)
         }
-        getReservoirData()
-        refresh()
+        val volley = Volley.newRequestQueue(context)
     }
 
     override fun onCreateView(
@@ -72,6 +75,10 @@ class ReservoirFragment : Fragment() {
             R.color.holo_red_light
         )
 
+        refreshTimer.schedule(60000) {
+            getReservoirData()
+        }
+
         return fragmentView
     }
 
@@ -89,6 +96,15 @@ class ReservoirFragment : Fragment() {
             throw RuntimeException(context.toString() + " must implement OnFragmentInteractionListener")
         }*/
     }
+
+    override fun onDestroyView() {
+        Log.d("ReservoirFragment.onDestroyView()", "called")
+        super.onDestroyView()
+        volley!!.cancelAll(VOLLEY_TAG)
+        refreshTimer.cancel()
+        refreshTimer.purge()
+    }
+
 
     override fun onDetach() {
         super.onDetach()
@@ -121,23 +137,7 @@ class ReservoirFragment : Fragment() {
             }
     }
 
-    fun refresh() {
-        if(scheduleRefresh) {
-            Timer().schedule(60000) {
-                getReservoirData()
-                refresh()
-            }
-        }
-    }
-
     fun getReservoirData() {
-
-        if(context == null) {
-            scheduleRefresh = false
-            return
-        }
-
-        val queue = Volley.newRequestQueue(context)
 
         val prefs = context!!.getSharedPreferences(GLOBAL_PREFS, Context.MODE_PRIVATE)
         val controller = prefs.getString(PREF_KEY_CONTROLLER_HOSTNAME, "undefined")
@@ -181,6 +181,6 @@ class ReservoirFragment : Fragment() {
                 Log.d("reservoir model", reservoir.toString())
             },
             Response.ErrorListener { Log.d( "error", "Failed to retrieve reservoir data from master controller!" )})
-        queue.add(roomRequest)
+        volley!!.add(roomRequest)
     }
 }

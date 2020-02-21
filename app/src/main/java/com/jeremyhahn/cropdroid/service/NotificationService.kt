@@ -1,28 +1,32 @@
 package com.jeremyhahn.cropdroid.service
 
+import android.R
 import android.app.NotificationChannel
+import android.app.NotificationChannelGroup
 import android.app.NotificationManager
-import android.app.PendingIntent
+import android.app.NotificationManager.IMPORTANCE_DEFAULT
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import com.jeremyhahn.cropdroid.MasterControllerListActivity
-import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.model.Notification
 import okhttp3.*
 import okio.ByteString
 import org.json.JSONObject
 
 
+// https://stackoverflow.com/questions/7690350/android-start-service-on-boot
 class NotificationService : Service() {
 
-    val serviceType : String = "notification"
+    val CHANNEL_ID = "CROPDROID_NOTIFICATIONS"
+    val GROUP_KEY = "CropDroid"
+
     val client = OkHttpClient()
 
     var userId : String? = null
@@ -31,15 +35,14 @@ class NotificationService : Service() {
     var jwt: String? = null
 
     var binder : IBinder? = null
-    var serviceRecord: com.jeremyhahn.cropdroid.model.Service? = null
     var websocket : WebSocket? = null
+
+    var summaryNotificationBuilder: NotificationCompat.Builder? = null
+    var notificationManager: NotificationManager? = null
+    var bundleNotificationId : Int = 1
 
     companion object {
         private const val NORMAL_CLOSURE_STATUS = 1000
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
     }
 
     override fun onBind(intent: Intent): IBinder {
@@ -48,6 +51,8 @@ class NotificationService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent != null && websocket == null) {
+            notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+
             userId = intent.getStringExtra("user_id")
             controllerId = intent.getIntExtra("controller_id", 0)
             hostname = intent.getStringExtra("controller_hostname")
@@ -76,46 +81,39 @@ class NotificationService : Service() {
         return START_STICKY_COMPATIBILITY
     }
 
-    fun sendNotification(notification: Notification) {
-        val intent = Intent(applicationContext, MasterControllerListActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        val pendingIntent = PendingIntent.getActivity(applicationContext, 0, intent, 0)
+    fun createNotification(notification: Notification) {
 
-        createNotificationChannel(applicationContext,
-            NotificationManagerCompat.IMPORTANCE_DEFAULT, false,
-            applicationContext.getString(com.jeremyhahn.cropdroid.R.string.app_name), "CropDroid notification channel.")
-
-        val channelId = "${applicationContext.packageName}-${applicationContext.getString(com.jeremyhahn.cropdroid.R.string.app_name)}"
-        val notificationBuilder = NotificationCompat.Builder(applicationContext, channelId).apply {
-            setSmallIcon(R.mipmap.ic_launcher)
-            setContentTitle(notification.type)
-            setContentText(notification.controller)
-            setStyle(NotificationCompat.BigTextStyle().bigText(notification.message))
-            priority = NotificationCompat.PRIORITY_DEFAULT
-            setAutoCancel(true)
-            setContentIntent(pendingIntent)
-        }
-
-        val notificationManager = NotificationManagerCompat.from(applicationContext)
-        notificationManager.notify(1001, notificationBuilder.build())
-    }
-
-    fun createNotificationChannel(context: Context, importance: Int, showBadge: Boolean, name: String, description: String) {
-        // 1
+        //We need to update the bundle notification every time a new notification comes up.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (notificationManager!!.notificationChannels.size < 2) {
 
-            // 2
-            val channelId = "${context.packageName}-$name"
-            val channel = NotificationChannel(channelId, name, importance)
-            channel.description = description
-            channel.setShowBadge(showBadge)
+                val groupChannel = NotificationChannel("bundle_channel_id", "bundle_channel_name", NotificationManager.IMPORTANCE_LOW)
+                notificationManager!!.createNotificationChannel(groupChannel)
 
-            // 3
-            val notificationManager = context.getSystemService(NotificationManager::class.java)
-            notificationManager.createNotificationChannel(channel)
+                val channel = NotificationChannel("channel_id", "channel_name", NotificationManager.IMPORTANCE_DEFAULT)
+                notificationManager!!.createNotificationChannel(channel)
+            }
         }
-    }
 
+        summaryNotificationBuilder =
+            NotificationCompat.Builder(this, "bundle_channel_id")
+                .setGroup(GROUP_KEY)
+                .setGroupSummary(true)
+                .setContentTitle("CropDroid")
+                .setContentText("You have unread messages")
+                .setSmallIcon(R.mipmap.sym_def_app_icon)
+
+        val newNotification =
+            android.app.Notification.Builder(this, "channel_id")
+                .setContentTitle(notification.type)
+                .setContentText(notification.message)
+                .setSmallIcon(R.mipmap.sym_def_app_icon)
+                .setGroupSummary(false)
+                .setGroup(GROUP_KEY)
+
+        notificationManager!!.notify(notification.hashCode(), newNotification.build())
+        notificationManager!!.notify(bundleNotificationId, summaryNotificationBuilder!!.build())
+    }
 
     inner class NotificationWebSocketListener : WebSocketListener() {
 
@@ -133,7 +131,8 @@ class NotificationService : Service() {
                 json.getString("type"),
                 json.getString("message"),
                 json.getString("timestamp"))
-            sendNotification(notification)
+
+            createNotification(notification)
         }
 
         override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
