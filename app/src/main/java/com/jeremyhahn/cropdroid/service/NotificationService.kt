@@ -75,7 +75,7 @@ class NotificationService : Service() {
                 Toast.LENGTH_LONG
             ).show()
             super.onStartCommand(intent, flags, startId)
-            return START_REDELIVER_INTENT
+            return START_STICKY
         }
         stopSelf()
         return START_STICKY_COMPATIBILITY

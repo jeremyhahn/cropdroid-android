@@ -144,7 +144,7 @@ class EventListFragment : Fragment() {
                 TOTAL_PAGES = eventsPage.count / eventsPage.size
 
                 //cards.clear()
-                //cards.add(MicroController("Water Temp", reservoir.waterTemp.toString()))
+                //cards.add(Metric("Water Temp", reservoir.waterTemp.toString()))
 
                 progressBar!!.visibility = GONE
                 isLoading = false

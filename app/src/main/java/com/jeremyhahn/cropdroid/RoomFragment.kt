@@ -18,8 +18,11 @@ import com.android.volley.RequestQueue
 import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
-import com.jeremyhahn.cropdroid.model.MicroController
+import com.jeremyhahn.cropdroid.model.Channel
+import com.jeremyhahn.cropdroid.model.Metric
+import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
 import com.jeremyhahn.cropdroid.model.Room
+import org.json.JSONArray
 import org.json.JSONObject
 import java.util.*
 import kotlin.collections.ArrayList
@@ -37,14 +40,14 @@ class RoomFragment : Fragment() {
 
     private var param1: String? = null
     private var listener: OnFragmentInteractionListener? = null
-    private var cards = ArrayList<MicroController>()
-    private var adapter: MicroControllerRecyclerAdapter = MicroControllerRecyclerAdapter(cards)
+    private var recyclerItems = ArrayList<MicroControllerRecyclerModel>()
+    private var adapter: MicroControllerRecyclerAdapter = MicroControllerRecyclerAdapter(recyclerItems)
     private var swipeContainer: SwipeRefreshLayout? = null
     private var controllerHostname: String? = null
     private var scheduleRefresh: Boolean = true
     private var volley: RequestQueue? = null
     private val VOLLEY_TAG = "RoomFragment"
-    private var refreshTimer: Timer = Timer()
+    private var refreshTimer: Timer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,10 +57,7 @@ class RoomFragment : Fragment() {
         volley = Volley.newRequestQueue(context)
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
         var fragmentView = inflater.inflate(R.layout.fragment_room, container, false)
         var recyclerView = fragmentView.findViewById(R.id.recyclerView) as RecyclerView
@@ -76,7 +76,8 @@ class RoomFragment : Fragment() {
             R.color.holo_red_light
         )
 
-        refreshTimer.schedule(60000) {
+        refreshTimer = Timer()
+        refreshTimer!!.schedule(60000) {
             getRoomData()
         }
 
@@ -106,14 +107,14 @@ class RoomFragment : Fragment() {
         Log.d("RoomFragment.onDestroyView()", "called")
         super.onDestroyView()
         volley!!.cancelAll(VOLLEY_TAG)
-        refreshTimer.cancel()
-        refreshTimer.purge()
+        refreshTimer!!.cancel()
+        refreshTimer!!.purge()
     }
 
     override fun onDetach() {
         super.onDetach()
         listener = null
-        cards.clear()
+        recyclerItems.clear()
     }
 
     /**
@@ -155,9 +156,10 @@ class RoomFragment : Fragment() {
             Request.Method.GET, url,
             Response.Listener<String> { response ->
 
+                recyclerItems.clear()
+
                 var response = response.toString()
                 val json = JSONObject(response)
-
                 var room = Room(json.getInt("mem"),
                     json.getDouble("tempF0"),json.getDouble("tempC0"),json.getDouble("humidity0"),json.getDouble("heatIndex0"),
                     json.getDouble("tempF1"),json.getDouble("tempC1"),json.getDouble("humidity1"), json.getDouble("heatIndex1"),
@@ -165,30 +167,112 @@ class RoomFragment : Fragment() {
                     json.getDouble("vpd"), json.getDouble("pod0"), json.getDouble("pod1"),
                     json.getDouble("co2"), json.getInt("water0"), json.getInt("water1"), json.getInt("photo"))
 
-                cards.clear()
+                recyclerItems.add(
+                    MicroControllerRecyclerModel(
+                        MicroControllerRecyclerModel.METRIC_TYPE,
+                        Metric("Air Temp (Sensor 1)", room.tempF0.toString()),
+                        null))
 
-                cards.add(MicroController("Air Temp (Sensor 1)", room.tempF0.toString()))
-                cards.add(MicroController("Relative Humidity (Sensor 1)", room.humidity0.toString()))
-                cards.add(MicroController("Heat Index (Sensor 1)", room.heatIndex0.toString()))
+                recyclerItems.add(
+                    MicroControllerRecyclerModel(
+                        MicroControllerRecyclerModel.METRIC_TYPE,
+                        Metric("Relative Humidity (Sensor 1)", room.humidity0.toString()),
+                        null))
 
-                cards.add(MicroController("Air Temp (Sensor 2)", room.tempF1.toString()))
-                cards.add(MicroController("Relative Humidity (Sensor 2)", room.humidity1.toString()))
-                cards.add(MicroController("Heat Index (Sensor 2)", room.heatIndex1.toString()))
+                recyclerItems.add(
+                    MicroControllerRecyclerModel(
+                        MicroControllerRecyclerModel.METRIC_TYPE,
+                        Metric("Heat Index (Sensor 1)", room.heatIndex0.toString()),
+                        null))
 
-                cards.add(MicroController("Air Temp (Sensor 3)", room.tempF2.toString()))
-                cards.add(MicroController("Relative Humidity (Sensor 3)", room.humidity2.toString()))
-                cards.add(MicroController("Heat Index (Sensor 3)", room.heatIndex2.toString()))
+                recyclerItems.add(
+                    MicroControllerRecyclerModel(
+                        MicroControllerRecyclerModel.METRIC_TYPE,
+                        Metric("Air Temp (Sensor 2)", room.tempF1.toString()),
+                        null))
 
-                cards.add(MicroController("Co2", room.co2.toString()))
+                recyclerItems.add(
+                    MicroControllerRecyclerModel(
+                        MicroControllerRecyclerModel.METRIC_TYPE,
+                        Metric("Relative Humidity (Sensor 2)", room.humidity1.toString()),
+                    null))
 
-                cards.add(MicroController("Vapor Pressure Deficit", room.vpd.toString()))
-                cards.add(MicroController("Water Temp (Sensor 1)", room.pod0.toString()))
-                cards.add(MicroController("Water Temp (Sensor 2)", room.pod1.toString()))
 
-                cards.add(MicroController("Water Leak Detector (Sensor 1)", room.water0.toString()))
-                cards.add(MicroController("Water Leak Detector (Sensor 2)", room.water1.toString()))
+                recyclerItems.add(
+                    MicroControllerRecyclerModel(
+                        MicroControllerRecyclerModel.METRIC_TYPE,
+                        Metric("Heat Index (Sensor 2)", room.heatIndex1.toString()),
+                        null))
 
-                cards.add(MicroController("Lights", if (room.photo > 0) "On" else "Off"))
+                recyclerItems.add(
+                    MicroControllerRecyclerModel(
+                        MicroControllerRecyclerModel.METRIC_TYPE,
+                        Metric("Air Temp (Sensor 3)", room.tempF2.toString()),
+                        null))
+
+                recyclerItems.add(
+                    MicroControllerRecyclerModel(
+                        MicroControllerRecyclerModel.METRIC_TYPE,
+                        Metric("Relative Humidity (Sensor 3)", room.humidity2.toString()),
+                        null))
+
+                recyclerItems.add(
+                    MicroControllerRecyclerModel(
+                        MicroControllerRecyclerModel.METRIC_TYPE,
+                        Metric("Heat Index (Sensor 3)", room.heatIndex2.toString()),
+                        null))
+
+                recyclerItems.add(
+                    MicroControllerRecyclerModel(
+                        MicroControllerRecyclerModel.METRIC_TYPE,
+                        Metric("Co2", room.co2.toString()),
+                        null))
+
+                recyclerItems.add(
+                    MicroControllerRecyclerModel(
+                        MicroControllerRecyclerModel.METRIC_TYPE,
+                        Metric("Vapor Pressure Deficit", room.vpd.toString()),
+                        null))
+
+                recyclerItems.add(
+                    MicroControllerRecyclerModel(
+                        MicroControllerRecyclerModel.METRIC_TYPE,
+                        Metric("Water Temp (Sensor 1)", room.pod0.toString()),
+                        null))
+
+                recyclerItems.add(
+                    MicroControllerRecyclerModel(
+                        MicroControllerRecyclerModel.METRIC_TYPE,
+                        Metric("Water Temp (Sensor 2)", room.pod1.toString()),
+                        null))
+
+                recyclerItems.add(
+                    MicroControllerRecyclerModel(
+                        MicroControllerRecyclerModel.METRIC_TYPE,
+                        Metric("Water Leak Detector (Sensor 1)", room.water0.toString()),
+                        null))
+
+                recyclerItems.add(
+                    MicroControllerRecyclerModel(
+                        MicroControllerRecyclerModel.METRIC_TYPE,
+                        Metric("Water Leak Detector (Sensor 2)", room.water1.toString()),
+                        null))
+
+                recyclerItems.add(
+                    MicroControllerRecyclerModel(
+                        MicroControllerRecyclerModel.METRIC_TYPE,
+                        Metric("Lights", if (room.photo > 0) "On" else "Off"),
+                        null))
+
+                val jsonChannels = json.getJSONObject("channels")
+                for(i in 0..jsonChannels.length()-1) {
+                    val v = jsonChannels.getInt(i.toString())
+                    recyclerItems.add(
+                        MicroControllerRecyclerModel(
+                            MicroControllerRecyclerModel.CHANNEL_TYPE,
+                            null,
+                            Channel(i, v)))
+                }
 
                 adapter.notifyDataSetChanged()
                 swipeContainer?.setRefreshing(false)

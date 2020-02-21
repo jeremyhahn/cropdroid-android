@@ -16,7 +16,9 @@ import com.android.volley.RequestQueue
 import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
-import com.jeremyhahn.cropdroid.model.MicroController
+import com.jeremyhahn.cropdroid.model.Channel
+import com.jeremyhahn.cropdroid.model.Metric
+import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
 import com.jeremyhahn.cropdroid.model.Reservoir
 import org.json.JSONObject
 import java.util.*
@@ -38,20 +40,20 @@ class ReservoirFragment : Fragment() {
     private var param1: String? = null
     private var param2: String? = null
     private var listener: OnFragmentInteractionListener? = null
-    private var cards = ArrayList<MicroController>()
-    private var adapter: MicroControllerRecyclerAdapter = MicroControllerRecyclerAdapter(cards)
+    private var recyclerItems = ArrayList<MicroControllerRecyclerModel>()
+    private var adapter: MicroControllerRecyclerAdapter = MicroControllerRecyclerAdapter(recyclerItems)
     private var swipeContainer: SwipeRefreshLayout? = null
-    private val volley: RequestQueue? = null
+    private var volley: RequestQueue? = null
     private val VOLLEY_TAG : String = "ReservoirFragment"
     private var scheduleRefresh: Boolean = true
-    private val refreshTimer: Timer = Timer()
+    private var refreshTimer: Timer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
             param1 = it.getString(ARG_1_CONTROLLER_HOSTNAME)
         }
-        val volley = Volley.newRequestQueue(context)
+        volley = Volley.newRequestQueue(context)
     }
 
     override fun onCreateView(
@@ -75,9 +77,12 @@ class ReservoirFragment : Fragment() {
             R.color.holo_red_light
         )
 
-        refreshTimer.schedule(60000) {
+        refreshTimer = Timer()
+        refreshTimer!!.schedule(60000) {
             getReservoirData()
         }
+
+        getReservoirData()
 
         return fragmentView
     }
@@ -101,8 +106,8 @@ class ReservoirFragment : Fragment() {
         Log.d("ReservoirFragment.onDestroyView()", "called")
         super.onDestroyView()
         volley!!.cancelAll(VOLLEY_TAG)
-        refreshTimer.cancel()
-        refreshTimer.purge()
+        refreshTimer!!.cancel()
+        refreshTimer!!.purge()
     }
 
 
@@ -157,22 +162,102 @@ class ReservoirFragment : Fragment() {
                     json.getDouble("envTemp"),json.getDouble("envHumidity"),json.getDouble("envHeatIndex"),
                     json.getInt("upperFloat"), json.getInt("lowerFloat"))
 
-                cards.clear()
+                recyclerItems.clear()
 
-                cards.add(MicroController("Water Temp", reservoir.waterTemp.toString()))
-                cards.add(MicroController("PH", reservoir.PH.toString()))
-                cards.add(MicroController("EC", reservoir.EC.toString()))
-                cards.add(MicroController("TDS", reservoir.TDS.toString()))
-                cards.add(MicroController("ORP", reservoir.ORP.toString()))
-                cards.add(MicroController("DO_mgL", reservoir.DO_mgL.toString()))
-                cards.add(MicroController("DO_PER", reservoir.DO_PER.toString()))
-                cards.add(MicroController("SAL", reservoir.SAL.toString()))
-                cards.add(MicroController("SG", reservoir.SG.toString()))
-                cards.add(MicroController("Environment Temp", reservoir.envTemp.toString()))
-                cards.add(MicroController("Environment Humidity", reservoir.envHumidity.toString()))
-                cards.add(MicroController("Environment HeatIndex", reservoir.envHeatIndex.toString()))
-                cards.add(MicroController("Upper Float", reservoir.upperFloat.toString()))
-                cards.add(MicroController("Lower Float", reservoir.lowerFloat.toString()))
+                recyclerItems.add(
+                    MicroControllerRecyclerModel(
+                        MicroControllerRecyclerModel.METRIC_TYPE,
+                        Metric("Water Temp", reservoir.waterTemp.toString()),
+                        null))
+
+                recyclerItems.add(
+                    MicroControllerRecyclerModel(
+                        MicroControllerRecyclerModel.METRIC_TYPE,
+                        Metric("PH", reservoir.PH.toString()),
+                        null))
+
+                recyclerItems.add(
+                    MicroControllerRecyclerModel(
+                        MicroControllerRecyclerModel.METRIC_TYPE,
+                        Metric("EC", reservoir.EC.toString()),
+                        null))
+
+                recyclerItems.add(
+                    MicroControllerRecyclerModel(
+                        MicroControllerRecyclerModel.METRIC_TYPE,
+                        Metric("TDS", reservoir.TDS.toString()),
+                        null))
+
+                recyclerItems.add(
+                    MicroControllerRecyclerModel(
+                        MicroControllerRecyclerModel.METRIC_TYPE,
+                        Metric("ORP", reservoir.ORP.toString()),
+                        null))
+
+                recyclerItems.add(
+                    MicroControllerRecyclerModel(
+                        MicroControllerRecyclerModel.METRIC_TYPE,
+                        Metric("DO_mgL", reservoir.DO_mgL.toString()),
+                        null))
+
+                recyclerItems.add(
+                    MicroControllerRecyclerModel(
+                        MicroControllerRecyclerModel.METRIC_TYPE,
+                        Metric("DO_PER", reservoir.DO_PER.toString()),
+                        null))
+
+                recyclerItems.add(
+                    MicroControllerRecyclerModel(
+                        MicroControllerRecyclerModel.METRIC_TYPE,
+                        Metric("SAL", reservoir.SAL.toString()),
+                        null))
+
+                recyclerItems.add(
+                    MicroControllerRecyclerModel(
+                        MicroControllerRecyclerModel.METRIC_TYPE,
+                        Metric("SG", reservoir.SG.toString()),
+                        null))
+
+                recyclerItems.add(
+                    MicroControllerRecyclerModel(
+                        MicroControllerRecyclerModel.METRIC_TYPE,
+                        Metric("Environment Temp", reservoir.envTemp.toString()),
+                        null))
+
+                recyclerItems.add(
+                    MicroControllerRecyclerModel(
+                        MicroControllerRecyclerModel.METRIC_TYPE,
+                        Metric("Environment Humidity", reservoir.envHumidity.toString()),
+                        null))
+
+                recyclerItems.add(
+                    MicroControllerRecyclerModel(
+                        MicroControllerRecyclerModel.METRIC_TYPE,
+                        Metric("Environment HeatIndex", reservoir.envHeatIndex.toString()),
+                        null))
+
+                recyclerItems.add(
+                    MicroControllerRecyclerModel(
+                        MicroControllerRecyclerModel.METRIC_TYPE,
+                        Metric("Upper Float", reservoir.upperFloat.toString()),
+                    null))
+
+                recyclerItems.add(
+                    MicroControllerRecyclerModel(
+                        MicroControllerRecyclerModel.METRIC_TYPE,
+                        Metric("Lower Float", reservoir.lowerFloat.toString()),
+                        null))
+
+                val jsonChannels = json.getJSONObject("channels")
+                for(i in 0..jsonChannels.length()-1) {
+                    val o = jsonChannels.getString(i.toString())
+                    recyclerItems.add(
+                        MicroControllerRecyclerModel(
+                            MicroControllerRecyclerModel.CHANNEL_TYPE,
+                            null,
+                            Channel(i, i)
+                        ))
+                }
 
                 adapter.notifyDataSetChanged()
                 swipeContainer?.setRefreshing(false)

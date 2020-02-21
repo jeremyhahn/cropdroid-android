@@ -39,6 +39,7 @@ import java.security.spec.X509EncodedKeySpec
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var loginViewModel: LoginViewModel
+    var controllerHostname : String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,7 +48,7 @@ class LoginActivity : AppCompatActivity() {
 
         val controllerId = intent.getStringExtra("controller_id")
         val controllerName = intent.getStringExtra("controller_name")
-        val controllerHostname = intent.getStringExtra("controller_hostname")
+        controllerHostname = intent.getStringExtra("controller_hostname")
 
         val username = findViewById<EditText>(R.id.username)
         val password = findViewById<EditText>(R.id.password)
@@ -56,7 +57,7 @@ class LoginActivity : AppCompatActivity() {
         val loading = findViewById<ProgressBar>(R.id.loading)
 
         var repo = MasterControllerRepository(this)
-        val selectedController = repo.getControllerByHostname(controllerHostname)
+        val selectedController = repo.getControllerByHostname(controllerHostname!!)
         if(!selectedController!!.token.isNullOrEmpty()) {
             try {
                 var userid =
@@ -82,7 +83,7 @@ class LoginActivity : AppCompatActivity() {
 
         Log.d("LoginActivity.onCreate: controller_id", controllerId)
         Log.d("LoginActivity.onCreate: controller_name", controllerName)
-        Log.d("LoginActivity.onCreate: controller_hostname", controllerHostname)
+        Log.d("LoginActivity.onCreate: controller_hostname", controllerHostname!!)
 
         loginViewModel = ViewModelProviders.of(this, LoginViewModelFactory()).get(LoginViewModel::class.java)
 
@@ -112,7 +113,7 @@ class LoginActivity : AppCompatActivity() {
             if(loginResult.registered) {
                 loginViewModel.login(
                     CropDroidAPI(
-                        controllerHostname,
+                        controllerHostname!!,
                         useSSL.isChecked
                     ),
                     username.text.toString(),
@@ -145,7 +146,7 @@ class LoginActivity : AppCompatActivity() {
 
                 user.id = jws.body.get("id").toString()
 
-                var authenticatedController = MasterController(Integer.parseInt(controllerId), controllerName, controllerHostname, user.token)
+                var authenticatedController = MasterController(Integer.parseInt(controllerId), controllerName, controllerHostname!!, user.token)
                 var rowsUpdated = MasterControllerRepository(this).updateController(authenticatedController)
                 if(rowsUpdated != 1) {
                     Log.e("LoginActivity.loginResult.token", "Unexpected number of rows effected: " + rowsUpdated.toString())
@@ -178,7 +179,7 @@ class LoginActivity : AppCompatActivity() {
                     EditorInfo.IME_ACTION_DONE ->
                         loginViewModel.login(
                             CropDroidAPI(
-                                controllerHostname,
+                                controllerHostname!!,
                                 useSSL.isChecked
                             ),
                             username.text.toString(),
@@ -192,7 +193,7 @@ class LoginActivity : AppCompatActivity() {
                 loading.visibility = View.VISIBLE
                 loginViewModel.login(
                     CropDroidAPI(
-                        controllerHostname,
+                        controllerHostname!!,
                         useSSL.isChecked
                     ),
                     username.text.toString(),
@@ -205,7 +206,7 @@ class LoginActivity : AppCompatActivity() {
     fun onRegister(v: View) {
         loginViewModel.register(
             CropDroidAPI(
-                serverName.text.toString(),
+                controllerHostname!!,
                 useSSL.isChecked
             ),
             username.text.toString(),
