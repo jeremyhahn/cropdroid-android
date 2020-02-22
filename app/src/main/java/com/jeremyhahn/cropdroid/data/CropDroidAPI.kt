@@ -12,10 +12,11 @@ class CropDroidAPI(val controller: String, useSSL: Boolean) {
     val REST_ENDPOINT: String
     val REST_ENDPOINT_SSL: String
     val USE_SSL: Boolean
+    val PROTOCOL = if (useSSL) "https://" else "http://"
 
     init {
-        REST_ENDPOINT = "http://".plus(controller).plus(API_BASE)
-        REST_ENDPOINT_SSL = "https://".plus(controller).plus(API_BASE)
+        REST_ENDPOINT = PROTOCOL.plus(controller).plus(API_BASE)
+        REST_ENDPOINT_SSL = PROTOCOL.plus(controller).plus(API_BASE)
         USE_SSL = useSSL
     }
 

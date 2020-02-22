@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.android.volley.DefaultRetryPolicy
 import com.android.volley.Request
 import com.android.volley.RequestQueue
 import com.android.volley.Response
@@ -61,12 +62,14 @@ class ReservoirFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
 
-        var fragmentView = inflater.inflate(R.layout.fragment_room, container, false)
-        var recyclerView = fragmentView.findViewById(R.id.recyclerView) as RecyclerView
+        var fragmentView = inflater.inflate(R.layout.fragment_reservoir, container, false)
+        var recyclerView = fragmentView.findViewById(R.id.reservoirRecyclerView) as RecyclerView
         recyclerView.layoutManager = LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
         recyclerView.adapter = adapter
 
-        swipeContainer = fragmentView.findViewById(R.id.roomSwipeRefresh) as SwipeRefreshLayout
+        Log.d("ReservoirFragment.onCreateView", "executed")
+
+        swipeContainer = fragmentView.findViewById(R.id.reservoirSwipeRefresh) as SwipeRefreshLayout
         swipeContainer?.setOnRefreshListener(SwipeRefreshLayout.OnRefreshListener {
             getReservoirData()
         })
@@ -105,7 +108,7 @@ class ReservoirFragment : Fragment() {
     override fun onDestroyView() {
         Log.d("ReservoirFragment.onDestroyView()", "called")
         super.onDestroyView()
-        volley!!.cancelAll(VOLLEY_TAG)
+        //volley!!.cancelAll(VOLLEY_TAG)
         refreshTimer!!.cancel()
         refreshTimer!!.purge()
     }
@@ -149,7 +152,7 @@ class ReservoirFragment : Fragment() {
 
         val url = "http://".plus(controller).plus("/reservoir")
 
-        val roomRequest = StringRequest(
+        val reservoirRequest = StringRequest(
             Request.Method.GET, url,
             Response.Listener<String> { response ->
 
@@ -266,6 +269,8 @@ class ReservoirFragment : Fragment() {
                 Log.d("reservoir model", reservoir.toString())
             },
             Response.ErrorListener { Log.d( "error", "Failed to retrieve reservoir data from master controller!" )})
-        volley!!.add(roomRequest)
+        reservoirRequest.setTag(VOLLEY_TAG)
+        reservoirRequest.setRetryPolicy(DefaultRetryPolicy(20 * 1000, API_CONNECTION_UNAVAILABLE_RETRY_COUNT, API_CONNECTION_UNAVAILABLE_RETRY_BACKOFF))
+        volley!!.add(reservoirRequest)
     }
 }

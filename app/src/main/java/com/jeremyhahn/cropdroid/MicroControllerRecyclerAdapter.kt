@@ -1,12 +1,10 @@
 package com.jeremyhahn.cropdroid
 
-import android.graphics.ColorSpace.Model
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.appcompat.widget.SwitchCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.jeremyhahn.cropdroid.model.Channel
 import com.jeremyhahn.cropdroid.model.Metric
@@ -44,6 +42,16 @@ class MicroControllerRecyclerAdapter(val recyclerItems: ArrayList<MicroControlle
         }
     }
 
+    class DefaultViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+
+        fun bindItems(item: Metric) {
+            val title = itemView.findViewById(R.id.title) as TextView
+            val value = itemView.findViewById(R.id.value) as TextView
+            title.text = item.title
+            value.text = item.value
+        }
+    }
+
     override fun getItemCount(): Int {
         return recyclerItems.size
     }
@@ -58,17 +66,19 @@ class MicroControllerRecyclerAdapter(val recyclerItems: ArrayList<MicroControlle
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val view: View
-        if (viewType == MicroControllerRecyclerModel.METRIC_TYPE) {
-            view = LayoutInflater.from(parent.context).inflate(R.layout.microcontroller_cardview, parent, false)
-            return MetricTypeViewHolder(view)
+        if (viewType == MicroControllerRecyclerModel.CHANNEL_TYPE) {
+            view = LayoutInflater.from(parent.context)
+                .inflate(R.layout.microcontroller_switch_cardview, parent, false)
+            return SwitchTypeViewHolder(view)
         }
-        // MicroControllerRecyclerModel.CHANNEL_TYPE
-        view = LayoutInflater.from(parent.context).inflate(R.layout.microcontroller_switch_cardview, parent, false)
-        return SwitchTypeViewHolder(view)
+        //if(viewType == MicroControllerRecyclerModel.METRIC_TYPE) {
+        view = LayoutInflater.from(parent.context).inflate(R.layout.microcontroller_cardview, parent, false)
+        return MetricTypeViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         //holder.bindItems(recyclerItems[position])
+
         holder.itemView.setOnClickListener(
             View.OnClickListener
             {
@@ -76,15 +86,17 @@ class MicroControllerRecyclerAdapter(val recyclerItems: ArrayList<MicroControlle
                 //context.startActivity(Intent(context, MainActivity::class.java))
             })
 
+        Log.d("MicroControllerRecyclerAdapter.onBindViewHolder", "executed")
+
         val model = recyclerItems.get(position)
         if (model != null) {
-            if (model.type == MicroControllerRecyclerModel.METRIC_TYPE) {
-                (holder as MetricTypeViewHolder).itemView.title.setText(model.metric!!.title)
-                (holder as MetricTypeViewHolder).itemView.value.setText(model.metric!!.value)
-            }
-            else { // MicroControllerRecyclerModel.CHANNEL_TYPE
+            if (model.type == MicroControllerRecyclerModel.CHANNEL_TYPE) {
                 (holder as SwitchTypeViewHolder).itemView.switchId.setText("Channel ".plus(model.channel!!.id))
                 (holder as SwitchTypeViewHolder).itemView.switchValue.setChecked(model.channel!!.state === 1)
+            }
+            else {
+                (holder as MetricTypeViewHolder).itemView.title.setText(model.metric!!.title)
+                (holder as MetricTypeViewHolder).itemView.value.setText(model.metric!!.value)
             }
         }
     }

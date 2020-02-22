@@ -1,13 +1,11 @@
 package com.jeremyhahn.cropdroid
 
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.work.*
-import com.jeremyhahn.cropdroid.ui.login.LoginActivity
 import com.jeremyhahn.cropdroid.worker.SyncWorker
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.concurrent.TimeUnit
@@ -34,6 +32,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
+
+        //var repo = MasterControllerRepository(this); repo.drop(); return
 
         /*
         fab.setOnClickListener { view ->

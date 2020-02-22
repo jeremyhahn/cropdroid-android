@@ -9,6 +9,7 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
@@ -19,7 +20,7 @@ import com.jeremyhahn.cropdroid.model.Notification
 import okhttp3.*
 import okio.ByteString
 import org.json.JSONObject
-
+import java.time.ZonedDateTime
 
 // https://stackoverflow.com/questions/7690350/android-start-service-on-boot
 class NotificationService : Service() {
@@ -40,6 +41,9 @@ class NotificationService : Service() {
     var summaryNotificationBuilder: NotificationCompat.Builder? = null
     var notificationManager: NotificationManager? = null
     var bundleNotificationId : Int = 1
+
+    val MAX_SOCKET_ATTEMPTS = 10
+    var socketFailures = 0
 
     companion object {
         private const val NORMAL_CLOSURE_STATUS = 1000
@@ -68,6 +72,7 @@ class NotificationService : Service() {
             val listener = NotificationWebSocketListener()
             websocket = client!!.newWebSocket(request, listener)
             client!!.dispatcher().executorService().shutdown()
+            client!!.retryOnConnectionFailure()
 
             Toast.makeText(
                 applicationContext,
@@ -142,11 +147,15 @@ class NotificationService : Service() {
         override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
             webSocket.close(NotificationService.NORMAL_CLOSURE_STATUS, null)
             Log.d("NotificationService.onClosing", "$code / $reason")
+
+            createNotification(Notification("Android", "WebSocket", "Socket closed!", ZonedDateTime.now().toString()))
         }
 
         override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
             Log.d("NotificationService.onFailure", response.toString())
             t.printStackTrace()
+
+            createNotification(Notification("Android", "WebSocket", "Socket failed!", ZonedDateTime.now().toString()))
         }
     }
 }

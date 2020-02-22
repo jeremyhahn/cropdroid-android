@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener
+import com.android.volley.DefaultRetryPolicy
 import com.android.volley.Request
 import com.android.volley.RequestQueue
 import com.android.volley.Response
@@ -22,11 +23,11 @@ import com.jeremyhahn.cropdroid.model.Channel
 import com.jeremyhahn.cropdroid.model.Metric
 import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
 import com.jeremyhahn.cropdroid.model.Room
-import org.json.JSONArray
 import org.json.JSONObject
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.concurrent.schedule
+
 
 /**
  * A simple [Fragment] subclass.
@@ -61,8 +62,12 @@ class RoomFragment : Fragment() {
 
         var fragmentView = inflater.inflate(R.layout.fragment_room, container, false)
         var recyclerView = fragmentView.findViewById(R.id.recyclerView) as RecyclerView
+
+        //recyclerView.layoutManager = LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
         recyclerView.layoutManager = LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
         recyclerView.adapter = adapter
+
+        Log.d("RoomFragment.onCreateView", "executed")
 
         swipeContainer = fragmentView.findViewById(R.id.roomSwipeRefresh) as SwipeRefreshLayout
         swipeContainer?.setOnRefreshListener(OnRefreshListener {
@@ -85,7 +90,6 @@ class RoomFragment : Fragment() {
 
         //return inflater.inflate(R.layout.fragment_room, container, false)
         return fragmentView
-
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -106,7 +110,7 @@ class RoomFragment : Fragment() {
     override fun onDestroyView() {
         Log.d("RoomFragment.onDestroyView()", "called")
         super.onDestroyView()
-        volley!!.cancelAll(VOLLEY_TAG)
+        //volley!!.cancelAll(VOLLEY_TAG)
         refreshTimer!!.cancel()
         refreshTimer!!.purge()
     }
@@ -114,7 +118,6 @@ class RoomFragment : Fragment() {
     override fun onDetach() {
         super.onDetach()
         listener = null
-        recyclerItems.clear()
     }
 
     /**
@@ -281,6 +284,7 @@ class RoomFragment : Fragment() {
             },
             Response.ErrorListener { Log.d( "error", "Failed to retrieve room data from master controller!" )})
         roomRequest.setTag(VOLLEY_TAG)
+        roomRequest.setRetryPolicy(DefaultRetryPolicy(20 * 1000, API_CONNECTION_UNAVAILABLE_RETRY_COUNT, API_CONNECTION_UNAVAILABLE_RETRY_BACKOFF))
         volley!!.add(roomRequest)
     }
 }

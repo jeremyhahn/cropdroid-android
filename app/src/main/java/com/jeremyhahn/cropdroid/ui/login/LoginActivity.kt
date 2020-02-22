@@ -35,7 +35,6 @@ import java.security.KeyFactory
 import java.security.PublicKey
 import java.security.spec.X509EncodedKeySpec
 
-
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var loginViewModel: LoginViewModel
@@ -79,7 +78,7 @@ class LoginActivity : AppCompatActivity() {
         for(controller in repo.allControllers) {
             Log.d("LoginActivity.onCreate", "registered controller: " + controller.toString())
         }
-        //repo.drop()
+
 
         Log.d("LoginActivity.onCreate: controller_id", controllerId)
         Log.d("LoginActivity.onCreate: controller_name", controllerName)
@@ -123,7 +122,7 @@ class LoginActivity : AppCompatActivity() {
 
             if(loginResult.success != null) {
 
-                var user = loginResult.success!!
+                var user = loginResult.success
 
                 val prefs = getSharedPreferences(GLOBAL_PREFS, Context.MODE_PRIVATE)
                 val editor = prefs.edit()
@@ -146,7 +145,8 @@ class LoginActivity : AppCompatActivity() {
 
                 user.id = jws.body.get("id").toString()
 
-                var authenticatedController = MasterController(Integer.parseInt(controllerId), controllerName, controllerHostname!!, user.token)
+                var isSecure = if(useSSL.isChecked) 1 else 0
+                var authenticatedController = MasterController(Integer.parseInt(controllerId), controllerName, controllerHostname!!, isSecure, user.token)
                 var rowsUpdated = MasterControllerRepository(this).updateController(authenticatedController)
                 if(rowsUpdated != 1) {
                     Log.e("LoginActivity.loginResult.token", "Unexpected number of rows effected: " + rowsUpdated.toString())
