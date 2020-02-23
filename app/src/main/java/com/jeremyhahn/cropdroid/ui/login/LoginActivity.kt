@@ -45,7 +45,7 @@ class LoginActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_login)
 
-        val controllerId = intent.getStringExtra("controller_id")
+        var controllerId = intent.getStringExtra("controller_id")
         val controllerName = intent.getStringExtra("controller_name")
         controllerHostname = intent.getStringExtra("controller_hostname")
 
@@ -79,9 +79,8 @@ class LoginActivity : AppCompatActivity() {
             Log.d("LoginActivity.onCreate", "registered controller: " + controller.toString())
         }
 
-
-        Log.d("LoginActivity.onCreate: controller_id", controllerId)
-        Log.d("LoginActivity.onCreate: controller_name", controllerName)
+        Log.d("LoginActivity.onCreate: controller_id", "" + controllerId)
+        Log.d("LoginActivity.onCreate: controller_name", "" + controllerName)
         Log.d("LoginActivity.onCreate: controller_hostname", controllerHostname!!)
 
         loginViewModel = ViewModelProviders.of(this, LoginViewModelFactory()).get(LoginViewModel::class.java)
@@ -140,11 +139,14 @@ class LoginActivity : AppCompatActivity() {
                 var jws = Jwts.parserBuilder().setSigningKey(publicKey).build().parseClaimsJws(user.token)
                 */
 
+                Log.d("LoginActivity token:", user.token)
+
                 var jws = JsonWebToken(this).parse(user.token)
                 Log.d("jws", jws.toString())
 
                 user.id = jws.body.get("id").toString()
 
+                if(controllerId == null) controllerId = "1"
                 var isSecure = if(useSSL.isChecked) 1 else 0
                 var authenticatedController = MasterController(Integer.parseInt(controllerId), controllerName, controllerHostname!!, isSecure, user.token)
                 var rowsUpdated = MasterControllerRepository(this).updateController(authenticatedController)

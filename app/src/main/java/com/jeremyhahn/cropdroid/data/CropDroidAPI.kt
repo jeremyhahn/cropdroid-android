@@ -6,24 +6,29 @@ import okhttp3.*
 import org.json.JSONObject
 import java.io.IOException
 
-
-class CropDroidAPI(val controller: String, useSSL: Boolean) {
+class CropDroidAPI(val controller: String, useSSL: Boolean, jwt: String = "") {
 
     val REST_ENDPOINT: String
     val REST_ENDPOINT_SSL: String
     val USE_SSL: Boolean
+    val JWT: String
     val PROTOCOL = if (useSSL) "https://" else "http://"
 
     init {
         REST_ENDPOINT = PROTOCOL.plus(controller).plus(API_BASE)
         REST_ENDPOINT_SSL = PROTOCOL.plus(controller).plus(API_BASE)
         USE_SSL = useSSL
+        JWT = jwt
     }
 
     fun createEndpoint(resource: String) : String {
         if(USE_SSL) return REST_ENDPOINT_SSL.plus(resource) else {
             return REST_ENDPOINT.plus(resource)
         }
+    }
+
+    fun roomStatus() {
+
     }
 
     fun login(username: String, password: String, callback: Callback) {
