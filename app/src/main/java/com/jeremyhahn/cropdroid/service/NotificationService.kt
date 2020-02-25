@@ -10,6 +10,9 @@ import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
+import com.jeremyhahn.cropdroid.Constants.Companion.API_BASE
+import com.jeremyhahn.cropdroid.db.MasterControllerRepository
+import com.jeremyhahn.cropdroid.model.MasterController
 import com.jeremyhahn.cropdroid.model.Notification
 import okhttp3.*
 import okio.ByteString
@@ -20,23 +23,14 @@ import java.time.ZonedDateTime
 // https://stackoverflow.com/questions/7690350/android-start-service-on-boot
 class NotificationService : Service() {
 
-    val CHANNEL_ID = "CROPDROID_NOTIFICATIONS"
-    val GROUP_KEY = "CropDroid"
-
-    var userId : String? = null
-    var controllerId : Int? = null
-    var hostname : String? = null
-    var jwt: String? = null
+    val CONNECTION_FAILED_DELAY = 60000L
 
     var binder : IBinder? = null
-    var websocket : WebSocket? = null
+    var userId : String = ""
+    var websockets : HashMap<MasterController, WebSocket> = HashMap()
 
     var summaryNotificationBuilder: NotificationCompat.Builder? = null
     var notificationManager: NotificationManager? = null
-    var bundleNotificationId : Int = 1
-
-    val MAX_SOCKET_ATTEMPTS = 10
-    var socketFailures = 0
 
     companion object {
         private const val NORMAL_CLOSURE_STATUS = 1000
@@ -47,41 +41,43 @@ class NotificationService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent != null && websocket == null) {
-            notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
-            userId = intent.getStringExtra("user_id")
-            controllerId = intent.getIntExtra("controller_id", 0)
-            hostname = intent.getStringExtra("controller_hostname")
-            jwt = intent.getStringExtra("jwt")
+        userId = intent!!.getStringExtra("user_id")
 
-            Log.d("NotificationService.onStartCommand", "hostname: $hostname")
-            Log.d("NotificationService.onStartCommand", "bearer token: $jwt")
+        notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
-            createWebsocket()
-
-            Toast.makeText(
-                applicationContext,
-                "NotificationService started.",
-                Toast.LENGTH_LONG
-            ).show()
-            super.onStartCommand(intent, flags, startId)
-            return START_STICKY
+        var controllers = MasterControllerRepository(this).allControllers
+        for(controller in controllers) {
+            if(websockets[controller] == null) {
+                createWebsocket(controller)
+            }
         }
-        stopSelf()
-        return START_STICKY_COMPATIBILITY
+
+        Toast.makeText(
+            applicationContext,
+            "NotificationService running",
+            Toast.LENGTH_LONG
+        ).show()
+
+        Log.d("NotificationService", "Connection count: " + controllers.size.toString())
+
+        super.onStartCommand(intent, flags, startId)
+        return START_STICKY
     }
 
-    fun createWebsocket() {
+    fun createWebsocket(controller: MasterController) {
         val client = OkHttpClient()
+        val protocol = if(controller.secure == 1) "wss://" else "ws://"
         val request = Request.Builder()
-            .url("ws://".plus(hostname).plus("/api/v1/notification"))
-            .addHeader("Authorization", "Bearer " + jwt)
+            .url(protocol.plus(controller.hostname).plus(API_BASE).plus("/notification"))
+            .addHeader("Authorization", "Bearer " + controller.token)
             .build()
         val listener = NotificationWebSocketListener()
-        websocket = client!!.newWebSocket(request, listener)
+        websockets[controller] = client!!.newWebSocket(request, listener)
         client!!.dispatcher().executorService().shutdown()
         client!!.retryOnConnectionFailure()
+
+        Log.d("NotificationService.createWebsocket", "Created WebSocket " + websockets[controller].hashCode() + " for " + controller.name)
     }
 
     fun createNotification(notification: Notification) {
@@ -100,29 +96,33 @@ class NotificationService : Service() {
 
         summaryNotificationBuilder =
             NotificationCompat.Builder(this, "bundle_channel_id")
-                .setGroup(GROUP_KEY)
+                .setGroup(notification.controller)
                 .setGroupSummary(true)
-                .setContentTitle("CropDroid")
+                .setContentTitle(notification.controller)
                 .setContentText("You have unread messages")
-                .setSmallIcon(R.drawable.ic_dialog_info)
+                .setSmallIcon(R.mipmap.sym_def_app_icon)
 
         val newNotification =
             android.app.Notification.Builder(this, "channel_id")
-                .setContentTitle(notification.type)
+                .setContentTitle(notification.controller)
                 .setContentText(notification.message)
-                .setSmallIcon(R.drawable.ic_dialog_info)
+                .setSmallIcon(R.drawable.sym_def_app_icon)
                 .setGroupSummary(false)
-                .setGroup(GROUP_KEY)
+                .setGroup(notification.controller)
 
         notificationManager!!.notify(notification.hashCode(), newNotification.build())
-        notificationManager!!.notify(bundleNotificationId, summaryNotificationBuilder!!.build())
+        notificationManager!!.notify(notification.controller.hashCode(), summaryNotificationBuilder!!.build())
     }
 
     inner class NotificationWebSocketListener : WebSocketListener() {
 
         override fun onOpen(webSocket: WebSocket, response: Response) {
-            createNotification(Notification("Android", "Notifications", "Listening for new messages", ZonedDateTime.now().toString()))
-            webSocket.send("{\"Id\":$userId}")
+            var controller = getControllerByWebSocket(webSocket)
+            if(controller != null) {
+                webSocket.send("{\"Id\":$userId}")
+                createNotification(Notification(controller.name, controller.name, "Listening for new messages", ZonedDateTime.now().toString()))
+                return
+            }
             //webSocket.send(ByteString.decodeHex("deadbeef"))
             //webSocket.close(Companion.NORMAL_CLOSURE_STATUS, "Goodbye !")
         }
@@ -147,16 +147,49 @@ class NotificationService : Service() {
             webSocket.close(NotificationService.NORMAL_CLOSURE_STATUS, null)
             Log.d("NotificationService.onClosing", "$code / $reason")
 
-            createNotification(Notification("Android", "Notifications", "Socket closed!", ZonedDateTime.now().toString()))
+            var controller = getControllerByWebSocket(webSocket)
+            if(controller != null) {
+                createNotification(Notification(controller.name, "Notifications", "Connection closed!", ZonedDateTime.now().toString()))
+                return
+            }
+
+            Log.d("NotificationService.onFailure", "Unable to locate controller for closed websocket connection: " + webSocket.hashCode())
         }
 
         override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
             Log.d("NotificationService.onFailure", response.toString())
             t.printStackTrace()
 
-            createNotification(Notification("Android", "Notifications", "Disconnected from server", ZonedDateTime.now().toString()))
-            sleep(60000)
-            createWebsocket()
+            sleep(CONNECTION_FAILED_DELAY)
+
+            var controller = getControllerByWebSocket(webSocket)
+            if(controller != null) {
+                Log.d("NotificationService.onFailure", "Restarting connection for " + controller.name)
+                createNotification(Notification(controller.name, "Notifications", "Connection failed!", ZonedDateTime.now().toString()))
+                createWebsocket(controller)
+                return
+            }
+
+            Log.d("NotificationService.onFailure", "Unable to locate controller for failed websocket connection: " + webSocket.hashCode())
         }
+
+        fun getControllerByWebSocket(webSocket: WebSocket) : MasterController? {
+            for((k, v) in websockets) {
+                if(v.equals(webSocket)) {
+                    return k
+                }
+            }
+            return null
+        }
+
+        /*
+        fun getWebsocketByControllerName(name: String) : WebSocket? {
+            for((k, v) in websockets) {
+                if(k.name == name) {
+                    return v
+                }
+            }
+            return null
+        }*/
     }
 }

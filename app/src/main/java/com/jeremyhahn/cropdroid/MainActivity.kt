@@ -63,8 +63,6 @@ class MainActivity : AppCompatActivity() {
 */
 
         startActivity(Intent(this, MasterControllerListActivity::class.java))
-        //startActivity(Intent(this, NewMasterControllerActivity::class.java))
-        //startActivity(Intent(this, LoginActivity::class.java))
     }
 
     fun logout() {

@@ -29,12 +29,23 @@ class MicroControllerActivity: AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         preferences =  applicationContext.getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_PRIVATE)
-        val hostname = preferences!!.getString(Constants.PREF_KEY_CONTROLLER_HOSTNAME, "undefined")
-        repo = MasterControllerRepository(this)
-        controller = repo!!.getControllerByHostname(hostname)
+        val id = preferences!!.getInt(Constants.PREF_KEY_CONTROLLER_ID, 0)
+        controller = MasterControllerRepository(this).getController(id)
 
         toolbar.setTitle(controller!!.name);
+
+        /*
+        toolbar.setNavigationIcon(R.drawable.ic_cropdroid_logo)
+        toolbar.setNavigationOnClickListener(object: View.OnClickListener {
+            override fun onClick(v: View) {
+                onBackPressed()
+                return
+            }
+        })
+         */
         setSupportActionBar(toolbar)
+        supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+        supportActionBar!!.setDisplayShowHomeEnabled(true)
 
         tabLayout = findViewById<TabLayout>(R.id.tabLayout)
         viewPager = findViewById<ViewPager>(R.id.viewPager)
@@ -62,8 +73,12 @@ class MicroControllerActivity: AppCompatActivity() {
 
             }
         })
+    }
 
-     }
+    override fun onSupportNavigateUp(): Boolean {
+        startActivity(Intent(this, MasterControllerListActivity::class.java))
+        return true
+    }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.

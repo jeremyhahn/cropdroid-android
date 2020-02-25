@@ -35,6 +35,11 @@ class LoginActivity : AppCompatActivity() {
 
     private lateinit var loginViewModel: LoginViewModel
     var controller : MasterController? = null
+    val repository: MasterControllerRepository
+
+    init {
+        this.repository = MasterControllerRepository(this)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,37 +53,38 @@ class LoginActivity : AppCompatActivity() {
             0,
             "")
 
+        Log.d("LoginActivity.onCreate", "controller_id: " + controller!!.id.toString())
+
         val username = findViewById<EditText>(R.id.username)
         val password = findViewById<EditText>(R.id.password)
         val useSSL = findViewById<CheckBox>(R.id.useSSL)
         val login = findViewById<Button>(R.id.login)
         val loading = findViewById<ProgressBar>(R.id.loading)
 
-        var repo = MasterControllerRepository(this)
+        try {
+            val selectedController = repository.getController(controller!!.id)
 
-            try {
-                val selectedController = repo.getController(controller!!.id)
-                if(selectedController != null && !selectedController.token.isEmpty()) {
-                    var userid = JsonWebToken(this).parse(selectedController.token).body.get("id").toString()
-                    var user = User(
-                        userid,
-                        username.text.toString(),
-                        password.text.toString(),
-                        selectedController.token
-                    )
-                    updateUiWithUser(user, selectedController)
-                    return
-                }
-            }
-            catch(dbe: android.database.CursorIndexOutOfBoundsException) {
-                // The controller hasnt been logged into yet
-            }
-            catch(e: ExpiredJwtException) {
-                Log.d("LoginActivity.onCreate", "JWT expired")
-                controller!!.token = ""
-            }
 
-        for(controller in repo.allControllers) {
+            Log.d("LoginActivity.onCreate", "selectedController: " + selectedController.name)
+
+            if(selectedController != null && !selectedController.token.isEmpty()) {
+                var userid = JsonWebToken(this).parse(selectedController.token).body.get("id").toString()
+                var user = User(
+                    userid,
+                    username.text.toString(),
+                    password.text.toString(),
+                    selectedController.token
+                )
+                updateUiWithUser(user, selectedController)
+                return
+            }
+        }
+        catch(e: ExpiredJwtException) {
+            Log.d("LoginActivity.onCreate", "JWT expired")
+            controller!!.token = ""
+        }
+
+        for(controller in repository.allControllers) {
             Log.d("LoginActivity.onCreate", "registered controller: " + controller!!.toString())
         }
 
@@ -140,17 +146,18 @@ class LoginActivity : AppCompatActivity() {
 
                 user.id = jws.body.get("id").toString()
 
-                if(controller!!.id == 0) controller!!.id = 1
                 controller!!.secure = if(useSSL.isChecked) 1 else 0
                 controller!!.token = user.token
 
-                var rowsUpdated = MasterControllerRepository(this).updateController(controller!!)
-                if(rowsUpdated != 1) {
-                    Log.e("LoginActivity.loginResult.token", "Unexpected number of rows effected: " + rowsUpdated.toString())
+                var rowsUpdated = repository.updateController(controller!!)
+                if (rowsUpdated != 1) {
+                    Log.e(
+                        "LoginActivity.loginResult.token",
+                        "Unexpected number of rows effected: " + rowsUpdated.toString()
+                    )
                     return@Observer
                 }
-
-                Log.i("LoginActivity.loginResult.token", "Controller successfully authenticated")
+                Log.i("LoginActivity.loginResult.token","Controller successfully authenticated")
 
                 val prefs = getSharedPreferences(GLOBAL_PREFS, Context.MODE_PRIVATE)
                 val editor = prefs.edit()
@@ -220,9 +227,9 @@ class LoginActivity : AppCompatActivity() {
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         intent.putExtra(PREF_KEY_USER_ID, user.id)
         intent.putExtra(PREF_KEY_CONTROLLER_ID, controller!!.id)
-        intent.putExtra(PREF_KEY_CONTROLLER_HOSTNAME, controller!!.hostname)
-        intent.putExtra(PREF_KEY_CONTROLLER_SECURE, controller!!.secure)
-        intent.putExtra(PREF_KEY_JWT, controller!!.token)
+        //intent.putExtra(PREF_KEY_CONTROLLER_HOSTNAME, controller!!.hostname)
+        //intent.putExtra(PREF_KEY_CONTROLLER_SECURE, controller!!.secure)
+        //intent.putExtra(PREF_KEY_JWT, controller!!.token)
         startService(intent)
 
         startActivity(Intent(this, MicroControllerActivity::class.java))

@@ -121,7 +121,9 @@ class MicroControllerRecyclerAdapter(val activity: Activity,
                             }
 
                             override fun onResponse(call: Call, response: okhttp3.Response) {
-                                activity.runOnUiThread(Runnable() { itemView.switchValue.setChecked(newState) })
+                                activity.runOnUiThread(Runnable() {
+                                    itemView.switchValue.setChecked(newState)
+                                })
                             }
                         })
                     }

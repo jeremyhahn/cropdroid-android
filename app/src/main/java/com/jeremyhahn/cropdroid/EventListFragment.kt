@@ -51,10 +51,9 @@ class EventListFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
         val id = activity!!.getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_PRIVATE)
-            .getString(Constants.PREF_KEY_CONTROLLER_ID, "")
-        Log.d("EventListFragment.onCreate", "id is: ".plus(id))
-        controller = MasterControllerRepository(context!!).getController(Integer.parseInt(id))
-
+            .getInt(Constants.PREF_KEY_CONTROLLER_ID, 0)
+        Log.d("EventListFragment.onCreate", "controller_id: " + id.toString())
+        controller = MasterControllerRepository(context!!).getController(id)
 
         var fragmentView = inflater.inflate(R.layout.fragment_events, container, false)
 

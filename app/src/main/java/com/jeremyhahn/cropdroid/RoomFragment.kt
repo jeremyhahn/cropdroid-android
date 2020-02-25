@@ -39,9 +39,11 @@ class RoomFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
         val id = activity!!.getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_PRIVATE)
-            .getString(Constants.PREF_KEY_CONTROLLER_ID, "")
-        Log.d("RoomFragment.onCreate", "id is: ".plus(id))
-        controller = MasterControllerRepository(context!!).getController(Integer.parseInt(id))
+            .getInt(Constants.PREF_KEY_CONTROLLER_ID, 0)
+
+        Log.d("RoomFragment.onCreate", "id is: " + id.toString())
+
+        controller = MasterControllerRepository(context!!).getController(id)
 
         adapter = MicroControllerRecyclerAdapter(activity!!, CropDroidAPI(controller!!), recyclerItems, ControllerType.Room)
 

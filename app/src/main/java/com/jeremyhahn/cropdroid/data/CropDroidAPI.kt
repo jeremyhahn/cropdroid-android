@@ -86,12 +86,13 @@ class CropDroidAPI(val controller: MasterController) {
         Log.d("CropDroidAPI.doGet", "endpoint: " + endpoint)
         Log.d("CropDroidAPI.doGet", "token: " + controller.token)
 
-        val logging = HttpLoggingInterceptor()
-        logging.setLevel(HttpLoggingInterceptor.Level.BASIC)
-        val client = OkHttpClient.Builder()
-            .addInterceptor(logging)
-            .build()
+        //val logging = HttpLoggingInterceptor()
+        //logging.setLevel(HttpLoggingInterceptor.Level.BASIC)
+        //val client = OkHttpClient.Builder()
+            //.addInterceptor(logging)
+          //  .build()
 
+        val client = OkHttpClient()
         var request = Request.Builder()
             .header("Authorization","Bearer " + controller.token)
             .url(endpoint)
