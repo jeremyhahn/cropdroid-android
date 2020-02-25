@@ -1,27 +1,35 @@
 package com.jeremyhahn.cropdroid
 
+import android.app.Activity
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
+import com.jeremyhahn.cropdroid.Constants.Companion.SwitchState
+import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Channel
 import com.jeremyhahn.cropdroid.model.Metric
 import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
 import kotlinx.android.synthetic.main.microcontroller_cardview.view.*
 import kotlinx.android.synthetic.main.microcontroller_switch_cardview.view.*
+import okhttp3.Call
+import okhttp3.Callback
+import java.io.IOException
 
+class MicroControllerRecyclerAdapter(val activity: Activity,
+                                     val cropDroidAPI: CropDroidAPI,
+                                     val recyclerItems: ArrayList<MicroControllerRecyclerModel>,
+                                     controllerType: ControllerType) :
+    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-class MicroControllerRecyclerAdapter(val recyclerItems: ArrayList<MicroControllerRecyclerModel>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    var metricCount: Int = 0
+    val controllerType: ControllerType
 
-    fun clear() {
-        recyclerItems.clear()
-        notifyDataSetChanged()
-    }
-
-    fun addAll(list : List<MicroControllerRecyclerModel>) {
-        recyclerItems.addAll(list)
+    init {
+        this.controllerType = controllerType
     }
 
     class MetricTypeViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -43,7 +51,6 @@ class MicroControllerRecyclerAdapter(val recyclerItems: ArrayList<MicroControlle
     }
 
     class DefaultViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-
         fun bindItems(item: Metric) {
             val title = itemView.findViewById(R.id.title) as TextView
             val value = itemView.findViewById(R.id.value) as TextView
@@ -78,26 +85,61 @@ class MicroControllerRecyclerAdapter(val recyclerItems: ArrayList<MicroControlle
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         //holder.bindItems(recyclerItems[position])
-
+/*
         holder.itemView.setOnClickListener(
             View.OnClickListener
             {
                 Log.i("itemView click event!", "Click-$position")
+                Log.i("itemView click event!", "channelId: " + (channelCount - position).toString())
                 //context.startActivity(Intent(context, MainActivity::class.java))
             })
-
-        Log.d("MicroControllerRecyclerAdapter.onBindViewHolder", "executed")
+*/
 
         val model = recyclerItems.get(position)
         if (model != null) {
             if (model.type == MicroControllerRecyclerModel.CHANNEL_TYPE) {
-                (holder as SwitchTypeViewHolder).itemView.switchId.setText("Channel ".plus(model.channel!!.id))
-                (holder as SwitchTypeViewHolder).itemView.switchValue.setChecked(model.channel!!.state === 1)
+
+                var itemView = (holder as SwitchTypeViewHolder).itemView
+                var state = model.channel!!.state === 1
+                var switchState = if(state) SwitchState.ON else SwitchState.OFF
+
+                itemView.switchId.setText("Channel ".plus(model.channel!!.id))
+                itemView.switchValue.setChecked(state)
+                itemView.switchValue.setOnClickListener(
+                    View.OnClickListener {
+                        var newState = itemView.switchValue.isChecked()
+                        val channelId = position - metricCount + 1
+
+                        Log.d("SwitchTypeViewHolder.onClick", "channel " + channelId)
+
+                        cropDroidAPI.switch(controllerType, channelId, newState, object: Callback {
+
+                            override fun onFailure(call: Call, e: IOException) {
+                                Log.d("MicroControllerRecyclerAdapter.onSwitchState", "onFailure response: " + e!!.message)
+                                itemView.switchValue.setChecked(!newState)
+                                return
+                            }
+
+                            override fun onResponse(call: Call, response: okhttp3.Response) {
+                                activity.runOnUiThread(Runnable() { itemView.switchValue.setChecked(newState) })
+                            }
+                        })
+                    }
+                )
             }
             else {
                 (holder as MetricTypeViewHolder).itemView.title.setText(model.metric!!.title)
                 (holder as MetricTypeViewHolder).itemView.value.setText(model.metric!!.value)
             }
         }
+    }
+
+    fun clear() {
+        recyclerItems.clear()
+        notifyDataSetChanged()
+    }
+
+    fun addAll(list : List<MicroControllerRecyclerModel>) {
+        recyclerItems.addAll(list)
     }
 }

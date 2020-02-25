@@ -1,8 +1,6 @@
 package com.jeremyhahn.cropdroid
 
 import android.content.Context
-import android.content.Context.MODE_PRIVATE
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -13,59 +11,45 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener
-import com.android.volley.DefaultRetryPolicy
-import com.android.volley.Request
-import com.android.volley.RequestQueue
-import com.android.volley.Response
-import com.android.volley.toolbox.StringRequest
-import com.android.volley.toolbox.Volley
-import com.jeremyhahn.cropdroid.model.Channel
-import com.jeremyhahn.cropdroid.model.Metric
-import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
-import com.jeremyhahn.cropdroid.model.Room
+import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
+import com.jeremyhahn.cropdroid.data.CropDroidAPI
+import com.jeremyhahn.cropdroid.db.MasterControllerRepository
+import com.jeremyhahn.cropdroid.model.*
+import kotlinx.android.synthetic.main.fragment_room.*
+import okhttp3.Call
+import okhttp3.Callback
 import org.json.JSONObject
+import java.io.IOException
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.concurrent.schedule
 
-
-/**
- * A simple [Fragment] subclass.
- * Activities that contain this fragment must implement the
- * [RoomFragment.OnFragmentInteractionListener] interface
- * to handle interaction events.
- * Use the [RoomFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class RoomFragment : Fragment() {
 
-    private var param1: String? = null
-    private var listener: OnFragmentInteractionListener? = null
     private var recyclerItems = ArrayList<MicroControllerRecyclerModel>()
-    private var adapter: MicroControllerRecyclerAdapter = MicroControllerRecyclerAdapter(recyclerItems)
+    private var adapter: MicroControllerRecyclerAdapter? = null
     private var swipeContainer: SwipeRefreshLayout? = null
-    private var controllerHostname: String? = null
-    private var scheduleRefresh: Boolean = true
-    private var volley: RequestQueue? = null
-    private val VOLLEY_TAG = "RoomFragment"
     private var refreshTimer: Timer? = null
+    private var controller : MasterController? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(PREF_KEY_CONTROLLER_HOSTNAME)
-        }
-        volley = Volley.newRequestQueue(context)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
+        val id = activity!!.getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_PRIVATE)
+            .getString(Constants.PREF_KEY_CONTROLLER_ID, "")
+        Log.d("RoomFragment.onCreate", "id is: ".plus(id))
+        controller = MasterControllerRepository(context!!).getController(Integer.parseInt(id))
+
+        adapter = MicroControllerRecyclerAdapter(activity!!, CropDroidAPI(controller!!), recyclerItems, ControllerType.Room)
+
         var fragmentView = inflater.inflate(R.layout.fragment_room, container, false)
         var recyclerView = fragmentView.findViewById(R.id.recyclerView) as RecyclerView
 
-        //recyclerView.layoutManager = LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
         recyclerView.layoutManager = LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
-        recyclerView.adapter = adapter
+        recyclerView.adapter = adapter!!
 
         Log.d("RoomFragment.onCreateView", "executed")
 
@@ -73,7 +57,6 @@ class RoomFragment : Fragment() {
         swipeContainer?.setOnRefreshListener(OnRefreshListener {
             getRoomData()
         })
-        // Configure the refreshing colors
         swipeContainer?.setColorSchemeResources(
             R.color.holo_blue_bright,
             R.color.holo_green_light,
@@ -88,81 +71,45 @@ class RoomFragment : Fragment() {
 
         getRoomData()
 
-        //return inflater.inflate(R.layout.fragment_room, container, false)
         return fragmentView
-    }
-
-    // TODO: Rename method, update argument and hook method into UI event
-    fun onButtonPressed(uri: Uri) {
-        listener?.onFragmentInteraction(uri)
     }
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        /*
-        if (context is OnFragmentInteractionListener) {
-            listener = context
-        } else {
-            throw RuntimeException(context.toString() + " must implement OnFragmentInteractionListener")
-        }*/
     }
 
     override fun onDestroyView() {
         Log.d("RoomFragment.onDestroyView()", "called")
         super.onDestroyView()
-        //volley!!.cancelAll(VOLLEY_TAG)
         refreshTimer!!.cancel()
         refreshTimer!!.purge()
     }
 
     override fun onDetach() {
         super.onDetach()
-        listener = null
-    }
-
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     *
-     *
-     * See the Android Training lesson [Communicating with Other Fragments]
-     * (http://developer.android.com/training/basics/fragments/communicating.html)
-     * for more information.
-     */
-    interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        fun onFragmentInteraction(uri: Uri)
-    }
-
-    companion object {
-        @JvmStatic
-        fun newInstance(param1: String) =
-            RoomFragment().apply {
-                arguments = Bundle().apply {
-                    putString(PREF_KEY_CONTROLLER_HOSTNAME, param1)
-                }
-            }
     }
 
     fun getRoomData() {
 
-        var volley = Volley.newRequestQueue(context)
-        val prefs = context!!.getSharedPreferences(GLOBAL_PREFS, MODE_PRIVATE)
-        val controller = prefs.getString(PREF_KEY_CONTROLLER_HOSTNAME, "undefined")
+        CropDroidAPI(controller!!).roomStatus(object : Callback {
 
-        val url = "http://".plus(controller).plus("/room")
-        Log.d("RoomFragment url:", url)
+            override fun onFailure(call: Call, e: IOException) {
+                Log.d("RoomFragment.getRoomData()", "onFailure response: " + e!!.message)
+                return
+            }
 
-        val roomRequest = StringRequest(
-            Request.Method.GET, url,
-            Response.Listener<String> { response ->
+            override fun onResponse(call: Call, response: okhttp3.Response) {
+
+                var responseBody = response.body().string()
+
+                Log.d("RoomFragment.getRoomData", "responseBody: " + responseBody)
+                if(response.code() != 200) {
+                    return
+                }
 
                 recyclerItems.clear()
 
-                var response = response.toString()
-                val json = JSONObject(response)
+                val json = JSONObject(responseBody)
                 var room = Room(json.getInt("mem"),
                     json.getDouble("tempF0"),json.getDouble("tempC0"),json.getDouble("humidity0"),json.getDouble("heatIndex0"),
                     json.getDouble("tempF1"),json.getDouble("tempC1"),json.getDouble("humidity1"), json.getDouble("heatIndex1"),
@@ -198,7 +145,7 @@ class RoomFragment : Fragment() {
                     MicroControllerRecyclerModel(
                         MicroControllerRecyclerModel.METRIC_TYPE,
                         Metric("Relative Humidity (Sensor 2)", room.humidity1.toString()),
-                    null))
+                        null))
 
 
                 recyclerItems.add(
@@ -267,6 +214,8 @@ class RoomFragment : Fragment() {
                         Metric("Lights", if (room.photo > 0) "On" else "Off"),
                         null))
 
+                adapter!!.metricCount = recyclerItems.size
+
                 val jsonChannels = json.getJSONObject("channels")
                 for(i in 0..jsonChannels.length()-1) {
                     val v = jsonChannels.getInt(i.toString())
@@ -277,14 +226,12 @@ class RoomFragment : Fragment() {
                             Channel(i, v)))
                 }
 
-                adapter.notifyDataSetChanged()
-                swipeContainer?.setRefreshing(false)
+                activity!!.runOnUiThread(Runnable() {
+                    adapter!!.notifyDataSetChanged()
+                    swipeContainer?.setRefreshing(false)
+                })
+            }
+        })
 
-                Log.d("room model", room.toString())
-            },
-            Response.ErrorListener { Log.d( "error", "Failed to retrieve room data from master controller!" )})
-        roomRequest.setTag(VOLLEY_TAG)
-        roomRequest.setRetryPolicy(DefaultRetryPolicy(20 * 1000, API_CONNECTION_UNAVAILABLE_RETRY_COUNT, API_CONNECTION_UNAVAILABLE_RETRY_BACKOFF))
-        volley!!.add(roomRequest)
     }
 }

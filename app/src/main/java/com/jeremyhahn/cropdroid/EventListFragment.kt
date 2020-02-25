@@ -9,17 +9,22 @@ import android.view.View
 import android.view.View.GONE
 import android.view.ViewGroup
 import android.widget.ProgressBar
+import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.android.volley.Request
-import com.android.volley.Response
-import com.android.volley.toolbox.StringRequest
-import com.android.volley.toolbox.Volley
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.jeremyhahn.cropdroid.Constants.Companion.GLOBAL_PREFS
+import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_CONTROLLER_ID
+import com.jeremyhahn.cropdroid.data.CropDroidAPI
+import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.EventLog
 import com.jeremyhahn.cropdroid.model.EventsPage
-import androidx.fragment.app.Fragment
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.jeremyhahn.cropdroid.model.MasterController
+import okhttp3.Call
+import okhttp3.Callback
 import org.json.JSONObject
+import java.io.IOException
 
 class EventListFragment : Fragment() {
 
@@ -37,11 +42,19 @@ class EventListFragment : Fragment() {
     private var TOTAL_PAGES : Int = 10
     private var currentPage = PAGE_START
 
+    private var controller : MasterController? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+
+        val id = activity!!.getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_PRIVATE)
+            .getString(Constants.PREF_KEY_CONTROLLER_ID, "")
+        Log.d("EventListFragment.onCreate", "id is: ".plus(id))
+        controller = MasterControllerRepository(context!!).getController(Integer.parseInt(id))
+
 
         var fragmentView = inflater.inflate(R.layout.fragment_events, container, false)
 
@@ -52,7 +65,7 @@ class EventListFragment : Fragment() {
         rv = fragmentView.findViewById<View>(R.id.eventsRecycler) as RecyclerView
         rv!!.setHasFixedSize(true)
         rv!!.layoutManager = linearLayoutManager
-        //rv!!.itemAnimator = DefaultItemAnimator()
+        rv!!.itemAnimator = DefaultItemAnimator()
         rv!!.adapter = adapterEventListRecycler
         rv!!.addOnScrollListener(object : EventListScrollListener(linearLayoutManager!!) {
 
@@ -87,41 +100,38 @@ class EventListFragment : Fragment() {
             R.color.holo_red_light
         )
 
-        Handler().post(Runnable {loadFirstPage()})
-        //loadFirstPage()
+        //Handler().post(Runnable {loadFirstPage()})
+        loadFirstPage()
 
         return fragmentView
     }
 
     fun getEventsPage(page : Int) {
 
-        /*
-        Log.d("getEventsPage", "getting events")
-        Log.d("EventListFragment.currentPage", currentPage.toString())
-        Log.d("EventListFragment.PAGE_START", PAGE_START.toString())
-        Log.d("EventListFragment.isLastPage", isLastPage.toString())
-        Log.d("EventListFragment.isLoading", isLoading.toString())
-         */
-
         if(currentPage != PAGE_START) {
             adapterEventListRecycler!!.addLoadingFooter()
         }
 
-        val queue = Volley.newRequestQueue(context!!)
-        val prefs = activity!!.getSharedPreferences(GLOBAL_PREFS, Context.MODE_PRIVATE)
-        val controller = prefs.getString(PREF_KEY_CONTROLLER_HOSTNAME, "undefined")
+        CropDroidAPI(controller!!).eventsList(page.toString(), object : Callback {
 
-        val url = "http://".plus(controller).plus("/events/${page}")
-        Log.d("EventListFragment url", url)
+            override fun onFailure(call: Call, e: IOException) {
+                Log.d("EventListFragment.getEventsPage()", "onFailure response: " + e!!.message)
+                return
+            }
 
-        val eventsRequest = StringRequest(
-            Request.Method.GET, url,
-            Response.Listener<String> { response ->
+            override fun onResponse(call: Call, response: okhttp3.Response) {
+
+                var responseBody = response.body().string()
+
+                Log.d("EventListFragment.getEvemtsPage", "responseBody: " + responseBody)
+                if(response.code() != 200) {
+                    return
+                }
 
                 var events = ArrayList<EventLog>()
                 var eventsPage: EventsPage? = null
-                var response = response.toString()
-                val json = JSONObject(response)
+
+                val json = JSONObject(responseBody)
                 val jsonArray = json.getJSONArray("events")
 
                 for (i in 0 until jsonArray.length()) {
@@ -143,31 +153,26 @@ class EventListFragment : Fragment() {
 
                 TOTAL_PAGES = eventsPage.count / eventsPage.size
 
-                //cards.clear()
-                //cards.add(Metric("Water Temp", reservoir.waterTemp.toString()))
+                activity!!.runOnUiThread(Runnable() {
 
-                progressBar!!.visibility = GONE
-                isLoading = false
-                if(currentPage != PAGE_START) {
-                    adapterEventListRecycler!!.removeLoadingFooter()
-                }
+                    progressBar!!.visibility = GONE
+                    isLoading = false
 
-                adapterEventListRecycler!!.addAll(eventsPage.events)
-                adapterEventListRecycler!!.notifyDataSetChanged()
+                    if(currentPage != PAGE_START) {
+                        adapterEventListRecycler!!.removeLoadingFooter()
+                    }
 
-                //Log.d("EventListFragment.currentPage", currentPage.toString())
-                //Log.d("TOTAL_PAGES", TOTAL_PAGES.toString())
+                    adapterEventListRecycler!!.addAll(eventsPage.events)
+                    adapterEventListRecycler!!.notifyDataSetChanged()
 
-                if(currentPage >= TOTAL_PAGES) {
-                    isLastPage = true
-                }
+                    if(currentPage >= TOTAL_PAGES) {
+                        isLastPage = true
+                    }
 
-                swipeContainer?.setRefreshing(false)
-
-                Log.d("events page model", eventsPage.toString())
-            },
-            Response.ErrorListener { Log.d( "error", "Failed to retrieve event data from master controller!" )})
-        queue.add(eventsRequest)
+                    swipeContainer?.setRefreshing(false)
+                })
+            }
+        })
     }
 
     private fun loadFirstPage() {

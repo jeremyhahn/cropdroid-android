@@ -10,6 +10,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.jeremyhahn.cropdroid.Constants.Companion.GLOBAL_PREFS
+import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_CONTROLLER_HOSTNAME
 import com.jeremyhahn.cropdroid.MasterControllerRecyclerAdapter.OnMasterListener
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.MasterController
@@ -62,7 +64,7 @@ class MasterControllerListActivity : AppCompatActivity(), OnMasterListener {
 
         var selected = controllers.get(position)
         var intent = Intent(this, LoginActivity::class.java)
-        intent.putExtra("controller_id", selected.id.toString())
+        intent.putExtra("controller_id", selected.id)
         intent.putExtra("controller_name", selected.name)
         intent.putExtra("controller_hostname", selected.hostname)
         startActivity(intent)

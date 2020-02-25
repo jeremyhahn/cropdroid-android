@@ -2,24 +2,19 @@ package com.jeremyhahn.cropdroid.service
 
 import android.R
 import android.app.NotificationChannel
-import android.app.NotificationChannelGroup
 import android.app.NotificationManager
-import android.app.NotificationManager.IMPORTANCE_DEFAULT
 import android.app.Service
-import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
-import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import com.jeremyhahn.cropdroid.model.Notification
 import okhttp3.*
 import okio.ByteString
 import org.json.JSONObject
+import java.lang.Thread.sleep
 import java.time.ZonedDateTime
 
 // https://stackoverflow.com/questions/7690350/android-start-service-on-boot
@@ -27,8 +22,6 @@ class NotificationService : Service() {
 
     val CHANNEL_ID = "CROPDROID_NOTIFICATIONS"
     val GROUP_KEY = "CropDroid"
-
-    val client = OkHttpClient()
 
     var userId : String? = null
     var controllerId : Int? = null
@@ -65,14 +58,7 @@ class NotificationService : Service() {
             Log.d("NotificationService.onStartCommand", "hostname: $hostname")
             Log.d("NotificationService.onStartCommand", "bearer token: $jwt")
 
-            val request = Request.Builder()
-                .url("ws://".plus(hostname).plus("/api/v1/notification"))
-                .addHeader("Authorization", "Bearer " + jwt)
-                .build()
-            val listener = NotificationWebSocketListener()
-            websocket = client!!.newWebSocket(request, listener)
-            client!!.dispatcher().executorService().shutdown()
-            client!!.retryOnConnectionFailure()
+            createWebsocket()
 
             Toast.makeText(
                 applicationContext,
@@ -84,6 +70,18 @@ class NotificationService : Service() {
         }
         stopSelf()
         return START_STICKY_COMPATIBILITY
+    }
+
+    fun createWebsocket() {
+        val client = OkHttpClient()
+        val request = Request.Builder()
+            .url("ws://".plus(hostname).plus("/api/v1/notification"))
+            .addHeader("Authorization", "Bearer " + jwt)
+            .build()
+        val listener = NotificationWebSocketListener()
+        websocket = client!!.newWebSocket(request, listener)
+        client!!.dispatcher().executorService().shutdown()
+        client!!.retryOnConnectionFailure()
     }
 
     fun createNotification(notification: Notification) {
@@ -106,13 +104,13 @@ class NotificationService : Service() {
                 .setGroupSummary(true)
                 .setContentTitle("CropDroid")
                 .setContentText("You have unread messages")
-                .setSmallIcon(R.mipmap.sym_def_app_icon)
+                .setSmallIcon(R.drawable.ic_dialog_info)
 
         val newNotification =
             android.app.Notification.Builder(this, "channel_id")
                 .setContentTitle(notification.type)
                 .setContentText(notification.message)
-                .setSmallIcon(R.mipmap.sym_def_app_icon)
+                .setSmallIcon(R.drawable.ic_dialog_info)
                 .setGroupSummary(false)
                 .setGroup(GROUP_KEY)
 
@@ -123,6 +121,7 @@ class NotificationService : Service() {
     inner class NotificationWebSocketListener : WebSocketListener() {
 
         override fun onOpen(webSocket: WebSocket, response: Response) {
+            createNotification(Notification("Android", "Notifications", "Listening for new messages", ZonedDateTime.now().toString()))
             webSocket.send("{\"Id\":$userId}")
             //webSocket.send(ByteString.decodeHex("deadbeef"))
             //webSocket.close(Companion.NORMAL_CLOSURE_STATUS, "Goodbye !")
@@ -148,14 +147,16 @@ class NotificationService : Service() {
             webSocket.close(NotificationService.NORMAL_CLOSURE_STATUS, null)
             Log.d("NotificationService.onClosing", "$code / $reason")
 
-            createNotification(Notification("Android", "WebSocket", "Socket closed!", ZonedDateTime.now().toString()))
+            createNotification(Notification("Android", "Notifications", "Socket closed!", ZonedDateTime.now().toString()))
         }
 
         override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
             Log.d("NotificationService.onFailure", response.toString())
             t.printStackTrace()
 
-            createNotification(Notification("Android", "WebSocket", "Socket failed!", ZonedDateTime.now().toString()))
+            createNotification(Notification("Android", "Notifications", "Disconnected from server", ZonedDateTime.now().toString()))
+            sleep(60000)
+            createWebsocket()
         }
     }
 }

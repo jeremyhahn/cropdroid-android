@@ -35,9 +35,9 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
-    implementation 'com.android.volley:volley:1.1.1'
     implementation 'androidx.work:work-runtime:2.3.1'
     implementation 'com.squareup.okhttp3:okhttp:3.6.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:3.6.0'
     api 'io.jsonwebtoken:jjwt-api:0.11.0'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.0'
     runtimeOnly('io.jsonwebtoken:jjwt-orgjson:0.11.0') {
@@ -46,5 +46,9 @@ dependencies {
     //runtimeOnly 'org.bouncycastle:bcprov-jdk15on:1.60'
     implementation 'org.bouncycastle:bcprov-jdk15on:1.60'
 
-    compile group: 'commons-io', name: 'commons-io', version: '2.0.1'
+    implementation group: 'commons-io', name: 'commons-io', version: '2.4'
+
+
+    //implementation("com.squareup.okhttp3:okhttp:4.4.0")
+    //implementation("com.squareup.okhttp3:logging-interceptor:4.4.0")
 }

@@ -4,7 +4,7 @@
     <string name="room_fragment">Room</string>
     <string name="reservoir_fragment">Reservoir</string>
     <string name="doser_fragment">Doser</string>
-    <string name="title_activity_masters">Edge Devices</string>
+    <string name="title_activity_masters">Grow Spaces</string>
     <string name="title_activity_microcontrollers">Controllers</string>
     <string name="prompt_name">Name</string>
     <string name="prompt_hostname">Hostname</string>
