@@ -3,10 +3,8 @@ package com.jeremyhahn.cropdroid.data
 import android.util.Log
 import com.jeremyhahn.cropdroid.Constants.Companion.API_BASE
 import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
-import com.jeremyhahn.cropdroid.Constants.Companion.SwitchState
 import com.jeremyhahn.cropdroid.model.MasterController
 import okhttp3.*
-import okhttp3.logging.HttpLoggingInterceptor
 import org.json.JSONObject
 import java.io.IOException
 

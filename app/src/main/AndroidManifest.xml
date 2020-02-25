@@ -17,7 +17,8 @@
         <service
             android:name=".service.NotificationService"
             android:enabled="true"
-            android:exported="true"/>
+            android:exported="true"
+            android:launchMode="singleTop"/>
 
         <activity
             android:name=".MainActivity"

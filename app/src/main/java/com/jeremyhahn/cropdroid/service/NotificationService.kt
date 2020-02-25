@@ -1,6 +1,5 @@
 package com.jeremyhahn.cropdroid.service
 
-import android.R
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
@@ -11,6 +10,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import com.jeremyhahn.cropdroid.Constants.Companion.API_BASE
+import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.MasterController
 import com.jeremyhahn.cropdroid.model.Notification
@@ -23,7 +23,7 @@ import java.time.ZonedDateTime
 // https://stackoverflow.com/questions/7690350/android-start-service-on-boot
 class NotificationService : Service() {
 
-    val CONNECTION_FAILED_DELAY = 60000L
+    val CONNECTION_FAILED_DELAY = 60000L  // one minute
 
     var binder : IBinder? = null
     var userId : String = ""
@@ -73,16 +73,16 @@ class NotificationService : Service() {
             .addHeader("Authorization", "Bearer " + controller.token)
             .build()
         val listener = NotificationWebSocketListener()
-        websockets[controller] = client!!.newWebSocket(request, listener)
-        client!!.dispatcher().executorService().shutdown()
-        client!!.retryOnConnectionFailure()
+        websockets[controller] = client.newWebSocket(request, listener)
+        client.dispatcher().executorService().shutdown()
+        client.retryOnConnectionFailure()
 
         Log.d("NotificationService.createWebsocket", "Created WebSocket " + websockets[controller].hashCode() + " for " + controller.name)
     }
 
     fun createNotification(notification: Notification) {
 
-        //We need to update the bundle notification every time a new notification comes up.
+        // Update the bundle notification every time a new notification comes up.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (notificationManager!!.notificationChannels.size < 2) {
 
@@ -96,17 +96,18 @@ class NotificationService : Service() {
 
         summaryNotificationBuilder =
             NotificationCompat.Builder(this, "bundle_channel_id")
+                //.setOngoing(true)
                 .setGroup(notification.controller)
                 .setGroupSummary(true)
                 .setContentTitle(notification.controller)
-                .setContentText("You have unread messages")
-                .setSmallIcon(R.mipmap.sym_def_app_icon)
+                .setContentText("Notifications")
+                .setSmallIcon(R.drawable.ic_cropdroid_logo)
 
         val newNotification =
             android.app.Notification.Builder(this, "channel_id")
                 .setContentTitle(notification.controller)
                 .setContentText(notification.message)
-                .setSmallIcon(R.drawable.sym_def_app_icon)
+                .setSmallIcon(R.drawable.ic_cropdroid_logo)
                 .setGroupSummary(false)
                 .setGroup(notification.controller)
 
@@ -120,7 +121,7 @@ class NotificationService : Service() {
             var controller = getControllerByWebSocket(webSocket)
             if(controller != null) {
                 webSocket.send("{\"Id\":$userId}")
-                createNotification(Notification(controller.name, controller.name, "Listening for new messages", ZonedDateTime.now().toString()))
+                createNotification(Notification(controller.name, controller.name, "Listening for new notifications", ZonedDateTime.now().toString()))
                 return
             }
             //webSocket.send(ByteString.decodeHex("deadbeef"))

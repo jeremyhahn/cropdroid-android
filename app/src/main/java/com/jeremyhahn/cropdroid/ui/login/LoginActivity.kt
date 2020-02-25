@@ -226,10 +226,6 @@ class LoginActivity : AppCompatActivity() {
         var intent = Intent(this, NotificationService::class.java)
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         intent.putExtra(PREF_KEY_USER_ID, user.id)
-        intent.putExtra(PREF_KEY_CONTROLLER_ID, controller!!.id)
-        //intent.putExtra(PREF_KEY_CONTROLLER_HOSTNAME, controller!!.hostname)
-        //intent.putExtra(PREF_KEY_CONTROLLER_SECURE, controller!!.secure)
-        //intent.putExtra(PREF_KEY_JWT, controller!!.token)
         startService(intent)
 
         startActivity(Intent(this, MicroControllerActivity::class.java))
