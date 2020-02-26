@@ -22,4 +22,8 @@
     <string name="title_activity_websocket">WebSocket Notifications</string>
     <string name="jwt_signing_public_key_asset">rsa.pub.der</string>
     <string name="action_logout">Logout</string>
+    <string name="action_quit">Quit</string>
+    <string name="action_quit_dialog">Are you sure? You will not receive anymore notifications.</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_yes">Yes</string>
 </resources>

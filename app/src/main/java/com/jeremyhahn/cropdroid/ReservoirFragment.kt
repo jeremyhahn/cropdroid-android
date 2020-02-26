@@ -20,7 +20,6 @@ import org.json.JSONObject
 import java.io.IOException
 import java.util.*
 import kotlin.collections.ArrayList
-import kotlin.concurrent.schedule
 import kotlin.concurrent.timerTask
 
 class ReservoirFragment : Fragment() {

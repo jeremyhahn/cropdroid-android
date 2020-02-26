@@ -15,6 +15,8 @@ class Constants {
         const val API_BASE = "/api/".plus(API_VERSION)
         const val API_CONNECTION_UNAVAILABLE_RETRY_COUNT = 100000000
         const val API_CONNECTION_UNAVAILABLE_RETRY_BACKOFF = 1.0f
+        const val STOP_SERVICE_ACTION = "STOP_SERVICE"
+        const val QUIT_APPLICATION_ACTION = "EXIT_APP"
 
         enum class SwitchState {
             ON,

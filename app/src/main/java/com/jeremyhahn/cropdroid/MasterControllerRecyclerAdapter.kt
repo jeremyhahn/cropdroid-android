@@ -3,10 +3,8 @@ package com.jeremyhahn.cropdroid
 import android.app.AlertDialog
 import android.content.Context
 import android.content.DialogInterface
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
-import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
@@ -28,13 +26,11 @@ class MasterControllerRecyclerAdapter(val controllers: ArrayList<MasterControlle
         notifyDataSetChanged()
     }
 
-    //this method is returning the view for each item in the list
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MasterControllerRecyclerAdapter.ViewHolder {
         val v = LayoutInflater.from(parent.context).inflate(R.layout.master_cardview, parent, false)
         return ViewHolder(v, onMasterListener)
     }
 
-    //this method is binding the data on the list
     override fun onBindViewHolder(holder: MasterControllerRecyclerAdapter.ViewHolder, position: Int) {
         holder.bindItems(controllers[position])
 

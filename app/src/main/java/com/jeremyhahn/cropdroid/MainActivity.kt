@@ -8,7 +8,9 @@ import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.work.*
+import com.jeremyhahn.cropdroid.Constants.Companion.QUIT_APPLICATION_ACTION
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
+import com.jeremyhahn.cropdroid.service.NotificationService
 import com.jeremyhahn.cropdroid.worker.SyncWorker
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.concurrent.TimeUnit
@@ -61,6 +63,16 @@ class MainActivity : AppCompatActivity() {
         })
         WorkManager.getInstance().cancelWorkById(workRequest.getId());
 */
+
+        if(intent.getBooleanExtra(QUIT_APPLICATION_ACTION, false)) {
+            finish();
+            return
+        }
+
+        var intent = Intent(this, NotificationService::class.java)
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        //startService(intent)
+        startForegroundService(intent)
 
         startActivity(Intent(this, MasterControllerListActivity::class.java))
     }

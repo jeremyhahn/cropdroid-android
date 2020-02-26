@@ -51,6 +51,7 @@ class LoginActivity : AppCompatActivity() {
             intent.getStringExtra("controller_name"),
             intent.getStringExtra("controller_hostname"),
             0,
+            0,
             "")
 
         Log.d("LoginActivity.onCreate", "controller_id: " + controller!!.id.toString())
@@ -147,6 +148,7 @@ class LoginActivity : AppCompatActivity() {
                 user.id = jws.body.get("id").toString()
 
                 controller!!.secure = if(useSSL.isChecked) 1 else 0
+                controller!!.userid = Integer.parseInt(user.id)
                 controller!!.token = user.token
 
                 var rowsUpdated = repository.updateController(controller!!)
@@ -220,23 +222,22 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun updateUiWithUser(user: User, controller: MasterController = this.controller!!) {
-        val welcome = getString(R.string.welcome)
-        val displayName = user.username
+        //val welcome = getString(R.string.welcome)
+        //val displayName = user.username
 
         var intent = Intent(this, NotificationService::class.java)
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        //intent.putExtra(PREF_KEY_CONTROLLER_ID, controller.id)
-        //intent.putExtra(PREF_KEY_USER_ID, user.id)
-        startService(intent)
-        //startForegroundService(intent)
+        //startService(intent)
+        startForegroundService(intent)
 
         startActivity(Intent(this, MicroControllerActivity::class.java))
 
+        /*
         Toast.makeText(
             applicationContext,
             "$welcome $displayName",
             Toast.LENGTH_LONG
-        ).show()
+        ).show()*/
     }
 
     private fun showLoginFailed(@StringRes errorString: Int) {

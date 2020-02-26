@@ -7,14 +7,12 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager.widget.ViewPager
 import com.google.android.material.tabs.TabLayout
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.MasterController
 import kotlinx.android.synthetic.main.activity_main.*
-
 
 class MicroControllerActivity: AppCompatActivity() {
 
@@ -75,6 +73,7 @@ class MicroControllerActivity: AppCompatActivity() {
     }
 
     override fun onSupportNavigateUp(): Boolean {
+        finish()
         startActivity(Intent(this, MasterControllerListActivity::class.java))
         return true
     }

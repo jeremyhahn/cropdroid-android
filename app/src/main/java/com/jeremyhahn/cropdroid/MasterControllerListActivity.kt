@@ -1,9 +1,14 @@
 package com.jeremyhahn.cropdroid
 
+import android.app.AlertDialog
+import android.app.Dialog
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -11,14 +16,14 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.jeremyhahn.cropdroid.Constants.Companion.GLOBAL_PREFS
-import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_CONTROLLER_HOSTNAME
 import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_CONTROLLER_ID
 import com.jeremyhahn.cropdroid.MasterControllerRecyclerAdapter.OnMasterListener
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.MasterController
+import com.jeremyhahn.cropdroid.service.NotificationService
 import com.jeremyhahn.cropdroid.ui.login.LoginActivity
-
 import kotlinx.android.synthetic.main.activity_masters.*
+
 
 class MasterControllerListActivity : AppCompatActivity(), OnMasterListener {
 
@@ -97,4 +102,47 @@ class MasterControllerListActivity : AppCompatActivity(), OnMasterListener {
         swipeContainer?.setRefreshing(false)
     }
 
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        menuInflater.inflate(R.menu.menu_master_controller_list, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        return when (item.itemId) {
+            R.id.action_quit -> {
+                createQuitDialog().show()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    fun createQuitDialog(): Dialog {
+        return let {
+            val builder = AlertDialog.Builder(it)
+            builder.setMessage(R.string.action_quit_dialog).setPositiveButton(R.string.action_yes,
+                DialogInterface.OnClickListener { dialog, id ->
+                    // Stop notification service
+                    var intent = Intent(this, NotificationService::class.java)
+                    intent.action = Constants.STOP_SERVICE_ACTION
+                    startService(intent)
+
+                    // Kill the app
+                    finish()
+                    val intent2 = Intent(applicationContext, MainActivity::class.java)
+                    intent2.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    intent2.putExtra(Constants.QUIT_APPLICATION_ACTION, true)
+                    startActivity(intent2)
+                })
+            .setNegativeButton(R.string.action_cancel,
+                DialogInterface.OnClickListener { dialog, id ->
+                    Log.d("createQuitDialog", "cancel pressed")
+                })
+            builder.create()
+        } ?: throw IllegalStateException("Activity cannot be null")
+    }
 }

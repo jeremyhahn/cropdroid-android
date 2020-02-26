@@ -10,6 +10,6 @@ class StartupReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         Log.i("StartupReceiver.onReceive", "Restarting notification service")
         //context.startService(Intent(context, NotificationService::class.java))
-        context.startForegroundService(intent)
+        context.startForegroundService(Intent(context, NotificationService::class.java))
     }
 }

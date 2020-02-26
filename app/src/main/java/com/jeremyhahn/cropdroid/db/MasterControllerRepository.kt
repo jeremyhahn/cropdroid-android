@@ -8,12 +8,13 @@ import android.database.sqlite.SQLiteOpenHelper
 import com.jeremyhahn.cropdroid.Constants.Companion.DATABASE_NAME
 import com.jeremyhahn.cropdroid.model.MasterController
 
-private const val DATABASE_VERSION = 3
+private const val DATABASE_VERSION = 4
 private const val TABLE_MASTER_CONTROLLERS = "master_controllers"
 private const val KEY_ID = "id"
 private const val KEY_NAME = "name"
 private const val KEY_HOSTNAME = "hostname"
 private const val KEY_SECURE = "secure"
+private const val KEY_USERID = "userid"
 private const val KEY_TOKEN = "token"
 
 class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
@@ -32,6 +33,7 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
                     + KEY_NAME + " TEXT,"
                     + KEY_HOSTNAME + " TEXT" + ","
                     + KEY_SECURE + " INT" + ","
+                    + KEY_USERID + " INT" + ","
                     + KEY_TOKEN + " TEXT)")
         db.execSQL(createMasterControllerTableSql)
     }
@@ -70,6 +72,7 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
         values.put(KEY_NAME, controller.name)
         values.put(KEY_HOSTNAME, controller.hostname)
         values.put(KEY_SECURE, controller.secure)
+        values.put(KEY_USERID, controller.userid)
         values.put(KEY_TOKEN, controller.token)
         db.insert(TABLE_MASTER_CONTROLLERS, null, values)
         controller.id = getLastInsertedId(db)
@@ -86,6 +89,7 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
                 KEY_NAME,
                 KEY_HOSTNAME,
                 KEY_SECURE,
+                KEY_USERID,
                 KEY_TOKEN
             ),
             "$KEY_ID=?",
@@ -101,7 +105,8 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
             cursor.getString(1),
             cursor.getString(2),
             cursor.getInt(3),
-            cursor.getString(4)
+            cursor.getInt(4),
+            cursor.getString(5)
         )
         db.close()
         return controller
@@ -117,6 +122,7 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
                 KEY_NAME,
                 KEY_HOSTNAME,
                 KEY_SECURE,
+                KEY_USERID,
                 KEY_TOKEN
             ),
             "$KEY_HOSTNAME=?",
@@ -133,7 +139,8 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
                 cursor.getString(1),
                 cursor.getString(2),
                 cursor.getInt(3),
-                cursor.getString(4)
+                cursor.getInt(4),
+                cursor.getString(5)
             )
         }
         db.close()
@@ -153,7 +160,8 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
                         cursor.getString(1),
                         cursor.getString(2),
                         cursor.getInt(3),
-                        cursor.getString(4)
+                        cursor.getInt(4),
+                        cursor.getString(5)
                     ))
                 } while (cursor.moveToNext())
             }
@@ -167,6 +175,7 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
         values.put(KEY_NAME, controller.name)
         values.put(KEY_HOSTNAME, controller.hostname)
         values.put(KEY_SECURE, controller.secure)
+        values.put(KEY_USERID, controller.userid)
         values.put(KEY_TOKEN, controller.token)
         var response = db.update(
             TABLE_MASTER_CONTROLLERS,

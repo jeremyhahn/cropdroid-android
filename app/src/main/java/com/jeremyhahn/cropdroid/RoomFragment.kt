@@ -15,14 +15,12 @@ import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.*
-import kotlinx.android.synthetic.main.fragment_room.*
 import okhttp3.Call
 import okhttp3.Callback
 import org.json.JSONObject
 import java.io.IOException
 import java.util.*
 import kotlin.collections.ArrayList
-import kotlin.concurrent.schedule
 import kotlin.concurrent.timerTask
 
 class RoomFragment : Fragment() {

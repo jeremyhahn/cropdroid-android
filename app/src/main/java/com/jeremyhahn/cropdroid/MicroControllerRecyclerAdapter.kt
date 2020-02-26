@@ -21,10 +21,8 @@ import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
 
-class MicroControllerRecyclerAdapter(val activity: Activity,
-                                     val cropDroidAPI: CropDroidAPI,
-                                     val recyclerItems: ArrayList<MicroControllerRecyclerModel>,
-                                     controllerType: ControllerType) :
+class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: CropDroidAPI,
+           val recyclerItems: ArrayList<MicroControllerRecyclerModel>, controllerType: ControllerType) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     var metricCount: Int = 0
