@@ -1,16 +1,18 @@
 package com.jeremyhahn.cropdroid.service
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.Service
+import android.app.*
+import android.app.AlarmManager.ELAPSED_REALTIME
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
+import android.os.SystemClock
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
-import com.jeremyhahn.cropdroid.Constants.Companion.API_BASE
 import com.jeremyhahn.cropdroid.R
+import com.jeremyhahn.cropdroid.Constants
+import com.jeremyhahn.cropdroid.Constants.Companion.API_BASE
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.MasterController
 import com.jeremyhahn.cropdroid.model.Notification
@@ -19,6 +21,7 @@ import okio.ByteString
 import org.json.JSONObject
 import java.lang.Thread.sleep
 import java.time.ZonedDateTime
+
 
 // https://stackoverflow.com/questions/7690350/android-start-service-on-boot
 class NotificationService : Service() {
@@ -40,9 +43,20 @@ class NotificationService : Service() {
         return binder!!
     }
 
+    override fun onTaskRemoved(rootIntent : Intent) {
+        var restartService = Intent(getApplicationContext(), NotificationService::class.java)
+        restartService.setPackage(getPackageName())
+        var restartServicePI = PendingIntent.getService(getApplicationContext(), 1, restartService, PendingIntent.FLAG_ONE_SHOT)
+        var alarmService = getApplicationContext().getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        alarmService.set(ELAPSED_REALTIME, SystemClock.elapsedRealtime() + 100, restartServicePI)
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
-        userId = intent!!.getStringExtra("user_id")
+        Log.d("NotificationService.onStartCommand", "Starting service")
+
+        userId = getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_PRIVATE)
+            .getString(Constants.PREF_KEY_USER_ID, "undefined")
 
         notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
@@ -61,8 +75,13 @@ class NotificationService : Service() {
 
         Log.d("NotificationService", "Connection count: " + controllers.size.toString())
 
-        super.onStartCommand(intent, flags, startId)
+        //super.onStartCommand(intent, flags, startId)
         return START_STICKY
+    }
+
+    override fun onDestroy() {
+        Log.d("NotificationService.onDestroy", "Starting new NotificationService intent")
+        sendBroadcast(Intent(this, NotificationService::class.java))
     }
 
     fun createWebsocket(controller: MasterController) {
@@ -87,9 +106,11 @@ class NotificationService : Service() {
             if (notificationManager!!.notificationChannels.size < 2) {
 
                 val groupChannel = NotificationChannel("bundle_channel_id", "bundle_channel_name", NotificationManager.IMPORTANCE_LOW)
+                groupChannel.setShowBadge(true)
                 notificationManager!!.createNotificationChannel(groupChannel)
 
                 val channel = NotificationChannel("channel_id", "channel_name", NotificationManager.IMPORTANCE_DEFAULT)
+                channel.setShowBadge(true)
                 notificationManager!!.createNotificationChannel(channel)
             }
         }
@@ -100,7 +121,7 @@ class NotificationService : Service() {
                 .setGroup(notification.controller)
                 .setGroupSummary(true)
                 .setContentTitle(notification.controller)
-                .setContentText("Notifications")
+                .setContentText("You have unread messages")
                 .setSmallIcon(R.drawable.ic_cropdroid_logo)
 
         val newNotification =

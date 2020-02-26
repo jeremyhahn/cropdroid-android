@@ -21,6 +21,7 @@ import java.io.IOException
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.concurrent.schedule
+import kotlin.concurrent.timerTask
 
 class ReservoirFragment : Fragment() {
 
@@ -31,16 +32,12 @@ class ReservoirFragment : Fragment() {
     private var refreshTimer: Timer? = null
     private var controller : MasterController? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
-
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
         val id = activity!!.getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_PRIVATE)
             .getInt(Constants.PREF_KEY_CONTROLLER_ID, 0)
 
-        Log.d("ReservoirFragment.onCreate", "id is: " + id.toString())
+        Log.d("ReservoirFragment.onCreateView", "PREF_KEY_CONTROLLER_ID: " + id.toString())
 
         controller = MasterControllerRepository(context!!).getController(id)
 
@@ -63,28 +60,18 @@ class ReservoirFragment : Fragment() {
         )
 
         refreshTimer = Timer()
-        refreshTimer!!.schedule(60000) {
+        refreshTimer!!.scheduleAtFixedRate(timerTask {
             getReservoirData()
-        }
-
-        getReservoirData()
+        }, 0, 60000)
 
         return fragmentView
     }
 
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-    }
-
-    override fun onDestroyView() {
-        Log.d("ReservoirFragment.onDestroyView()", "called")
-        super.onDestroyView()
+    override fun onStop() {
+        super.onStop()
+        Log.d("ReservoirFragment.onStop()", "called")
         refreshTimer!!.cancel()
         refreshTimer!!.purge()
-    }
-
-    override fun onDetach() {
-        super.onDetach()
     }
 
     fun getReservoirData() {
@@ -101,21 +88,19 @@ class ReservoirFragment : Fragment() {
                 var responseBody = response.body().string()
 
                 Log.d("ReservoirFragment.getReservoirData", "responseBody: " + responseBody)
+
                 if(response.code() != 200) {
                     return
                 }
 
+                recyclerItems.clear()
+
                 val json = JSONObject(responseBody)
-
-                adapter!!.metricCount = json.length()-1
-
                 var reservoir = Reservoir(json.getInt("mem"), json.getDouble("resTemp"),
                     json.getDouble("PH"),json.getDouble("EC"),json.getDouble("TDS"),json.getDouble("SAL"),
                     json.getDouble("SG"),json.getDouble("DO_mgL"),json.getDouble("DO_PER"),json.getDouble("ORP"),
                     json.getDouble("envTemp"),json.getDouble("envHumidity"),json.getDouble("envHeatIndex"),
                     json.getInt("upperFloat"), json.getInt("lowerFloat"))
-
-                recyclerItems.clear()
 
                 recyclerItems.add(
                     MicroControllerRecyclerModel(
@@ -200,6 +185,8 @@ class ReservoirFragment : Fragment() {
                         MicroControllerRecyclerModel.METRIC_TYPE,
                         Metric("Lower Float", reservoir.lowerFloat.toString()),
                         null))
+
+                adapter!!.metricCount = recyclerItems.size
 
                 val jsonChannels = json.getJSONObject("channels")
                 for(i in 0..jsonChannels.length()-1) {

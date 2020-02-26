@@ -32,8 +32,7 @@ class MicroControllerActivity: AppCompatActivity() {
         val id = preferences!!.getInt(Constants.PREF_KEY_CONTROLLER_ID, 0)
         controller = MasterControllerRepository(this).getController(id)
 
-        toolbar.setTitle(controller!!.name);
-
+        toolbar.setTitle(controller!!.name)
         /*
         toolbar.setNavigationIcon(R.drawable.ic_cropdroid_logo)
         toolbar.setNavigationOnClickListener(object: View.OnClickListener {

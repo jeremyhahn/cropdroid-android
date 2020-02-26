@@ -23,6 +23,7 @@ import java.io.IOException
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.concurrent.schedule
+import kotlin.concurrent.timerTask
 
 class RoomFragment : Fragment() {
 
@@ -32,16 +33,12 @@ class RoomFragment : Fragment() {
     private var refreshTimer: Timer? = null
     private var controller : MasterController? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
-
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
         val id = activity!!.getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_PRIVATE)
             .getInt(Constants.PREF_KEY_CONTROLLER_ID, 0)
 
-        Log.d("RoomFragment.onCreate", "id is: " + id.toString())
+        Log.d("RoomFragment.onCreateView", "PREF_KEY_CONTROLLER_ID: " + id.toString())
 
         controller = MasterControllerRepository(context!!).getController(id)
 
@@ -52,8 +49,6 @@ class RoomFragment : Fragment() {
 
         recyclerView.layoutManager = LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
         recyclerView.adapter = adapter!!
-
-        Log.d("RoomFragment.onCreateView", "executed")
 
         swipeContainer = fragmentView.findViewById(R.id.roomSwipeRefresh) as SwipeRefreshLayout
         swipeContainer?.setOnRefreshListener(OnRefreshListener {
@@ -67,28 +62,18 @@ class RoomFragment : Fragment() {
         )
 
         refreshTimer = Timer()
-        refreshTimer!!.schedule(60000) {
-            getRoomData()
-        }
-
-        getRoomData()
+        refreshTimer!!.scheduleAtFixedRate(timerTask {
+                getRoomData()
+        }, 0, 60000)
 
         return fragmentView
     }
 
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-    }
-
-    override fun onDestroyView() {
-        Log.d("RoomFragment.onDestroyView()", "called")
-        super.onDestroyView()
+    override fun onStop() {
+        super.onStop()
+        Log.d("RoomFragment.onStop()", "called")
         refreshTimer!!.cancel()
         refreshTimer!!.purge()
-    }
-
-    override fun onDetach() {
-        super.onDetach()
     }
 
     fun getRoomData() {
@@ -105,6 +90,7 @@ class RoomFragment : Fragment() {
                 var responseBody = response.body().string()
 
                 Log.d("RoomFragment.getRoomData", "responseBody: " + responseBody)
+
                 if(response.code() != 200) {
                     return
                 }

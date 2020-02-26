@@ -45,10 +45,9 @@ dependencies {
     }
     //runtimeOnly 'org.bouncycastle:bcprov-jdk15on:1.60'
     implementation 'org.bouncycastle:bcprov-jdk15on:1.60'
+    //implementation group: 'commons-io', name: 'commons-io', version: '2.4'
+    //implementation 'com.diogobernardino:williamchart:3.3.0'
 
-    implementation group: 'commons-io', name: 'commons-io', version: '2.4'
-
-
-    //implementation("com.squareup.okhttp3:okhttp:4.4.0")
-    //implementation("com.squareup.okhttp3:logging-interceptor:4.4.0")
+    implementation 'com.github.blackfizz:eazegraph:1.2.2@aar'
+    implementation 'com.nineoldandroids:library:2.4.0'
 }

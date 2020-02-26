@@ -89,7 +89,8 @@ class EventListFragment : Fragment() {
 
         swipeContainer = fragmentView.findViewById(R.id.eventsSwipeRefresh) as SwipeRefreshLayout
         swipeContainer?.setOnRefreshListener(SwipeRefreshLayout.OnRefreshListener {
-            Handler().post(Runnable {loadFirstPage()})
+            //Handler().post(Runnable {loadFirstPage()})
+            loadFirstPage()
         })
         // Configure the refreshing colors
         swipeContainer?.setColorSchemeResources(
@@ -107,14 +108,13 @@ class EventListFragment : Fragment() {
 
     fun getEventsPage(page : Int) {
 
-        if(currentPage != PAGE_START) {
-            adapterEventListRecycler!!.addLoadingFooter()
-        }
-
         CropDroidAPI(controller!!).eventsList(page.toString(), object : Callback {
 
             override fun onFailure(call: Call, e: IOException) {
                 Log.d("EventListFragment.getEventsPage()", "onFailure response: " + e!!.message)
+                progressBar!!.visibility = GONE
+                isLoading = false
+                adapterEventListRecycler!!.removeLoadingFooter()
                 return
             }
 
@@ -156,10 +156,7 @@ class EventListFragment : Fragment() {
 
                     progressBar!!.visibility = GONE
                     isLoading = false
-
-                    if(currentPage != PAGE_START) {
-                        adapterEventListRecycler!!.removeLoadingFooter()
-                    }
+                    adapterEventListRecycler!!.removeLoadingFooter()
 
                     adapterEventListRecycler!!.addAll(eventsPage.events)
                     adapterEventListRecycler!!.notifyDataSetChanged()
@@ -184,6 +181,8 @@ class EventListFragment : Fragment() {
 
     private fun loadNextPage() {
         Log.d(TAG, "loadNextPage: $currentPage")
+        adapterEventListRecycler!!.addLoadingFooter()
+        isLoading = true
         getEventsPage(currentPage)
     }
 }

@@ -161,7 +161,7 @@ class LoginActivity : AppCompatActivity() {
 
                 val prefs = getSharedPreferences(GLOBAL_PREFS, Context.MODE_PRIVATE)
                 val editor = prefs.edit()
-                editor.putString("controller_id", controller!!.id.toString())
+                editor.putInt("controller_id", controller!!.id)
                 editor.putString("controller_name", controller!!.name)
                 editor.putString("controller_hostname", controller!!.hostname)
                 editor.putString("user_id", user.id)
@@ -225,8 +225,10 @@ class LoginActivity : AppCompatActivity() {
 
         var intent = Intent(this, NotificationService::class.java)
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        intent.putExtra(PREF_KEY_USER_ID, user.id)
+        //intent.putExtra(PREF_KEY_CONTROLLER_ID, controller.id)
+        //intent.putExtra(PREF_KEY_USER_ID, user.id)
         startService(intent)
+        //startForegroundService(intent)
 
         startActivity(Intent(this, MicroControllerActivity::class.java))
 

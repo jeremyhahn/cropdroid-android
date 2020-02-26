@@ -1,11 +1,13 @@
 package com.jeremyhahn.cropdroid
 
 import android.app.Activity
+import android.content.Intent
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
 import com.jeremyhahn.cropdroid.Constants.Companion.SwitchState
@@ -100,6 +102,9 @@ class MicroControllerRecyclerAdapter(val activity: Activity,
             if (model.type == MicroControllerRecyclerModel.CHANNEL_TYPE) {
 
                 var itemView = (holder as SwitchTypeViewHolder).itemView
+
+                if(itemView == null) return
+
                 var state = model.channel!!.state === 1
                 var switchState = if(state) SwitchState.ON else SwitchState.OFF
 
@@ -108,7 +113,7 @@ class MicroControllerRecyclerAdapter(val activity: Activity,
                 itemView.switchValue.setOnClickListener(
                     View.OnClickListener {
                         var newState = itemView.switchValue.isChecked()
-                        val channelId = position - metricCount + 1
+                        val channelId = position - metricCount
 
                         Log.d("SwitchTypeViewHolder.onClick", "channel " + channelId)
 
@@ -121,17 +126,29 @@ class MicroControllerRecyclerAdapter(val activity: Activity,
                             }
 
                             override fun onResponse(call: Call, response: okhttp3.Response) {
+                                /*
                                 activity.runOnUiThread(Runnable() {
                                     itemView.switchValue.setChecked(newState)
                                 })
+                                */
                             }
                         })
                     }
                 )
             }
             else {
-                (holder as MetricTypeViewHolder).itemView.title.setText(model.metric!!.title)
-                (holder as MetricTypeViewHolder).itemView.value.setText(model.metric!!.value)
+
+                var itemView = (holder as MetricTypeViewHolder).itemView
+                itemView.title.setText(model.metric!!.title)
+                itemView.value.setText(model.metric!!.value)
+                itemView.setOnLongClickListener(
+                    View.OnLongClickListener {
+                        var intent = Intent(activity, MetricDetailActivity::class.java)
+                        intent.putExtra("metric", model.metric!!.title)
+                        activity.startActivity(intent)
+                        return@OnLongClickListener true
+                    }
+                )
             }
         }
     }

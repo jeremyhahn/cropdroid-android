@@ -50,8 +50,6 @@ class EventListPaginationRecyclerAdapter(private val context: Context) :  Recycl
         when (this.getItemViewType(position)) {
             ITEM -> {
                 val eventLogVH = holder as EventLogVH
-//                eventLogVH.header.setText(StringBuilder(eventLog.event).append(" ").append(eventLog.timestamp).toString())
-//                eventLogVH.message.setText(eventLog.message)
                 eventLogVH.header.setText(createHeader(eventLog))
                 eventLogVH.message.setText(eventLog.message)
             }
@@ -110,8 +108,9 @@ class EventListPaginationRecyclerAdapter(private val context: Context) :  Recycl
     }
 
     fun removeLoadingFooter() {
-        isLoadingAdded = false
-        //if(eventLogs!!.size > 0) {
+        if(isLoadingAdded) {
+            isLoadingAdded = false
+            //if(eventLogs!!.size > 0) {
             var position = eventLogs!!.size - 1
             //if (position < 0) position = 0
             val item = this.getItem(position)
@@ -120,7 +119,8 @@ class EventListPaginationRecyclerAdapter(private val context: Context) :  Recycl
                 //this.notifyItemRemoved(position)
                 Handler().post(Runnable { this.notifyItemRemoved(position) })
             }
-        //}
+            //}
+        }
     }
 
     fun getItem(position: Int): EventLog {
