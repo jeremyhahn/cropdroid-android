@@ -5,9 +5,11 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
+import android.graphics.Color
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
+import androidx.constraintlayout.solver.widgets.ConstraintAnchor
 import androidx.core.app.NotificationCompat
 import com.jeremyhahn.cropdroid.Constants
 import com.jeremyhahn.cropdroid.Constants.Companion.API_BASE
@@ -28,14 +30,12 @@ import kotlin.collections.HashMap
 // https://stackoverflow.com/questions/7690350/android-start-service-on-boot
 class NotificationService : Service() {
 
+    val GROUP_KEY_FOREGROUND = "cropdroid_foreground"
     val CONNECTION_FAILED_DELAY = 60000L  // one minute
-    val GROUP_KEY = "cropdroid"
-
     var binder : IBinder? = null
     var websockets : HashMap<MasterController, WebSocket> = HashMap()
-
-    //var summaryNotificationBuilder: NotificationCompat.Builder? = null
     var notificationManager: NotificationManager? = null
+    var bundlerNotificationBuilder: NotificationCompat.Builder? = null
 
     companion object {
         private const val NORMAL_CLOSURE_STATUS = 1000
@@ -44,33 +44,38 @@ class NotificationService : Service() {
     override fun onBind(intent: Intent): IBinder {
         return binder!!
     }
-/*
-    override fun onTaskRemoved(rootIntent : Intent) {
-        var restartService = Intent(getApplicationContext(), NotificationService::class.java)
-        restartService.setPackage(getPackageName())
-        var restartServicePI = PendingIntent.getService(getApplicationContext(), 1, restartService, PendingIntent.FLAG_ONE_SHOT)
-        var alarmService = getApplicationContext().getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        alarmService.set(ELAPSED_REALTIME, SystemClock.elapsedRealtime() + 100, restartServicePI)
-    }
-*/
+
     override fun onCreate() {
         notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        createForegroundNotification()
-    }
 
-    fun stopService() {
-        var controllers = MasterControllerRepository(this).allControllers
-        for(controller in controllers) {
-            websockets[controller]!!.close(NORMAL_CLOSURE_STATUS, "EVENT_APP_CLOSE")
-            websockets.remove(controller)
-        }
-        stopForeground(true)
-        stopSelf()
+        val pendingIntent: PendingIntent =
+            Intent(this, MasterControllerListActivity::class.java).let { notificationIntent ->
+                PendingIntent.getActivity(this, 0, notificationIntent, 0)
+            }
+
+        val foregroundChannel = NotificationChannel("foreground_channel_id", "High priority notifications", NotificationManager.IMPORTANCE_HIGH)
+        foregroundChannel.setShowBadge(true)
+        foregroundChannel.enableLights(false)
+        foregroundChannel.enableVibration(false)
+        foregroundChannel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PRIVATE)
+        foregroundChannel.setLightColor(Color.GREEN)
+        notificationManager!!.createNotificationChannel(foregroundChannel)
+
+        val _notification:  android.app.Notification = android.app.Notification.Builder(this, "foreground_channel_id")
+            .setOngoing(true)
+            .setContentTitle("Real-time Protection")
+            .setContentText("Monitoring and listening for notifications")
+            .setSmallIcon(R.drawable.ic_cropdroid_logo)
+            .setContentIntent(pendingIntent)
+            .setTicker("Monitoring and listening for notifications") // audibly announce when accessibility services turned on
+            .build()
+
+        startForeground(1, _notification)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
-        if (intent!!.action != null && intent!!.action.equals(Constants.STOP_SERVICE_ACTION)) {
+        if (intent!!.action != null && intent!!.action.equals(Constants.ACTION_STOP_SERVICE)) {
             Log.i("NotificationService.onStartCommand", "Stopping service");
             stopService()
             return START_NOT_STICKY
@@ -89,12 +94,15 @@ class NotificationService : Service() {
             if(websockets[controller] == null) {
                 if(controller.id == 0) {
                     // Controller hasn't been logged into yet
-                    createForegroundNotification()
                     return START_NOT_STICKY
                 }
                 Log.d("NotificationService.onStartCommand", "Found controller: " + controller)
                 authenticatedControllers.add(controller)
             }
+        }
+
+        if(authenticatedControllers.size <= 0) {
+            return START_NOT_STICKY
         }
 
         for(controller in authenticatedControllers) {
@@ -103,14 +111,7 @@ class NotificationService : Service() {
             }
         }
 
-        /*
-        Toast.makeText(
-            applicationContext,
-            "NotificationService running",
-            Toast.LENGTH_LONG
-        ).show()*/
-
-        Log.d("NotificationService", "Connection count: " + controllers.size.toString())
+        Log.d("NotificationService", "Connected to " + controllers.size.toString() + " controller(s)")
 
         //super.onStartCommand(intent, flags, startId)
         return START_STICKY
@@ -123,8 +124,14 @@ class NotificationService : Service() {
         //sendBroadcast(Intent(this, NotificationService::class.java))
     }
 
-    private fun isRunning() : Boolean {
-        return notificationManager != null
+    fun stopService() {
+        var controllers = MasterControllerRepository(this).allControllers
+        for(controller in controllers) {
+            websockets[controller]!!.close(NORMAL_CLOSURE_STATUS, "EVENT_APP_CLOSE")
+            websockets.remove(controller)
+        }
+        stopForeground(true)
+        stopSelf()
     }
 
     fun createWebsocket(controller: MasterController) {
@@ -142,72 +149,77 @@ class NotificationService : Service() {
         Log.d("NotificationService.createWebsocket", "Created WebSocket " + websockets[controller].hashCode() + " for " + controller.name)
     }
 
-    fun createForegroundNotification() {
-
-        val pendingIntent: PendingIntent =
-            Intent(this, MasterControllerListActivity::class.java).let { notificationIntent ->
-                PendingIntent.getActivity(this, 0, notificationIntent, 0)
-            }
-
-        val groupChannel = NotificationChannel("app_channel_id", "app_channel_id", NotificationManager.IMPORTANCE_LOW)
-        groupChannel.setShowBadge(true)
-
-        notificationManager!!.createNotificationChannel(groupChannel)
-
-        val _notification:  android.app.Notification = android.app.Notification.Builder(this, "app_channel_id")
-            //.setOngoing(true)
-            //.setGroup(notification.controller)
-            .setGroup(GROUP_KEY)
-            .setGroupSummary(true)
-            .setContentTitle("Notifications")
-            .setContentText("Listening for incoming messages")
-            .setSmallIcon(R.drawable.ic_sprout)
-            .setContentIntent(pendingIntent)
-            //.setTicker("Some ticker text...")
-            .build()
-
-        startForeground(1, _notification)
-    }
-
     fun createNotification(notification: Notification) {
 
         // Update the bundle notification every time a new notification comes up.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (notificationManager!!.notificationChannels.size < 2) {
+            if (notificationManager!!.notificationChannels.size < 5) {
 
-                //val groupChannel = NotificationChannel("bundle_channel_id", "bundle_channel_name", NotificationManager.IMPORTANCE_LOW)
-                //groupChannel.setShowBadge(true)
-                //notificationManager!!.createNotificationChannel(groupChannel)
+                val groupChannel = NotificationChannel("bundle_channel_id", "Notification bundler", NotificationManager.IMPORTANCE_LOW)
+                groupChannel.setShowBadge(true)
+                groupChannel.enableLights(false)
+                groupChannel.enableVibration(false)
+                groupChannel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PRIVATE)
+                notificationManager!!.createNotificationChannel(groupChannel)
 
-                val channel = NotificationChannel("channel_id", "channel_name", NotificationManager.IMPORTANCE_DEFAULT)
-                channel.setShowBadge(true)
-                notificationManager!!.createNotificationChannel(channel)
+                val lowPriorityChannel = NotificationChannel("low_priority_channel_id", "Low priority notifications", NotificationManager.IMPORTANCE_LOW)
+                //lowPriorityChannel.setShowBadge(true)
+                lowPriorityChannel.enableLights(true)
+                lowPriorityChannel.enableVibration(false)
+                lowPriorityChannel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PRIVATE)
+                lowPriorityChannel.setLightColor(Color.GREEN)
+                notificationManager!!.createNotificationChannel(lowPriorityChannel)
+
+                val medPriorityChannel = NotificationChannel("med_priority_channel_id", "Medium priority notifications", NotificationManager.IMPORTANCE_LOW)
+                //medPriorityChannel.setShowBadge(true)
+                medPriorityChannel.enableLights(true)
+                medPriorityChannel.enableVibration(false)
+                medPriorityChannel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PRIVATE)
+                medPriorityChannel.setLightColor(Color.YELLOW)
+                notificationManager!!.createNotificationChannel(medPriorityChannel)
+
+                val highPriorityChannel = NotificationChannel("high_priority_channel_id", "High priority notifications", NotificationManager.IMPORTANCE_HIGH)
+                //highPriorityChannel.setShowBadge(true)
+                highPriorityChannel.enableLights(true)
+                highPriorityChannel.enableVibration(true)
+                highPriorityChannel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC)
+                highPriorityChannel.setLightColor(Color.RED)
+                notificationManager!!.createNotificationChannel(highPriorityChannel)
             }
         }
-/*
-        summaryNotificationBuilder =
+
+        bundlerNotificationBuilder =
             NotificationCompat.Builder(this, "bundle_channel_id")
-                //.setOngoing(true)
                 .setGroup(notification.controller)
                 .setGroupSummary(true)
                 .setContentTitle(notification.controller)
                 .setContentText("You have unread messages")
-                .setSmallIcon(R.drawable.ic_cropdroid_logo)
-*/
+                .setSmallIcon(R.drawable.ic_sprout)
+                .setTicker("You have unread messages")
 
         val newNotification =
-            NotificationCompat.Builder(this, "channel_id")
+            NotificationCompat.Builder(this, "low_priority_channel_id")
                 .setContentTitle(notification.controller)
                 .setContentText(notification.type)
-                .setSmallIcon(R.drawable.ic_cropdroid_logo)
-                .setGroup(GROUP_KEY)
+                .setSmallIcon(R.drawable.ic_sprout)
+                .setGroup(notification.controller)
                 .setGroupSummary(false)
                 .setWhen(Date.from(ZonedDateTime.parse(notification.timestamp).toInstant()).time)
-                //.setGroup(notification.controller)
+                .setGroup(notification.controller)
                 .setStyle(NotificationCompat.BigTextStyle().bigText(notification.message))
+                .setTicker(notification.message)  // audibly announce when accessibility services turned on
+
+        if(notification.priority == Constants.NOTIFICATION_PRIORITY_HIGH) {
+            newNotification.setChannelId("high_priority_channel_id")
+            newNotification.setSmallIcon(android.R.drawable.ic_dialog_alert)
+            newNotification.setGroup(null)
+        } else if(notification.priority == Constants.NOTIFICATION_PRIORITY_MED) {
+            newNotification.setChannelId("med_priority_channel_id")
+            newNotification.setSmallIcon(android.R.drawable.ic_dialog_info)
+        }
 
         notificationManager!!.notify(notification.hashCode(), newNotification.build())
-  //      notificationManager!!.notify(notification.controller.hashCode(), summaryNotificationBuilder!!.build())
+        notificationManager!!.notify(notification.controller.hashCode(), bundlerNotificationBuilder!!.build())
     }
 
     inner class NotificationWebSocketListener : WebSocketListener() {
@@ -218,7 +230,11 @@ class NotificationService : Service() {
                 var payload = "{\"id\":" + controller.userid.toString() + "}"
                 Log.d("NotificationService.onOpen", "controller="  + controller.name + ", payload=" + payload)
                 webSocket.send(payload)
-                createNotification(Notification(controller.name, "Notification Service", "Listening for new notifications", ZonedDateTime.now().toString()))
+                createNotification(Notification(controller.name,
+                    Constants.NOTIFICATION_PRIORITY_LOW,
+                    "Notification Service",
+                    "Listening for new notifications",
+                    ZonedDateTime.now().toString()))
                 return
             }
             //webSocket.send(ByteString.decodeHex("deadbeef"))
@@ -230,6 +246,7 @@ class NotificationService : Service() {
             var json = JSONObject(text)
             var notification = Notification(
                 json.getString("controller"),
+                json.getInt("priority"),
                 json.getString("type"),
                 json.getString("message"),
                 json.getString("timestamp"))
@@ -247,7 +264,11 @@ class NotificationService : Service() {
 
             var controller = getControllerByWebSocket(webSocket)
             if(controller != null) {
-                createNotification(Notification(controller.name, "Notification Service", "Connection closed!", ZonedDateTime.now().toString()))
+                createNotification(Notification(controller.name,
+                    Constants.NOTIFICATION_PRIORITY_MED,
+                    "Notification Service",
+                    "Connection closed!",
+                    ZonedDateTime.now().toString()))
                 return
             }
 
@@ -264,7 +285,10 @@ class NotificationService : Service() {
             if(controller != null) {
                 Log.d("NotificationService.onFailure", "Restarting connection for " + controller.name)
 
-                createNotification(Notification(controller.name, "Notification Service", "Connection failed! \n\n" + t.message, ZonedDateTime.now().toString()))
+                createNotification(Notification(controller.name,
+                    Constants.NOTIFICATION_PRIORITY_MED,
+                    "Notification Service",
+                    "Connection failed! \n\n" + t.message, ZonedDateTime.now().toString()))
                 webSocket.cancel()
                 createWebsocket(controller)
                 return
@@ -281,15 +305,5 @@ class NotificationService : Service() {
             }
             return null
         }
-
-        /*
-        fun getWebsocketByControllerName(name: String) : WebSocket? {
-            for((k, v) in websockets) {
-                if(k.name == name) {
-                    return v
-                }
-            }
-            return null
-        }*/
     }
 }

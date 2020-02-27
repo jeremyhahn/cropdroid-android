@@ -91,7 +91,7 @@ class MicroControllerActivity: AppCompatActivity() {
         return when (item.itemId) {
             R.id.action_settings -> true
             R.id.action_video -> {
-                startActivity(Intent(this, VideoActivity::class.java))
+                //startActivity(Intent(this, VideoActivity::class.java))
                 true
             }
             R.id.action_logout -> {
@@ -112,8 +112,8 @@ class MicroControllerActivity: AppCompatActivity() {
                     Log.e("MainActivity.Logout", "Unable to commit session invalidation to shared preferences")
                 }
 
+                finish()
                 startActivity(Intent(this, MasterControllerListActivity::class.java))
-
                 return true
             }
             else -> super.onOptionsItemSelected(item)

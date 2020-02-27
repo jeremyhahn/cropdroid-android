@@ -15,11 +15,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.jeremyhahn.cropdroid.Constants.Companion.GLOBAL_PREFS
-import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_CONTROLLER_HOSTNAME
-import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_CONTROLLER_ID
-import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_CONTROLLER_SECURE
-import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_JWT
-import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_USER_ID
 import com.jeremyhahn.cropdroid.MicroControllerActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI

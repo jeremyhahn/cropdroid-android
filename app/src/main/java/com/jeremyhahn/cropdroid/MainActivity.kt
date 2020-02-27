@@ -1,15 +1,12 @@
 package com.jeremyhahn.cropdroid
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.work.*
-import com.jeremyhahn.cropdroid.Constants.Companion.QUIT_APPLICATION_ACTION
-import com.jeremyhahn.cropdroid.db.MasterControllerRepository
+import com.jeremyhahn.cropdroid.Constants.Companion.ACTION_QUIT
 import com.jeremyhahn.cropdroid.service.NotificationService
 import com.jeremyhahn.cropdroid.worker.SyncWorker
 import kotlinx.android.synthetic.main.activity_main.*
@@ -64,7 +61,7 @@ class MainActivity : AppCompatActivity() {
         WorkManager.getInstance().cancelWorkById(workRequest.getId());
 */
 
-        if(intent.getBooleanExtra(QUIT_APPLICATION_ACTION, false)) {
+        if(intent.getBooleanExtra(ACTION_QUIT, false)) {
             finish();
             return
         }

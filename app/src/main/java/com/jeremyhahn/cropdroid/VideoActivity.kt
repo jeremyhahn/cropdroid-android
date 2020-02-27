@@ -1,3 +1,4 @@
+/*
 package com.jeremyhahn.cropdroid
 
 import android.content.res.Configuration
@@ -196,3 +197,4 @@ class VideoActivity : AppCompatActivity(), IVLCVout.Callback {
         const val TAG = "VideoActivity"
     }
 }
+ */

@@ -128,14 +128,14 @@ class MasterControllerListActivity : AppCompatActivity(), OnMasterListener {
                 DialogInterface.OnClickListener { dialog, id ->
                     // Stop notification service
                     var intent = Intent(this, NotificationService::class.java)
-                    intent.action = Constants.STOP_SERVICE_ACTION
+                    intent.action = Constants.ACTION_STOP_SERVICE
                     startService(intent)
 
                     // Kill the app
                     finish()
                     val intent2 = Intent(applicationContext, MainActivity::class.java)
                     intent2.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-                    intent2.putExtra(Constants.QUIT_APPLICATION_ACTION, true)
+                    intent2.putExtra(Constants.ACTION_QUIT, true)
                     startActivity(intent2)
                 })
             .setNegativeButton(R.string.action_cancel,

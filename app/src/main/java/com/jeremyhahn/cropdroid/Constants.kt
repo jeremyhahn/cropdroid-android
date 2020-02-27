@@ -4,19 +4,17 @@ class Constants {
 
     companion object {
 
-        const val API_VERSION = "v1"
-        const val DATABASE_NAME = "cropdroid"
-        const val GLOBAL_PREFS = "cropdroid"
-        const val PREF_KEY_USER_ID = "user_id"
+        const val APP_NAME = "cropdroid"
+        const val DATABASE_NAME = APP_NAME
+        const val GLOBAL_PREFS = APP_NAME
         const val PREF_KEY_CONTROLLER_ID = "controller_id"
-        const val PREF_KEY_CONTROLLER_HOSTNAME = "controller_hostname"
-        const val PREF_KEY_CONTROLLER_SECURE = "controller_secure"
-        const val PREF_KEY_JWT = "jwt"
+        const val API_VERSION = "v1"
         const val API_BASE = "/api/".plus(API_VERSION)
-        const val API_CONNECTION_UNAVAILABLE_RETRY_COUNT = 100000000
-        const val API_CONNECTION_UNAVAILABLE_RETRY_BACKOFF = 1.0f
-        const val STOP_SERVICE_ACTION = "STOP_SERVICE"
-        const val QUIT_APPLICATION_ACTION = "EXIT_APP"
+        const val ACTION_STOP_SERVICE = "ACTION_STOP_SERVICE"
+        const val ACTION_QUIT = "ACTION_QUIT"
+        const val NOTIFICATION_PRIORITY_LOW = 0
+        const val NOTIFICATION_PRIORITY_MED = 1
+        const val NOTIFICATION_PRIORITY_HIGH = 2
 
         enum class SwitchState {
             ON,
