@@ -1,20 +1,18 @@
 package com.jeremyhahn.cropdroid.service
 
-import android.app.*
-import android.app.AlarmManager.ELAPSED_REALTIME
-import android.content.Context
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.Service
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
-import android.os.SystemClock
 import android.util.Log
-import android.widget.Toast
 import androidx.core.app.NotificationCompat
-import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.Constants
 import com.jeremyhahn.cropdroid.Constants.Companion.API_BASE
 import com.jeremyhahn.cropdroid.MasterControllerListActivity
-import com.jeremyhahn.cropdroid.MicroControllerActivity
+import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.MasterController
 import com.jeremyhahn.cropdroid.model.Notification
@@ -266,7 +264,7 @@ class NotificationService : Service() {
             if(controller != null) {
                 Log.d("NotificationService.onFailure", "Restarting connection for " + controller.name)
 
-                createNotification(Notification(controller.name, "Notification Service", "Connection failed! \n\n" + t.stackTrace, ZonedDateTime.now().toString()))
+                createNotification(Notification(controller.name, "Notification Service", "Connection failed! \n\n" + t.message, ZonedDateTime.now().toString()))
                 webSocket.cancel()
                 createWebsocket(controller)
                 return

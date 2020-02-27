@@ -45,6 +45,11 @@
             android:label="@string/title_activity_microcontrollers"
             android:theme="@style/AppTheme.NoActionBar" />
 
+        <activity
+            android:name=".VideoActivity"
+            android:label="@string/title_activity_video"
+            android:theme="@style/AppTheme.NoActionBar" />
+
         <receiver android:name=".StartupReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

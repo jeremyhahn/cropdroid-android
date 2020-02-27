@@ -26,4 +26,6 @@
     <string name="action_quit_dialog">Are you sure? You will not receive anymore notifications.</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_yes">Yes</string>
+    <string name="action_video">Video</string>
+    <string name="title_activity_video">Video</string>
 </resources>

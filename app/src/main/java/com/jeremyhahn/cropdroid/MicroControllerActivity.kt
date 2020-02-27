@@ -90,6 +90,10 @@ class MicroControllerActivity: AppCompatActivity() {
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
             R.id.action_settings -> true
+            R.id.action_video -> {
+                startActivity(Intent(this, VideoActivity::class.java))
+                true
+            }
             R.id.action_logout -> {
 
                 Log.d("MainActivity.OnOptionsItemSelected", "action_logout caught")
