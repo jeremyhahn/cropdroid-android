@@ -1,6 +1,9 @@
 package com.jeremyhahn.cropdroid
 
 import android.app.Activity
+import android.app.AlertDialog
+import android.app.Dialog
+import android.content.DialogInterface
 import android.content.Intent
 import android.util.Log
 import android.view.LayoutInflater
@@ -15,6 +18,7 @@ import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Channel
 import com.jeremyhahn.cropdroid.model.Metric
 import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
+import com.jeremyhahn.cropdroid.service.NotificationService
 import kotlinx.android.synthetic.main.microcontroller_cardview.view.*
 import kotlinx.android.synthetic.main.microcontroller_switch_cardview.view.*
 import okhttp3.Call
@@ -84,53 +88,64 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        //holder.bindItems(recyclerItems[position])
-/*
-        holder.itemView.setOnClickListener(
-            View.OnClickListener
-            {
-                Log.i("itemView click event!", "Click-$position")
-                Log.i("itemView click event!", "channelId: " + (channelCount - position).toString())
-                //context.startActivity(Intent(context, MainActivity::class.java))
-            })
-*/
+
+        // Avoid java.lang.IndexOutOfBoundsException: Index: 0, Size: 0
+        // when switching from doser tab to reservoir tab
+
+
+        if(recyclerItems.size < position) {
+            return
+        }
 
         val model = recyclerItems.get(position)
         if (model != null) {
             if (model.type == MicroControllerRecyclerModel.CHANNEL_TYPE) {
-
                 var itemView = (holder as SwitchTypeViewHolder).itemView
-
                 if(itemView == null) return
 
                 var state = model.channel!!.state === 1
-                var switchState = if(state) SwitchState.ON else SwitchState.OFF
-
-                itemView.switchId.setText("Channel ".plus(model.channel!!.id))
+                val displayName = if(model.channel!!.name != "") model.channel!!.name else "Channel ".plus(model.channel!!.id)
+                itemView.switchName.setText(displayName)
                 itemView.switchValue.setChecked(state)
                 itemView.switchValue.setOnClickListener(
                     View.OnClickListener {
                         var newState = itemView.switchValue.isChecked()
-                        val channelId = position - metricCount
+                        var channelId = model.channel!!.id
 
                         Log.d("SwitchTypeViewHolder.onClick", "channel " + channelId)
 
-                        cropDroidAPI.switch(controllerType, channelId, newState, object: Callback {
+                        var switchState = if(newState) SwitchState.ON else SwitchState.OFF
+                        var dialogMessage = activity.getResources().getString(R.string.action_confirm_switch)
+                            .plus(" the ")
+                            .plus(displayName)
+                            .plus(" ")
+                            .plus(switchState.name.toLowerCase())
+                            .plus("?")
 
-                            override fun onFailure(call: Call, e: IOException) {
-                                Log.d("MicroControllerRecyclerAdapter.onSwitchState", "onFailure response: " + e!!.message)
-                                itemView.switchValue.setChecked(!newState)
-                                return
-                            }
+                        val builder = AlertDialog.Builder(activity)
+                        builder.setMessage(dialogMessage).setPositiveButton(R.string.action_yes,
+                            DialogInterface.OnClickListener { dialog, id ->
 
-                            override fun onResponse(call: Call, response: okhttp3.Response) {
-                                /*
-                                activity.runOnUiThread(Runnable() {
-                                    itemView.switchValue.setChecked(newState)
+                                Log.d("SwitchTypeViewHolder.onClick", "DialogInterface.OnClickListener  " + channelId)
+
+                                cropDroidAPI.switch(controllerType, channelId, newState, object: Callback {
+                                    override fun onFailure(call: Call, e: IOException) {
+                                        Log.d("MicroControllerRecyclerAdapter.onSwitchState", "onFailure response: " + e!!.message)
+                                        itemView.switchValue.setChecked(!newState)
+                                        return
+                                    }
+                                    override fun onResponse(call: Call, response: okhttp3.Response) {
+                                        Log.d("MicroControllerRecyclerAdapter.onSwitchState", "onResponse response: " + response.body().toString())
+                                    }
                                 })
-                                */
-                            }
-                        })
+                            })
+                            .setNegativeButton(R.string.action_cancel,
+                                DialogInterface.OnClickListener { dialog, id ->
+                                    Log.d("confirmDelete", "cancel pressed")
+                                    itemView.switchValue.setChecked(!newState)
+                                })
+                        builder.create()
+                        builder.show()
                     }
                 )
             }
@@ -158,5 +173,20 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
 
     fun addAll(list : List<MicroControllerRecyclerModel>) {
         recyclerItems.addAll(list)
+    }
+
+    fun confirmDelete(): Dialog {
+        return let {
+            val builder = AlertDialog.Builder(activity)
+            builder.setMessage(R.string.action_quit_dialog).setPositiveButton(R.string.action_yes,
+                DialogInterface.OnClickListener { dialog, id ->
+
+                })
+                .setNegativeButton(R.string.action_cancel,
+                    DialogInterface.OnClickListener { dialog, id ->
+                        Log.d("confirmDelete", "cancel pressed")
+                    })
+            builder.create()
+        } ?: throw IllegalStateException("Activity cannot be null")
     }
 }

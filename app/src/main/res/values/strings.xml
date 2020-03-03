@@ -4,6 +4,7 @@
     <string name="room_fragment">Room</string>
     <string name="reservoir_fragment">Reservoir</string>
     <string name="doser_fragment">Doser</string>
+    <string name="events_fragment">Events</string>
     <string name="title_activity_masters">Grow Spaces</string>
     <string name="title_activity_microcontrollers">Controllers</string>
     <string name="prompt_name">Name</string>
@@ -28,4 +29,6 @@
     <string name="action_yes">Yes</string>
     <string name="action_video">Video</string>
     <string name="title_activity_video">Video</string>
+    <string name="action_confirm_switch">Are you sure you want to switch </string>
+    <string name="menu_rename">Rename</string>
 </resources>

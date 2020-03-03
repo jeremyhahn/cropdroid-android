@@ -8,8 +8,8 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import android.os.IBinder
+import android.provider.Settings.System.DEFAULT_NOTIFICATION_URI
 import android.util.Log
-import androidx.constraintlayout.solver.widgets.ConstraintAnchor
 import androidx.core.app.NotificationCompat
 import com.jeremyhahn.cropdroid.Constants
 import com.jeremyhahn.cropdroid.Constants.Companion.API_BASE
@@ -27,7 +27,6 @@ import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
-// https://stackoverflow.com/questions/7690350/android-start-service-on-boot
 class NotificationService : Service() {
 
     val GROUP_KEY_FOREGROUND = "cropdroid_foreground"
@@ -48,26 +47,26 @@ class NotificationService : Service() {
     override fun onCreate() {
         notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
+        var contentText = "Monitoring and listening for notifications"
         val pendingIntent: PendingIntent =
             Intent(this, MasterControllerListActivity::class.java).let { notificationIntent ->
                 PendingIntent.getActivity(this, 0, notificationIntent, 0)
             }
 
         val foregroundChannel = NotificationChannel("foreground_channel_id", "High priority notifications", NotificationManager.IMPORTANCE_HIGH)
-        foregroundChannel.setShowBadge(true)
         foregroundChannel.enableLights(false)
         foregroundChannel.enableVibration(false)
         foregroundChannel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PRIVATE)
-        foregroundChannel.setLightColor(Color.GREEN)
         notificationManager!!.createNotificationChannel(foregroundChannel)
 
         val _notification:  android.app.Notification = android.app.Notification.Builder(this, "foreground_channel_id")
             .setOngoing(true)
+            .setGroup(GROUP_KEY_FOREGROUND)
             .setContentTitle("Real-time Protection")
-            .setContentText("Monitoring and listening for notifications")
+            .setContentText(contentText)
             .setSmallIcon(R.drawable.ic_cropdroid_logo)
             .setContentIntent(pendingIntent)
-            .setTicker("Monitoring and listening for notifications") // audibly announce when accessibility services turned on
+            .setTicker(contentText) // audibly announce when accessibility services turned on
             .build()
 
         startForeground(1, _notification)
@@ -151,19 +150,21 @@ class NotificationService : Service() {
 
     fun createNotification(notification: Notification) {
 
+        var unread = "You have unread messages"
+
         // Update the bundle notification every time a new notification comes up.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (notificationManager!!.notificationChannels.size < 5) {
 
                 val groupChannel = NotificationChannel("bundle_channel_id", "Notification bundler", NotificationManager.IMPORTANCE_LOW)
                 groupChannel.setShowBadge(true)
-                groupChannel.enableLights(false)
-                groupChannel.enableVibration(false)
+                groupChannel.enableLights(true)
+                groupChannel.enableVibration(true)
                 groupChannel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PRIVATE)
                 notificationManager!!.createNotificationChannel(groupChannel)
 
                 val lowPriorityChannel = NotificationChannel("low_priority_channel_id", "Low priority notifications", NotificationManager.IMPORTANCE_LOW)
-                //lowPriorityChannel.setShowBadge(true)
+                lowPriorityChannel.setShowBadge(true)
                 lowPriorityChannel.enableLights(true)
                 lowPriorityChannel.enableVibration(false)
                 lowPriorityChannel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PRIVATE)
@@ -171,7 +172,7 @@ class NotificationService : Service() {
                 notificationManager!!.createNotificationChannel(lowPriorityChannel)
 
                 val medPriorityChannel = NotificationChannel("med_priority_channel_id", "Medium priority notifications", NotificationManager.IMPORTANCE_LOW)
-                //medPriorityChannel.setShowBadge(true)
+                medPriorityChannel.setShowBadge(true)
                 medPriorityChannel.enableLights(true)
                 medPriorityChannel.enableVibration(false)
                 medPriorityChannel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PRIVATE)
@@ -179,7 +180,7 @@ class NotificationService : Service() {
                 notificationManager!!.createNotificationChannel(medPriorityChannel)
 
                 val highPriorityChannel = NotificationChannel("high_priority_channel_id", "High priority notifications", NotificationManager.IMPORTANCE_HIGH)
-                //highPriorityChannel.setShowBadge(true)
+                highPriorityChannel.setShowBadge(true)
                 highPriorityChannel.enableLights(true)
                 highPriorityChannel.enableVibration(true)
                 highPriorityChannel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC)
@@ -193,9 +194,9 @@ class NotificationService : Service() {
                 .setGroup(notification.controller)
                 .setGroupSummary(true)
                 .setContentTitle(notification.controller)
-                .setContentText("You have unread messages")
+                .setContentText(unread)
                 .setSmallIcon(R.drawable.ic_sprout)
-                .setTicker("You have unread messages")
+                .setTicker(unread)
 
         val newNotification =
             NotificationCompat.Builder(this, "low_priority_channel_id")
@@ -208,14 +209,19 @@ class NotificationService : Service() {
                 .setGroup(notification.controller)
                 .setStyle(NotificationCompat.BigTextStyle().bigText(notification.message))
                 .setTicker(notification.message)  // audibly announce when accessibility services turned on
+                .setLights(Color.GREEN, 3000, 3000)
 
         if(notification.priority == Constants.NOTIFICATION_PRIORITY_HIGH) {
             newNotification.setChannelId("high_priority_channel_id")
             newNotification.setSmallIcon(android.R.drawable.ic_dialog_alert)
-            newNotification.setGroup(null)
+            newNotification.setVibrate(longArrayOf(1000, 1000, 1000, 1000, 1000))
+            newNotification.setLights(Color.RED, 3000, 3000)
+            newNotification.setSound(DEFAULT_NOTIFICATION_URI)
+            newNotification.setGroup(GROUP_KEY_FOREGROUND)
         } else if(notification.priority == Constants.NOTIFICATION_PRIORITY_MED) {
             newNotification.setChannelId("med_priority_channel_id")
             newNotification.setSmallIcon(android.R.drawable.ic_dialog_info)
+            newNotification.setLights(Color.YELLOW, 3000, 3000)
         }
 
         notificationManager!!.notify(notification.hashCode(), newNotification.build())

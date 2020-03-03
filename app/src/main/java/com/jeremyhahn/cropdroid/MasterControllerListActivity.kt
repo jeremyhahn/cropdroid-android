@@ -22,7 +22,9 @@ import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.MasterController
 import com.jeremyhahn.cropdroid.service.NotificationService
 import com.jeremyhahn.cropdroid.ui.login.LoginActivity
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_masters.*
+import kotlinx.android.synthetic.main.activity_masters.toolbar
 
 
 class MasterControllerListActivity : AppCompatActivity(), OnMasterListener {
@@ -34,6 +36,15 @@ class MasterControllerListActivity : AppCompatActivity(), OnMasterListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_masters)
+
+        toolbar.setNavigationIcon(R.drawable.ic_cropdroid_logo)
+        /*
+        toolbar.setNavigationOnClickListener(object: View.OnClickListener {
+            override fun onClick(v: View) {
+                onBackPressed()
+                return
+            }
+        })*/
         setSupportActionBar(toolbar)
 
         fab.setOnClickListener { view ->

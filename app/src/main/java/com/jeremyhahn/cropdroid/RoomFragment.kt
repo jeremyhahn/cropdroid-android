@@ -15,6 +15,7 @@ import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.*
+import com.jeremyhahn.cropdroid.utils.ChannelParser
 import okhttp3.Call
 import okhttp3.Callback
 import org.json.JSONObject
@@ -85,6 +86,7 @@ class RoomFragment : Fragment() {
 
             override fun onResponse(call: Call, response: okhttp3.Response) {
 
+                var waterLeakStatus = Constants.WATER_LEAK_STATUS_DRY
                 var responseBody = response.body().string()
 
                 Log.d("RoomFragment.getRoomData", "responseBody: " + responseBody)
@@ -106,62 +108,62 @@ class RoomFragment : Fragment() {
                 recyclerItems.add(
                     MicroControllerRecyclerModel(
                         MicroControllerRecyclerModel.METRIC_TYPE,
-                        Metric("Air Temp (Sensor 1)", room.tempF0.toString()),
+                        Metric("Ceiling Air Temperature", room.tempF0.toString().plus("°")),
                         null))
 
                 recyclerItems.add(
                     MicroControllerRecyclerModel(
                         MicroControllerRecyclerModel.METRIC_TYPE,
-                        Metric("Relative Humidity (Sensor 1)", room.humidity0.toString()),
+                        Metric("Ceiling Humidity", room.humidity0.toString().plus("%")),
                         null))
 
                 recyclerItems.add(
                     MicroControllerRecyclerModel(
                         MicroControllerRecyclerModel.METRIC_TYPE,
-                        Metric("Heat Index (Sensor 1)", room.heatIndex0.toString()),
+                        Metric("Ceiling Heat Index", room.heatIndex0.toString().plus("°")),
                         null))
 
                 recyclerItems.add(
                     MicroControllerRecyclerModel(
                         MicroControllerRecyclerModel.METRIC_TYPE,
-                        Metric("Air Temp (Sensor 2)", room.tempF1.toString()),
+                        Metric("Canopy Air Temperature", room.tempF1.toString().plus("°")),
                         null))
 
                 recyclerItems.add(
                     MicroControllerRecyclerModel(
                         MicroControllerRecyclerModel.METRIC_TYPE,
-                        Metric("Relative Humidity (Sensor 2)", room.humidity1.toString()),
+                        Metric("Canopy Humidity", room.humidity1.toString().plus("%")),
                         null))
 
 
                 recyclerItems.add(
                     MicroControllerRecyclerModel(
                         MicroControllerRecyclerModel.METRIC_TYPE,
-                        Metric("Heat Index (Sensor 2)", room.heatIndex1.toString()),
+                        Metric("Canopy Heat Index", room.heatIndex1.toString().plus("°")),
                         null))
 
                 recyclerItems.add(
                     MicroControllerRecyclerModel(
                         MicroControllerRecyclerModel.METRIC_TYPE,
-                        Metric("Air Temp (Sensor 3)", room.tempF2.toString()),
+                        Metric("Floor Air Temperature", room.tempF2.toString().plus("°")),
                         null))
 
                 recyclerItems.add(
                     MicroControllerRecyclerModel(
                         MicroControllerRecyclerModel.METRIC_TYPE,
-                        Metric("Relative Humidity (Sensor 3)", room.humidity2.toString()),
+                        Metric("Floor Humidity", room.humidity2.toString().plus("%")),
                         null))
 
                 recyclerItems.add(
                     MicroControllerRecyclerModel(
                         MicroControllerRecyclerModel.METRIC_TYPE,
-                        Metric("Heat Index (Sensor 3)", room.heatIndex2.toString()),
+                        Metric("Floor Heat Index", room.heatIndex2.toString().plus("°")),
                         null))
 
                 recyclerItems.add(
                     MicroControllerRecyclerModel(
                         MicroControllerRecyclerModel.METRIC_TYPE,
-                        Metric("Co2", room.co2.toString()),
+                        Metric("Co2", room.co2.toString().plus(" ppm")),
                         null))
 
                 recyclerItems.add(
@@ -173,25 +175,27 @@ class RoomFragment : Fragment() {
                 recyclerItems.add(
                     MicroControllerRecyclerModel(
                         MicroControllerRecyclerModel.METRIC_TYPE,
-                        Metric("Water Temp (Sensor 1)", room.pod0.toString()),
+                        Metric("Pod 1 Water Temperature", room.pod0.toString().plus("°")),
                         null))
 
                 recyclerItems.add(
                     MicroControllerRecyclerModel(
                         MicroControllerRecyclerModel.METRIC_TYPE,
-                        Metric("Water Temp (Sensor 2)", room.pod1.toString()),
+                        Metric("Pod 2 Water Temperature", room.pod1.toString().plus("°")),
                         null))
 
+                if(room.water0 > 0) waterLeakStatus = Constants.WATER_LEAK_STATUS_LEAK
                 recyclerItems.add(
                     MicroControllerRecyclerModel(
                         MicroControllerRecyclerModel.METRIC_TYPE,
-                        Metric("Water Leak Detector (Sensor 1)", room.water0.toString()),
+                        Metric("Pod 1 Water Detector", waterLeakStatus),
                         null))
 
+                if(room.water1 > 0) waterLeakStatus = Constants.WATER_LEAK_STATUS_LEAK
                 recyclerItems.add(
                     MicroControllerRecyclerModel(
                         MicroControllerRecyclerModel.METRIC_TYPE,
-                        Metric("Water Leak Detector (Sensor 2)", room.water1.toString()),
+                        Metric("Pod 2 Water Detector", waterLeakStatus),
                         null))
 
                 recyclerItems.add(
@@ -202,14 +206,13 @@ class RoomFragment : Fragment() {
 
                 adapter!!.metricCount = recyclerItems.size
 
-                val jsonChannels = json.getJSONObject("channels")
-                for(i in 0..jsonChannels.length()-1) {
-                    val v = jsonChannels.getInt(i.toString())
+                val jsonChannels = json.getJSONArray("channels")
+                var channels = ChannelParser.Parse(jsonChannels)
+                for(channel in channels) {
                     recyclerItems.add(
                         MicroControllerRecyclerModel(
                             MicroControllerRecyclerModel.CHANNEL_TYPE,
-                            null,
-                            Channel(i, v)))
+                            null, channel))
                 }
 
                 activity!!.runOnUiThread(Runnable() {

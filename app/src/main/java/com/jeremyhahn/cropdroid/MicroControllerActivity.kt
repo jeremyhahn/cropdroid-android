@@ -31,15 +31,6 @@ class MicroControllerActivity: AppCompatActivity() {
         controller = MasterControllerRepository(this).getController(id)
 
         toolbar.setTitle(controller!!.name)
-        /*
-        toolbar.setNavigationIcon(R.drawable.ic_cropdroid_logo)
-        toolbar.setNavigationOnClickListener(object: View.OnClickListener {
-            override fun onClick(v: View) {
-                onBackPressed()
-                return
-            }
-        })
-         */
         setSupportActionBar(toolbar)
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
         supportActionBar!!.setDisplayShowHomeEnabled(true)
@@ -47,10 +38,10 @@ class MicroControllerActivity: AppCompatActivity() {
         tabLayout = findViewById<TabLayout>(R.id.tabLayout)
         viewPager = findViewById<ViewPager>(R.id.viewPager)
 
-        tabLayout!!.addTab(tabLayout!!.newTab().setText("Room"))
-        tabLayout!!.addTab(tabLayout!!.newTab().setText(getString(R.string.reservoir_fragment)))
-        tabLayout!!.addTab(tabLayout!!.newTab().setText(getString(R.string.doser_fragment)))
-        tabLayout!!.addTab(tabLayout!!.newTab().setText("Events"))
+        tabLayout!!.addTab(tabLayout!!.newTab().setText(R.string.room_fragment))
+        tabLayout!!.addTab(tabLayout!!.newTab().setText(R.string.reservoir_fragment))
+        tabLayout!!.addTab(tabLayout!!.newTab().setText(R.string.doser_fragment))
+        tabLayout!!.addTab(tabLayout!!.newTab().setText(R.string.events_fragment))
 
         tabLayout!!.tabGravity = TabLayout.GRAVITY_FILL
 
@@ -58,7 +49,6 @@ class MicroControllerActivity: AppCompatActivity() {
         viewPager!!.adapter = adapter
 
         viewPager!!.addOnPageChangeListener(TabLayout.TabLayoutOnPageChangeListener(tabLayout))
-
         tabLayout!!.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) {
                 viewPager!!.currentItem = tab.position
