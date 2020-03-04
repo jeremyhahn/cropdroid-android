@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
 import com.jeremyhahn.cropdroid.Constants.Companion.FLOAT_SWITCH_FULL
+import com.jeremyhahn.cropdroid.Constants.Companion.MICROCONTROLLER_REFRESH
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.*
@@ -67,7 +68,7 @@ class ReservoirFragment : Fragment() {
             activity!!.runOnUiThread(Runnable() {
                 getReservoirData()
             })
-        }, 0, 60000)
+        }, 0, MICROCONTROLLER_REFRESH)
 
         return fragmentView
     }
@@ -77,7 +78,7 @@ class ReservoirFragment : Fragment() {
         Log.d("ReservoirFragment.onStop()", "called")
         refreshTimer!!.cancel()
         refreshTimer!!.purge()
-        adapter!!.clear()
+        //adapter!!.clear()
     }
 
     fun getReservoirData() {

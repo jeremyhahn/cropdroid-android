@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
+import com.jeremyhahn.cropdroid.Constants.Companion.MICROCONTROLLER_REFRESH
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.*
@@ -64,7 +65,7 @@ class DoserFragment : Fragment() {
             activity!!.runOnUiThread(Runnable() {
                 getDoserData()
             })
-        }, 0, 60000)
+        }, 0, MICROCONTROLLER_REFRESH)
 
         Log.d("DoserFragment.onCreateView", "executed")
 
@@ -76,7 +77,7 @@ class DoserFragment : Fragment() {
         Log.d("DoserFragment.onStop()", "called")
         refreshTimer!!.cancel()
         refreshTimer!!.purge()
-        adapter!!.clear()
+        //adapter!!.clear()
    }
 
      fun getDoserData() {

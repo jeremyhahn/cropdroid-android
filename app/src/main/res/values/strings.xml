@@ -31,4 +31,6 @@
     <string name="title_activity_video">Video</string>
     <string name="action_confirm_switch">Are you sure you want to switch </string>
     <string name="menu_rename">Rename</string>
+    <string name="number_picker_dispense_title">Timed Dose</string>
+    <string name="number_picker_dispense_message">Choose number of seconds</string>
 </resources>

@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener
 import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
+import com.jeremyhahn.cropdroid.Constants.Companion.MICROCONTROLLER_REFRESH
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.*
@@ -66,7 +67,7 @@ class RoomFragment : Fragment() {
             activity!!.runOnUiThread(Runnable() {
                 getRoomData()
             })
-        }, 0, 60000)
+        }, 0, MICROCONTROLLER_REFRESH)
 
         return fragmentView
     }
@@ -76,7 +77,7 @@ class RoomFragment : Fragment() {
         Log.d("RoomFragment.onStop()", "called")
         refreshTimer!!.cancel()
         refreshTimer!!.purge()
-        adapter!!.clear()
+        //adapter!!.clear()
     }
 
     fun getRoomData() {

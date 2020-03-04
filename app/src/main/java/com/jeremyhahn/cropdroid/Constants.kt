@@ -22,6 +22,7 @@ class Constants {
         const val ROOM_CONTROLLER_ID = 0
         const val RESERVOIR_CONTROLLER_ID = 1
         const val DOSING_CONTROLLER_ID = 2
+        const val MICROCONTROLLER_REFRESH = 30000L // 30 seconds
 
         enum class SwitchState {
             ON,

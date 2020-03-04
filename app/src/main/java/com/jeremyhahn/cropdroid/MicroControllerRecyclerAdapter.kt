@@ -9,8 +9,9 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.NumberPicker
 import android.widget.TextView
-import androidx.core.content.ContextCompat.startActivity
+import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
 import com.jeremyhahn.cropdroid.Constants.Companion.SwitchState
@@ -18,12 +19,12 @@ import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Channel
 import com.jeremyhahn.cropdroid.model.Metric
 import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
-import com.jeremyhahn.cropdroid.service.NotificationService
 import kotlinx.android.synthetic.main.microcontroller_cardview.view.*
 import kotlinx.android.synthetic.main.microcontroller_switch_cardview.view.*
 import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
+import com.jeremyhahn.cropdroid.R
 
 class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: CropDroidAPI,
            val recyclerItems: ArrayList<MicroControllerRecyclerModel>, controllerType: ControllerType) : Clearable,
@@ -100,6 +101,47 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
             if (model.type == MicroControllerRecyclerModel.CHANNEL_TYPE) {
                 var itemView = (holder as SwitchTypeViewHolder).itemView
                 if(itemView == null) return
+
+                itemView.btnDispense.setOnClickListener({
+                    val d = AlertDialog.Builder(activity)
+                    val inflater: LayoutInflater = activity.getLayoutInflater()
+                    val dialogView: View = inflater.inflate(R.layout.number_picker_dialog, null)
+                    d.setTitle(R.string.number_picker_dispense_title)
+                    d.setMessage(R.string.number_picker_dispense_message)
+                    d.setView(dialogView)
+                    val numberPicker =
+                        dialogView.findViewById<View>(R.id.dialog_number_picker) as NumberPicker
+                    numberPicker.maxValue = 60
+                    numberPicker.minValue = 1
+                    numberPicker.wrapSelectorWheel = false
+                    numberPicker.setOnValueChangedListener { numberPicker, i, i1 ->
+                        Log.d("btnDispense.onClick", "onValueChange: ")
+                    }
+                    d.setPositiveButton("Done") {
+                            dialogInterface, i -> Log.d("btnDispense.onClick", "onClick: " + numberPicker.value)
+
+                        cropDroidAPI.dispense(model.channel!!.id, numberPicker.value, object: Callback {
+                            override fun onFailure(call: Call, e: IOException) {
+                                Log.d("MicroControllerRecyclerAdapter.onSwitchState", "onFailure response: " + e!!.message)
+                                return
+                            }
+                            override fun onResponse(call: Call, response: okhttp3.Response) {
+                                Log.d("MicroControllerRecyclerAdapter.btnDispense.onClick", "onResponse response: " + response)
+                                Log.d("MicroControllerRecyclerAdapter.btnDispense.onClick", "onResponse response body: " + response.body().toString())
+                                activity.runOnUiThread(Runnable () {
+                                    Toast.makeText(activity, "Dispensing " + model.channel!!.name, Toast.LENGTH_SHORT).show();
+                                })
+                            }
+                        })
+
+                    }
+                    d.setNegativeButton("Cancel") {
+                            dialogInterface, i ->
+
+                    }
+                    val alertDialog = d.create()
+                    alertDialog.show()
+                })
 
                 var state = model.channel!!.state === 1
                 val displayName = if(model.channel!!.name != "") model.channel!!.name else "Channel ".plus(model.channel!!.id)

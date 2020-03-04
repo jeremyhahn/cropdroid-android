@@ -15,6 +15,7 @@ class CropDroidAPI(val controller: MasterController) {
     val RESERVOIR_RESOURCE = ControllerType.Reservoir.name.toLowerCase()
     val DOSER_RESOURCE = ControllerType.Doser.name.toLowerCase()
     val EVENTS_RESOURCE = "events"
+    val DISPENSE_RESOURCE = "dispense"
 
     init {
         REST_ENDPOINT = if(controller.secure == 1)
@@ -41,6 +42,13 @@ class CropDroidAPI(val controller: MasterController) {
     fun doserStatus(callback: Callback) {
         var args = ArrayList<String>(0)
         doGet(DOSER_RESOURCE, args, callback)
+    }
+
+    fun dispense(channelId: Int, seconds: Int, callback: Callback) {
+        var args = ArrayList<String>(4)
+        args.add(channelId.toString())
+        args.add(seconds.toString())
+        doGet(DISPENSE_RESOURCE, args, callback)
     }
 
     fun switch(controllerType: ControllerType, channelId: Int, state: Boolean, callback: Callback) {
