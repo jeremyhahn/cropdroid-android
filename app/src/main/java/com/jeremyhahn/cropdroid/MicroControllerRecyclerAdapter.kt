@@ -25,6 +25,9 @@ import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
 import com.jeremyhahn.cropdroid.R
+import kotlinx.android.synthetic.main.doser_switch_cardview.view.*
+import kotlinx.android.synthetic.main.microcontroller_switch_cardview.view.switchName
+import kotlinx.android.synthetic.main.microcontroller_switch_cardview.view.switchValue
 
 class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: CropDroidAPI,
            val recyclerItems: ArrayList<MicroControllerRecyclerModel>, controllerType: ControllerType) : Clearable,
@@ -79,8 +82,14 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val view: View
         if (viewType == MicroControllerRecyclerModel.CHANNEL_TYPE) {
-            view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.microcontroller_switch_cardview, parent, false)
+            if(controllerType === ControllerType.Doser) {
+                view = LayoutInflater.from(parent.context)
+                    .inflate(R.layout.doser_switch_cardview, parent, false)
+            }
+            else {
+                view = LayoutInflater.from(parent.context)
+                    .inflate(R.layout.microcontroller_switch_cardview, parent, false)
+            }
             return SwitchTypeViewHolder(view)
         }
         //if(viewType == MicroControllerRecyclerModel.METRIC_TYPE) {
@@ -102,46 +111,70 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
                 var itemView = (holder as SwitchTypeViewHolder).itemView
                 if(itemView == null) return
 
-                itemView.btnDispense.setOnClickListener({
-                    val d = AlertDialog.Builder(activity)
-                    val inflater: LayoutInflater = activity.getLayoutInflater()
-                    val dialogView: View = inflater.inflate(R.layout.number_picker_dialog, null)
-                    d.setTitle(R.string.number_picker_dispense_title)
-                    d.setMessage(R.string.number_picker_dispense_message)
-                    d.setView(dialogView)
-                    val numberPicker =
-                        dialogView.findViewById<View>(R.id.dialog_number_picker) as NumberPicker
-                    numberPicker.maxValue = 60
-                    numberPicker.minValue = 1
-                    numberPicker.wrapSelectorWheel = false
-                    numberPicker.setOnValueChangedListener { numberPicker, i, i1 ->
-                        Log.d("btnDispense.onClick", "onValueChange: ")
-                    }
-                    d.setPositiveButton("Done") {
-                            dialogInterface, i -> Log.d("btnDispense.onClick", "onClick: " + numberPicker.value)
+                if(controllerType === ControllerType.Doser) {
 
-                        cropDroidAPI.dispense(model.channel!!.id, numberPicker.value, object: Callback {
-                            override fun onFailure(call: Call, e: IOException) {
-                                Log.d("MicroControllerRecyclerAdapter.onSwitchState", "onFailure response: " + e!!.message)
-                                return
-                            }
-                            override fun onResponse(call: Call, response: okhttp3.Response) {
-                                Log.d("MicroControllerRecyclerAdapter.btnDispense.onClick", "onResponse response: " + response)
-                                Log.d("MicroControllerRecyclerAdapter.btnDispense.onClick", "onResponse response body: " + response.body().toString())
-                                activity.runOnUiThread(Runnable () {
-                                    Toast.makeText(activity, "Dispensing " + model.channel!!.name, Toast.LENGTH_SHORT).show();
+                    itemView.btnDispense.setOnClickListener({
+                        val d = AlertDialog.Builder(activity)
+                        val inflater: LayoutInflater = activity.getLayoutInflater()
+                        val dialogView: View = inflater.inflate(R.layout.number_picker_dialog, null)
+                        d.setTitle(R.string.number_picker_dispense_title)
+                        d.setMessage(R.string.number_picker_dispense_message)
+                        d.setView(dialogView)
+                        val numberPicker =
+                            dialogView.findViewById<View>(R.id.dialog_number_picker) as NumberPicker
+                        numberPicker.maxValue = 60
+                        numberPicker.minValue = 1
+                        numberPicker.wrapSelectorWheel = false
+                        numberPicker.setOnValueChangedListener { numberPicker, i, i1 ->
+                            Log.d("btnDispense.onClick", "onValueChange: ")
+                        }
+                        d.setPositiveButton("Done") { dialogInterface, i ->
+                            Log.d("btnDispense.onClick", "onClick: " + numberPicker.value)
+
+                            cropDroidAPI.dispense(
+                                model.channel!!.id,
+                                numberPicker.value,
+                                object : Callback {
+                                    override fun onFailure(call: Call, e: IOException) {
+                                        Log.d(
+                                            "MicroControllerRecyclerAdapter.onSwitchState",
+                                            "onFailure response: " + e!!.message
+                                        )
+                                        return
+                                    }
+
+                                    override fun onResponse(
+                                        call: Call,
+                                        response: okhttp3.Response
+                                    ) {
+                                        Log.d(
+                                            "MicroControllerRecyclerAdapter.btnDispense.onClick",
+                                            "onResponse response: " + response
+                                        )
+                                        Log.d(
+                                            "MicroControllerRecyclerAdapter.btnDispense.onClick",
+                                            "onResponse response body: " + response.body()
+                                                .toString()
+                                        )
+                                        activity.runOnUiThread(Runnable() {
+                                            Toast.makeText(
+                                                activity,
+                                                "Dispensing " + model.channel!!.name,
+                                                Toast.LENGTH_SHORT
+                                            ).show();
+                                        })
+                                    }
                                 })
-                            }
-                        })
 
-                    }
-                    d.setNegativeButton("Cancel") {
-                            dialogInterface, i ->
+                        }
+                        d.setNegativeButton("Cancel") { dialogInterface, i ->
 
-                    }
-                    val alertDialog = d.create()
-                    alertDialog.show()
-                })
+                        }
+
+                        val alertDialog = d.create()
+                        alertDialog.show()
+                    })
+                }
 
                 var state = model.channel!!.state === 1
                 val displayName = if(model.channel!!.name != "") model.channel!!.name else "Channel ".plus(model.channel!!.id)
