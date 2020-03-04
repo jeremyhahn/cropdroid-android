@@ -1,10 +1,12 @@
 package com.jeremyhahn.cropdroid
 
 import android.app.AlertDialog
+import android.app.PendingIntent.getActivity
 import android.content.Context
 import android.content.DialogInterface
 import android.view.LayoutInflater
 import android.view.View
+import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
@@ -33,9 +35,7 @@ class MasterControllerRecyclerAdapter(val controllers: ArrayList<MasterControlle
 
     override fun onBindViewHolder(holder: MasterControllerRecyclerAdapter.ViewHolder, position: Int) {
         holder.bindItems(controllers[position])
-
-       holder.itemView.setOnLongClickListener { v ->
-
+        holder.itemView.setOnLongClickListener { v ->
            val items = arrayOf<CharSequence>("Delete")
            val builder = AlertDialog.Builder(context)
 
@@ -45,18 +45,17 @@ class MasterControllerRecyclerAdapter(val controllers: ArrayList<MasterControlle
                    var selectedController = repository.getControllerByHostname(controllers[position].hostname)
                    repository.deleteController(selectedController!!)
                    controllers.removeAt(position)
-                   notifyItemRemoved(position);
+                   notifyDataSetChanged()
                    Toast.makeText(
                        context,
                        "Controller deleted",
                        Toast.LENGTH_SHORT
                    ).show()
-                   //var emptyListTest = v.findViewById(R.id.textMasterEmptyList) as TextView
+                   //var emptyListTest = findViewById(R.id.textMasterEmptyList) as TextView
                    //emptyListTest.visibility = VISIBLE
                })
            builder.show()
            true
-
        }
     }
 

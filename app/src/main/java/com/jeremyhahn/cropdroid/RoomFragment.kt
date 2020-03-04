@@ -16,6 +16,7 @@ import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.*
 import com.jeremyhahn.cropdroid.utils.ChannelParser
+import kotlinx.android.synthetic.main.fragment_room.*
 import okhttp3.Call
 import okhttp3.Callback
 import org.json.JSONObject
@@ -26,6 +27,7 @@ import kotlin.concurrent.timerTask
 
 class RoomFragment : Fragment() {
 
+    private var recyclerView: RecyclerView? = null
     private var recyclerItems = ArrayList<MicroControllerRecyclerModel>()
     private var adapter: MicroControllerRecyclerAdapter? = null
     private var swipeContainer: SwipeRefreshLayout? = null
@@ -44,10 +46,9 @@ class RoomFragment : Fragment() {
         adapter = MicroControllerRecyclerAdapter(activity!!, CropDroidAPI(controller!!), recyclerItems, ControllerType.Room)
 
         var fragmentView = inflater.inflate(R.layout.fragment_room, container, false)
-        var recyclerView = fragmentView.findViewById(R.id.recyclerView) as RecyclerView
-
-        recyclerView.layoutManager = LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
-        recyclerView.adapter = adapter!!
+        recyclerView = fragmentView.findViewById(R.id.recyclerView) as RecyclerView
+        recyclerView!!.layoutManager = LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
+        recyclerView!!.adapter = adapter!!
 
         swipeContainer = fragmentView.findViewById(R.id.roomSwipeRefresh) as SwipeRefreshLayout
         swipeContainer?.setOnRefreshListener(OnRefreshListener {
@@ -62,7 +63,9 @@ class RoomFragment : Fragment() {
 
         refreshTimer = Timer()
         refreshTimer!!.scheduleAtFixedRate(timerTask {
+            activity!!.runOnUiThread(Runnable() {
                 getRoomData()
+            })
         }, 0, 60000)
 
         return fragmentView
@@ -73,9 +76,12 @@ class RoomFragment : Fragment() {
         Log.d("RoomFragment.onStop()", "called")
         refreshTimer!!.cancel()
         refreshTimer!!.purge()
+        adapter!!.clear()
     }
 
     fun getRoomData() {
+
+        adapter!!.clear()
 
         CropDroidAPI(controller!!).roomStatus(object : Callback {
 
@@ -95,7 +101,7 @@ class RoomFragment : Fragment() {
                     return
                 }
 
-                recyclerItems.clear()
+                //recyclerItems.clear()
 
                 val json = JSONObject(responseBody)
                 var room = Room(json.getInt("mem"),
@@ -216,6 +222,7 @@ class RoomFragment : Fragment() {
                 }
 
                 activity!!.runOnUiThread(Runnable() {
+                    //recyclerView!!.getRecycledViewPool().clear()
                     adapter!!.notifyDataSetChanged()
                     swipeContainer?.setRefreshing(false)
                 })

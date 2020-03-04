@@ -26,7 +26,7 @@ import okhttp3.Callback
 import java.io.IOException
 
 class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: CropDroidAPI,
-           val recyclerItems: ArrayList<MicroControllerRecyclerModel>, controllerType: ControllerType) :
+           val recyclerItems: ArrayList<MicroControllerRecyclerModel>, controllerType: ControllerType) : Clearable,
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     var metricCount: Int = 0
@@ -91,8 +91,6 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
 
         // Avoid java.lang.IndexOutOfBoundsException: Index: 0, Size: 0
         // when switching from doser tab to reservoir tab
-
-
         if(recyclerItems.size < position) {
             return
         }
@@ -166,13 +164,14 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
         }
     }
 
-    fun clear() {
+    override fun clear() {
         recyclerItems.clear()
         notifyDataSetChanged()
     }
 
     fun addAll(list : List<MicroControllerRecyclerModel>) {
         recyclerItems.addAll(list)
+        notifyDataSetChanged()
     }
 
     fun confirmDelete(): Dialog {

@@ -126,7 +126,13 @@ class CropDroidAPI(val controller: MasterController) {
                 .header("Authorization","Bearer " + controller.token)
                 .build();
         }
-        client.newCall(request).enqueue(callback)
+
+        try {
+            client.newCall(request).enqueue(callback)
+        }
+        catch(e: java.net.ConnectException) {
+            fail(callback, e.message!!)
+        }
     }
 
     fun fail(callback: Callback, message: String) {

@@ -64,9 +64,10 @@ class LoginViewModel() : ViewModel() {
 
             override fun onResponse(call: Call, response: Response) {
 
-                Log.d("LoginViewModel.register", "login response: " + response)
-
                 var responseBody = response.body().string()
+
+                Log.d("LoginViewModel.register", "login response: " + responseBody)
+
                 var json = JSONObject(responseBody)
 
                 if (!response.isSuccessful()) {
@@ -77,6 +78,7 @@ class LoginViewModel() : ViewModel() {
 
                 if(json.getBoolean("success")) {
                     _loginResult.postValue(LoginResult(registered = true))
+                    return
                 }
 
                 _loginResult.postValue(LoginResult(error = "Unexpected error"))

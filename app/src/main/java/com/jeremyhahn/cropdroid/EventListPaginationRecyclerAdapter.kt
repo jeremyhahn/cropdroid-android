@@ -74,7 +74,8 @@ class EventListPaginationRecyclerAdapter(private val context: Context) :  Recycl
     fun add(mc: EventLog) {
         eventLogs!!.add(mc)
         //this.notifyItemInserted(eventLogs!!.size - 1)
-        Handler().post(Runnable { this.notifyItemInserted(eventLogs!!.size - 1) })
+        //Handler().post(Runnable { this.notifyItemInserted(eventLogs!!.size - 1) })
+        Handler().post(Runnable { notifyDataSetChanged() })
     }
 
     fun addAll(mcList: List<EventLog>) {
@@ -88,7 +89,8 @@ class EventListPaginationRecyclerAdapter(private val context: Context) :  Recycl
         //if (position > -1) {
             eventLogs!!.removeAt(position)
             //this.notifyItemRemoved(position)
-            Handler().post(Runnable { this.notifyItemRemoved(position) })
+            //Handler().post(Runnable { this.notifyItemRemoved(position) })
+            Handler().post(Runnable { notifyDataSetChanged() })
         //}
     }
 
@@ -97,6 +99,7 @@ class EventListPaginationRecyclerAdapter(private val context: Context) :  Recycl
         while (itemCount > 0) {
             remove(getItem(0))
         }
+        notifyDataSetChanged()
     }
 
     val isEmpty: Boolean
@@ -117,7 +120,8 @@ class EventListPaginationRecyclerAdapter(private val context: Context) :  Recycl
             if (item != null) {
                 eventLogs!!.removeAt(position)
                 //this.notifyItemRemoved(position)
-                Handler().post(Runnable { this.notifyItemRemoved(position) })
+                //Handler().post(Runnable { this.notifyItemRemoved(position) })
+                Handler().post(Runnable { notifyDataSetChanged() })
             }
             //}
         }

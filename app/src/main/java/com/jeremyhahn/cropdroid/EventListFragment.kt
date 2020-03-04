@@ -18,6 +18,7 @@ import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.EventLog
 import com.jeremyhahn.cropdroid.model.EventsPage
 import com.jeremyhahn.cropdroid.model.MasterController
+import kotlinx.android.synthetic.main.fragment_room.*
 import okhttp3.Call
 import okhttp3.Callback
 import org.json.JSONObject
@@ -27,7 +28,7 @@ class EventListFragment : Fragment() {
 
     private val TAG = "EventListFragment"
 
-    var adapterEventListRecycler: EventListPaginationRecyclerAdapter? = null
+    var adapter: EventListPaginationRecyclerAdapter? = null
     var linearLayoutManager: LinearLayoutManager? = null
     var swipeContainer: SwipeRefreshLayout? = null
     var rv: RecyclerView? = null
@@ -41,11 +42,7 @@ class EventListFragment : Fragment() {
 
     private var controller : MasterController? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
         val id = activity!!.getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_PRIVATE)
             .getInt(Constants.PREF_KEY_CONTROLLER_ID, 0)
@@ -55,14 +52,14 @@ class EventListFragment : Fragment() {
         var fragmentView = inflater.inflate(R.layout.fragment_events, container, false)
 
         progressBar = fragmentView.findViewById<View>(R.id.eventsProgress) as ProgressBar
-        adapterEventListRecycler = EventListPaginationRecyclerAdapter(context!!)
+        adapter = EventListPaginationRecyclerAdapter(context!!)
         linearLayoutManager = LinearLayoutManager(context!!, LinearLayoutManager.VERTICAL, false)
 
         rv = fragmentView.findViewById<View>(R.id.eventsRecycler) as RecyclerView
         rv!!.setHasFixedSize(true)
         rv!!.layoutManager = linearLayoutManager
         rv!!.itemAnimator = DefaultItemAnimator()
-        rv!!.adapter = adapterEventListRecycler
+        rv!!.adapter = adapter
         rv!!.addOnScrollListener(object : EventListScrollListener(linearLayoutManager!!) {
 
             override fun nextPage() {
@@ -103,6 +100,12 @@ class EventListFragment : Fragment() {
         return fragmentView
     }
 
+    override fun onStop() {
+        super.onStop()
+        Log.d("EventListFragment.onStop()", "called")
+        adapter!!.clear()
+    }
+
     fun getEventsPage(page : Int) {
 
         CropDroidAPI(controller!!).eventsList(page.toString(), object : Callback {
@@ -111,7 +114,7 @@ class EventListFragment : Fragment() {
                 Log.d("EventListFragment.getEventsPage()", "onFailure response: " + e!!.message)
                 progressBar!!.visibility = GONE
                 isLoading = false
-                adapterEventListRecycler!!.removeLoadingFooter()
+                adapter!!.removeLoadingFooter()
                 return
             }
 
@@ -153,15 +156,14 @@ class EventListFragment : Fragment() {
 
                     progressBar!!.visibility = GONE
                     isLoading = false
-                    adapterEventListRecycler!!.removeLoadingFooter()
-
-                    adapterEventListRecycler!!.addAll(eventsPage.events)
-                    adapterEventListRecycler!!.notifyDataSetChanged()
+                    adapter!!.removeLoadingFooter()
 
                     if(currentPage >= TOTAL_PAGES) {
                         isLastPage = true
                     }
 
+                    adapter!!.addAll(eventsPage.events)
+                    adapter!!.notifyDataSetChanged()
                     swipeContainer?.setRefreshing(false)
                 })
             }
@@ -170,15 +172,15 @@ class EventListFragment : Fragment() {
 
     private fun loadFirstPage() {
         Log.d(TAG, "loadFirstPage: ")
-        if(!adapterEventListRecycler!!.isEmpty) {
-            adapterEventListRecycler!!.clear()
+        if(!adapter!!.isEmpty) {
+            adapter!!.clear()
         }
         getEventsPage(0)
     }
 
     private fun loadNextPage() {
         Log.d(TAG, "loadNextPage: $currentPage")
-        adapterEventListRecycler!!.addLoadingFooter()
+        adapter!!.addLoadingFooter()
         isLoading = true
         getEventsPage(currentPage)
     }

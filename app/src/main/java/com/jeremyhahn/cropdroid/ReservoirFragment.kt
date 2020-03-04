@@ -16,6 +16,7 @@ import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.*
 import com.jeremyhahn.cropdroid.utils.ChannelParser
+import kotlinx.android.synthetic.main.fragment_room.*
 import okhttp3.Call
 import okhttp3.Callback
 import org.json.JSONArray
@@ -63,7 +64,9 @@ class ReservoirFragment : Fragment() {
 
         refreshTimer = Timer()
         refreshTimer!!.scheduleAtFixedRate(timerTask {
-            getReservoirData()
+            activity!!.runOnUiThread(Runnable() {
+                getReservoirData()
+            })
         }, 0, 60000)
 
         return fragmentView
@@ -74,10 +77,12 @@ class ReservoirFragment : Fragment() {
         Log.d("ReservoirFragment.onStop()", "called")
         refreshTimer!!.cancel()
         refreshTimer!!.purge()
-        recyclerItems.clear()
+        adapter!!.clear()
     }
 
     fun getReservoirData() {
+
+        adapter!!.clear()
 
         CropDroidAPI(controller!!).reservoirStatus(object : Callback {
 
@@ -97,7 +102,7 @@ class ReservoirFragment : Fragment() {
                     return
                 }
 
-                recyclerItems.clear()
+                //recyclerItems.clear()
 
                 val json = JSONObject(responseBody)
                 var reservoir = Reservoir(json.getInt("mem"), json.getDouble("resTemp"),
@@ -219,6 +224,7 @@ class ReservoirFragment : Fragment() {
                 }
 
                 activity!!.runOnUiThread(Runnable() {
+                    //recyclerView!!.getRecycledViewPool().clear()
                     adapter!!.notifyDataSetChanged()
                     swipeContainer?.setRefreshing(false)
                 })

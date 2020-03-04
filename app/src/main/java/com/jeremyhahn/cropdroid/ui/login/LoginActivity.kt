@@ -41,6 +41,12 @@ class LoginActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_login)
 
+        val username = findViewById<EditText>(R.id.username)
+        val password = findViewById<EditText>(R.id.password)
+        val useSSL = findViewById<CheckBox>(R.id.useSSL)
+        val login = findViewById<Button>(R.id.login)
+        val loading = findViewById<ProgressBar>(R.id.loading)
+
         controller = MasterController(
             intent.getIntExtra("controller_id", 0),
             intent.getStringExtra("controller_name"),
@@ -51,15 +57,8 @@ class LoginActivity : AppCompatActivity() {
 
         Log.d("LoginActivity.onCreate", "controller_id: " + controller!!.id.toString())
 
-        val username = findViewById<EditText>(R.id.username)
-        val password = findViewById<EditText>(R.id.password)
-        val useSSL = findViewById<CheckBox>(R.id.useSSL)
-        val login = findViewById<Button>(R.id.login)
-        val loading = findViewById<ProgressBar>(R.id.loading)
-
         try {
             val selectedController = repository.getController(controller!!.id)
-
 
             Log.d("LoginActivity.onCreate", "selectedController: " + selectedController.name)
 
@@ -199,6 +198,7 @@ class LoginActivity : AppCompatActivity() {
 
             login.setOnClickListener {
                 loading.visibility = View.VISIBLE
+                checkSslFlag()
                 loginViewModel.login(
                     CropDroidAPI(controller!!),
                     username.text.toString(),
@@ -209,11 +209,20 @@ class LoginActivity : AppCompatActivity() {
     }
 
     fun onRegister(v: View) {
+        checkSslFlag()
         loginViewModel.register(
             CropDroidAPI(controller!!),
             username.text.toString(),
             password.text.toString()
         )
+    }
+
+    fun checkSslFlag() {
+        if(useSSL.isChecked()) {
+            controller!!.secure = 1
+        } else {
+            controller!!.secure = 0
+        }
     }
 
     private fun updateUiWithUser(user: User, controller: MasterController = this.controller!!) {

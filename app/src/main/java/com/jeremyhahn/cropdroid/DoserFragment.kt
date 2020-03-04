@@ -15,6 +15,7 @@ import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.*
 import com.jeremyhahn.cropdroid.utils.ChannelParser
+import kotlinx.android.synthetic.main.fragment_room.*
 import okhttp3.Call
 import okhttp3.Callback
 import org.json.JSONArray
@@ -26,6 +27,7 @@ import kotlin.concurrent.timerTask
 
 class DoserFragment : Fragment() {
 
+    private var recyclerView:  RecyclerView? = null
     private var recyclerItems = ArrayList<MicroControllerRecyclerModel>()
     private var adapter: MicroControllerRecyclerAdapter? = null
     private var swipeContainer: SwipeRefreshLayout? = null
@@ -42,9 +44,9 @@ class DoserFragment : Fragment() {
         adapter = MicroControllerRecyclerAdapter(activity!!, CropDroidAPI(controller!!), recyclerItems, ControllerType.Doser)
 
         var fragmentView = inflater.inflate(R.layout.fragment_doser, container, false)
-        var recyclerView = fragmentView.findViewById(R.id.doserRecyclerView) as RecyclerView
-        recyclerView.layoutManager = LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
-        recyclerView.adapter = adapter
+        recyclerView = fragmentView.findViewById(R.id.doserRecyclerView) as RecyclerView
+        recyclerView!!.layoutManager = LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
+        recyclerView!!.adapter = adapter
 
         swipeContainer = fragmentView.findViewById(R.id.doserSwipeRefresh) as SwipeRefreshLayout
         swipeContainer?.setOnRefreshListener(SwipeRefreshLayout.OnRefreshListener {
@@ -59,7 +61,9 @@ class DoserFragment : Fragment() {
 
         refreshTimer = Timer()
         refreshTimer!!.scheduleAtFixedRate(timerTask {
-            getDoserData()
+            activity!!.runOnUiThread(Runnable() {
+                getDoserData()
+            })
         }, 0, 60000)
 
         Log.d("DoserFragment.onCreateView", "executed")
@@ -72,10 +76,12 @@ class DoserFragment : Fragment() {
         Log.d("DoserFragment.onStop()", "called")
         refreshTimer!!.cancel()
         refreshTimer!!.purge()
-        recyclerItems.clear()
-    }
+        adapter!!.clear()
+   }
 
      fun getDoserData() {
+
+         adapter!!.clear()
 
         CropDroidAPI(controller!!).doserStatus(object : Callback {
 
@@ -95,7 +101,7 @@ class DoserFragment : Fragment() {
                     return
                 }
 
-                recyclerItems.clear()
+                //recyclerItems.clear()
 
                 var channels = ChannelParser.Parse(responseBody)
                 for(channel in channels) {
@@ -106,6 +112,7 @@ class DoserFragment : Fragment() {
                 }
 
                 activity!!.runOnUiThread(Runnable() {
+                    //recyclerView!!.getRecycledViewPool().clear()
                     adapter!!.notifyDataSetChanged()
                     swipeContainer?.setRefreshing(false)
                 })

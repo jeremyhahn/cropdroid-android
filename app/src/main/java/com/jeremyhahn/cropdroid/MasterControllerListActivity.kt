@@ -93,13 +93,13 @@ class MasterControllerListActivity : AppCompatActivity(), OnMasterListener {
 
     fun getMasterControllers() {
 
-        var savedControllers = MasterControllerRepository(this).allControllers
+        controllers.clear()
 
+        var savedControllers = MasterControllerRepository(this).allControllers
         for(controller in savedControllers) {
             Log.d("savedController", controller.toString())
         }
 
-        controllers.clear()
         controllers.addAll(savedControllers)
 
         if(controllers.size <= 0) {

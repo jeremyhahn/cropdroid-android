@@ -171,7 +171,7 @@ class NotificationService : Service() {
                 lowPriorityChannel.setLightColor(Color.GREEN)
                 notificationManager!!.createNotificationChannel(lowPriorityChannel)
 
-                val medPriorityChannel = NotificationChannel("med_priority_channel_id", "Medium priority notifications", NotificationManager.IMPORTANCE_LOW)
+                val medPriorityChannel = NotificationChannel("med_priority_channel_id", "Medium priority notifications", NotificationManager.IMPORTANCE_DEFAULT)
                 medPriorityChannel.setShowBadge(true)
                 medPriorityChannel.enableLights(true)
                 medPriorityChannel.enableVibration(false)
