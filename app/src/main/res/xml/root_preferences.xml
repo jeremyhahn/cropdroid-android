@@ -18,7 +18,7 @@
         <ListPreference
             app:key="mode"
             app:title="@string/mode"
-            app:defaultValue="Mode"
+            app:defaultValue="Virtual"
             app:entries="@array/mode_entries"
             app:entryValues="@array/mode_values"
             app:useSimpleSummaryProvider="true" />
@@ -35,6 +35,12 @@
         <SwitchPreferenceCompat
             app:key="room.enable"
             app:title="@string/pref_enable" />
+
+        <EditTextPreference
+            app:key="room.uri"
+            app:title="@string/pref_uri"
+            app:dependency="room.uri"
+            app:useSimpleSummaryProvider="true" />
 
         <SwitchPreferenceCompat
             app:key="room.notify"
@@ -67,6 +73,12 @@
             app:key="reservoir.enable"
             app:title="@string/pref_enable"/>
 
+        <EditTextPreference
+            app:key="reservoir.uri"
+            app:title="@string/pref_uri"
+            app:dependency="reservoir.uri"
+            app:useSimpleSummaryProvider="true" />
+
         <SwitchPreferenceCompat
             app:key="reservoir.notify"
             app:title="@string/pref_notify"
@@ -94,6 +106,12 @@
             app:key="doser.enable"
             app:title="@string/pref_enable" />
 
+        <EditTextPreference
+            app:key="doser.uri"
+            app:title="@string/pref_uri"
+            app:dependency="doser.uri"
+            app:useSimpleSummaryProvider="true" />
+
         <SwitchPreferenceCompat
             app:key="doser.notify"
             app:title="@string/pref_notify"
@@ -112,7 +130,8 @@
 
         <SwitchPreferenceCompat
             app:key="smtp.enable"
-            app:title="@string/pref_enable" />
+            app:title="@string/pref_enable"
+            app:useSimpleSummaryProvider="true" />/>
 
         <EditTextPreference
             app:key="smtp.host"

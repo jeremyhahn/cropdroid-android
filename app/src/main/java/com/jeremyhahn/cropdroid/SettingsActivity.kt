@@ -1,9 +1,7 @@
 package com.jeremyhahn.cropdroid
 
-import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
-import android.content.SharedPreferences.OnSharedPreferenceChangeListener
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
@@ -43,10 +41,10 @@ class SettingsActivity : AppCompatActivity() {
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
 
-            PreferenceManager.getDefaultSharedPreferences(activity!!.applicationContext).registerOnSharedPreferenceChangeListener(this);
+            val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(activity!!.applicationContext)
+            sharedPrefs.registerOnSharedPreferenceChangeListener(this)
 
-            val id = activity!!.getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_PRIVATE)
-                .getInt(Constants.PREF_KEY_CONTROLLER_ID, 0)
+            val id = sharedPrefs.getInt(Constants.PREF_KEY_CONTROLLER_ID, 0)
 
             controller = MasterControllerRepository(context!!).getController(id)
             cropdroid = CropDroidAPI(controller!!)
@@ -77,14 +75,5 @@ class SettingsActivity : AppCompatActivity() {
                 }
             })
         }
-
-        fun createValue(sharedPreferences: SharedPreferences, key: String) : String {
-            return sharedPreferences!!.getString(key, "")
-        }
-
-        fun createValue(sharedPreferences: SharedPreferences, key: Boolean) : String {
-            return sharedPreferences!!.getString(key.toString(), "")
-        }
-
     }
 }

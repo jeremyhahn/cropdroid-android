@@ -2,6 +2,7 @@ package com.jeremyhahn.cropdroid
 
 import android.content.Context
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -11,7 +12,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
-import com.jeremyhahn.cropdroid.Constants.Companion.FLOAT_SWITCH_FULL
 import com.jeremyhahn.cropdroid.Constants.Companion.MICROCONTROLLER_REFRESH
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
@@ -39,7 +39,7 @@ class ReservoirFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
-        val id = activity!!.getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_PRIVATE)
+        val id = PreferenceManager.getDefaultSharedPreferences(activity!!.applicationContext)
             .getInt(Constants.PREF_KEY_CONTROLLER_ID, 0)
 
         Log.d("ReservoirFragment.onCreateView", "PREF_KEY_CONTROLLER_ID: " + id.toString())
@@ -105,19 +105,19 @@ class ReservoirFragment : Fragment() {
                 val json = JSONObject(responseBody)
 
                 val jsonMetrics = json.getJSONArray("metrics")
-                var metrics = MetricParser.Parse(jsonMetrics)
+                var metrics = MetricParser.parse(jsonMetrics)
                 for(metric in metrics) {
                     recyclerItems.add(
                         MicroControllerRecyclerModel(
                             MicroControllerRecyclerModel.METRIC_TYPE,
-                            Metric(metric.id, metric.name, metric.display, metric.unit, metric.enabled, metric.notify, metric.alarmLow, metric.alarmHigh, metric.value),
+                            Metric(metric.id, metric.name, metric.enabled, metric.notify, metric.display, metric.unit, metric.alarmLow, metric.alarmHigh, metric.value),
                             null))
                 }
 
                 adapter!!.metricCount = recyclerItems.size
 
                 val jsonChannels = json.getJSONArray("channels")
-                var channels = ChannelParser.Parse(jsonChannels)
+                var channels = ChannelParser.parse(jsonChannels)
                 for(channel in channels) {
                     recyclerItems.add(
                         MicroControllerRecyclerModel(

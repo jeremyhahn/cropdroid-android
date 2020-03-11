@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -15,7 +16,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.jeremyhahn.cropdroid.Constants.Companion.GLOBAL_PREFS
 import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_CONTROLLER_ID
 import com.jeremyhahn.cropdroid.MasterControllerRecyclerAdapter.OnMasterListener
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
@@ -79,7 +79,7 @@ class MasterControllerListActivity : AppCompatActivity(), OnMasterListener {
             return
         }
 
-        var editor = getSharedPreferences(GLOBAL_PREFS, Context.MODE_PRIVATE).edit()
+        var editor = PreferenceManager.getDefaultSharedPreferences(applicationContext).edit()
         editor.putInt(PREF_KEY_CONTROLLER_ID, controllers.get(position).id)
         editor.apply()
 

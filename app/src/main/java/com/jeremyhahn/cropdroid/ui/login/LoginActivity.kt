@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -14,7 +15,7 @@ import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import com.jeremyhahn.cropdroid.Constants.Companion.GLOBAL_PREFS
+import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_CONTROLLER_ID
 import com.jeremyhahn.cropdroid.MicroControllerActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
@@ -22,6 +23,8 @@ import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.MasterController
 import com.jeremyhahn.cropdroid.model.User
 import com.jeremyhahn.cropdroid.service.NotificationService
+import com.jeremyhahn.cropdroid.utils.ConfigManager
+import com.jeremyhahn.cropdroid.utils.ConfigParser
 import com.jeremyhahn.cropdroid.utils.JsonWebToken
 import io.jsonwebtoken.ExpiredJwtException
 import kotlinx.android.synthetic.main.activity_login.*
@@ -91,6 +94,7 @@ class LoginActivity : AppCompatActivity() {
         }
 
         Log.d("LoginActivity.onCreate: controller_id", "" + controller!!.id)
+        Log.d("LoginActivity.onCreate: controller_server_id", "" + controller!!.serverId)
         Log.d("LoginActivity.onCreate: controller_name", "" + controller!!.name)
         Log.d("LoginActivity.onCreate: controller_hostname", controller!!.hostname)
 
@@ -153,15 +157,17 @@ class LoginActivity : AppCompatActivity() {
                 }
                 Log.i("LoginActivity.loginResult.token","Controller successfully authenticated")
 
-                val prefs = getSharedPreferences(GLOBAL_PREFS, Context.MODE_PRIVATE)
+                val prefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
                 val editor = prefs.edit()
-                editor.putInt("controller_id", controller!!.id)              //  local sqlite controller id
+                editor.putInt(PREF_KEY_CONTROLLER_ID, controller!!.id)              //  local sqlite controller id
                 editor.putInt("controller_server_id", controller!!.serverId) // remote database controller id
                 editor.putString("controller_name", controller!!.name)
                 editor.putString("controller_hostname", controller!!.hostname)
                 editor.putString("user_id", user.id)
                 editor.putString("jwt", user.token)
-                val commit = editor.commit()
+                if(!editor.commit()) {
+                    Log.e("LoginActivity", "Error committing defaultSharedPreferences")
+                }
 
                 updateUiWithUser(user)
                 finish()
@@ -236,8 +242,13 @@ class LoginActivity : AppCompatActivity() {
                 Log.d(":LoginActivity.getConfig.onFailure", "onFailure response: " + e!!.message)
             }
             override fun onResponse(call: Call, response: okhttp3.Response) {
+
                 var responseBody = response.body().string()
                 Log.d("LoginActivity.getConfig.onResponse", "responseBody: " + responseBody)
+
+                ConfigManager(
+                    PreferenceManager.getDefaultSharedPreferences(applicationContext),
+                    ConfigParser.parse(responseBody)).sync()
 
                 startForegroundService(notificationServiceIntent)
                 startActivity(microControllerActivity)

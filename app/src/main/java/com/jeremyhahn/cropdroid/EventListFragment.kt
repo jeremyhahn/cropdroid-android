@@ -2,6 +2,7 @@ package com.jeremyhahn.cropdroid
 
 import android.content.Context
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -44,7 +45,7 @@ class EventListFragment : Fragment() {
 
      override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
-        val id = activity!!.getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_PRIVATE)
+        val id = PreferenceManager.getDefaultSharedPreferences(activity!!.applicationContext)
             .getInt(Constants.PREF_KEY_CONTROLLER_ID, 0)
         Log.d("EventListFragment.onCreate", "controller_id: " + id.toString())
         controller = MasterControllerRepository(context!!).getController(id)

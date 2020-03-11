@@ -1,6 +1,5 @@
 package com.jeremyhahn.cropdroid
 
-import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
@@ -12,6 +11,8 @@ import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager.widget.ViewPager
 import com.google.android.material.tabs.TabLayout
+import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_NAME_KEY
+import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ROOM_VIDEO_KEY
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.MasterController
 import kotlinx.android.synthetic.main.activity_main.*
@@ -21,18 +22,22 @@ class MicroControllerActivity: AppCompatActivity() {
     var tabLayout: TabLayout? = null
     var viewPager: ViewPager? = null
     var controller: MasterController? = null
-    var repo: MasterControllerRepository? = null
     var preferences : SharedPreferences? = null
+    var videoUrl: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        preferences =  applicationContext.getSharedPreferences(Constants.GLOBAL_PREFS, Context.MODE_PRIVATE)
+        preferences =  PreferenceManager.getDefaultSharedPreferences(applicationContext)
+
+        videoUrl = preferences!!.getString(CONFIG_ROOM_VIDEO_KEY, "")
+
         val id = preferences!!.getInt(Constants.PREF_KEY_CONTROLLER_ID, 0)
+
         controller = MasterControllerRepository(this).getController(id)
 
-        toolbar.setTitle(controller!!.name)
+        toolbar.setTitle(preferences!!.getString(CONFIG_NAME_KEY, controller!!.name))
         setSupportActionBar(toolbar)
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
         supportActionBar!!.setDisplayShowHomeEnabled(true)
@@ -71,8 +76,10 @@ class MicroControllerActivity: AppCompatActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu_main, menu)
+        if(videoUrl == "") {
+            menu.getItem(1).setVisible(false)
+        }
         return true
     }
 
@@ -88,15 +95,15 @@ class MicroControllerActivity: AppCompatActivity() {
             R.id.action_video -> {
                 //startActivity(Intent(this, VideoActivity::class.java))
                 val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this /* Activity context */)
-                val video_url = sharedPreferences.getString("room.video", "")
+                val video_url = sharedPreferences.getString(CONFIG_ROOM_VIDEO_KEY, "")
                 if(video_url != "") {
-                    /*
-                    var intent = Intent(this, VideoActivity::class.java)
-                    intent.putExtra("video_url", video_url)
-                    startActivity(intent)
-                    */
                     startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(video_url)))
                 }
+                /*
+                var intent = Intent(this, VideoActivity::class.java)
+                intent.putExtra("video_url", video_url)
+                startActivity(intent)
+                */
                 true
             }
             R.id.action_logout -> {
