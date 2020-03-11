@@ -14,13 +14,11 @@ import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
 import com.jeremyhahn.cropdroid.Constants.Companion.MICROCONTROLLER_REFRESH
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
-import com.jeremyhahn.cropdroid.model.*
+import com.jeremyhahn.cropdroid.model.MasterController
+import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
 import com.jeremyhahn.cropdroid.utils.ChannelParser
-import kotlinx.android.synthetic.main.fragment_room.*
 import okhttp3.Call
 import okhttp3.Callback
-import org.json.JSONArray
-import org.json.JSONObject
 import java.io.IOException
 import java.util.*
 import kotlin.collections.ArrayList
@@ -77,7 +75,6 @@ class DoserFragment : Fragment() {
         Log.d("DoserFragment.onStop()", "called")
         refreshTimer!!.cancel()
         refreshTimer!!.purge()
-        //adapter!!.clear()
    }
 
      fun getDoserData() {
@@ -93,7 +90,6 @@ class DoserFragment : Fragment() {
 
             override fun onResponse(call: Call, response: okhttp3.Response) {
 
-                var waterLeakStatus = Constants.WATER_LEAK_STATUS_DRY
                 var responseBody = response.body().string()
 
                 Log.d("DoserFragment.getDoserData", "responseBody: " + responseBody)
@@ -101,8 +97,6 @@ class DoserFragment : Fragment() {
                 if(response.code() != 200) {
                     return
                 }
-
-                //recyclerItems.clear()
 
                 var channels = ChannelParser.Parse(responseBody)
                 for(channel in channels) {
@@ -113,7 +107,6 @@ class DoserFragment : Fragment() {
                 }
 
                 activity!!.runOnUiThread(Runnable() {
-                    //recyclerView!!.getRecycledViewPool().clear()
                     adapter!!.notifyDataSetChanged()
                     swipeContainer?.setRefreshing(false)
                 })

@@ -15,12 +15,13 @@ import com.jeremyhahn.cropdroid.Constants.Companion.FLOAT_SWITCH_FULL
 import com.jeremyhahn.cropdroid.Constants.Companion.MICROCONTROLLER_REFRESH
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
-import com.jeremyhahn.cropdroid.model.*
+import com.jeremyhahn.cropdroid.model.MasterController
+import com.jeremyhahn.cropdroid.model.Metric
+import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
 import com.jeremyhahn.cropdroid.utils.ChannelParser
-import kotlinx.android.synthetic.main.fragment_room.*
+import com.jeremyhahn.cropdroid.utils.MetricParser
 import okhttp3.Call
 import okhttp3.Callback
-import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
 import java.util.*
@@ -78,7 +79,6 @@ class ReservoirFragment : Fragment() {
         Log.d("ReservoirFragment.onStop()", "called")
         refreshTimer!!.cancel()
         refreshTimer!!.purge()
-        //adapter!!.clear()
     }
 
     fun getReservoirData() {
@@ -94,7 +94,6 @@ class ReservoirFragment : Fragment() {
 
             override fun onResponse(call: Call, response: okhttp3.Response) {
 
-                var floatSwitchState = FLOAT_SWITCH_FULL
                 var responseBody = response.body().string()
 
                 Log.d("ReservoirFragment.getReservoirData", "responseBody: " + responseBody)
@@ -103,117 +102,19 @@ class ReservoirFragment : Fragment() {
                     return
                 }
 
-                //recyclerItems.clear()
-
                 val json = JSONObject(responseBody)
-                var reservoir = Reservoir(json.getInt("mem"), json.getDouble("resTemp"),
-                    json.getDouble("PH"),json.getDouble("EC"),json.getDouble("TDS"),json.getDouble("SAL"),
-                    json.getDouble("SG"),json.getDouble("DO_mgL"),json.getDouble("DO_PER"),json.getDouble("ORP"),
-                    json.getDouble("envTemp"),json.getDouble("envHumidity"),json.getDouble("envHeatIndex"),
-                    json.getInt("upperFloat"), json.getInt("lowerFloat"))
 
-                recyclerItems.add(
-                    MicroControllerRecyclerModel(
-                        MicroControllerRecyclerModel.METRIC_TYPE,
-                        Metric("Water Temperature", reservoir.waterTemp.toString().plus("°")),
-                        null))
-
-                recyclerItems.add(
-                    MicroControllerRecyclerModel(
-                        MicroControllerRecyclerModel.METRIC_TYPE,
-                        Metric("pH", reservoir.PH.toString()),
-                        null))
-
-                recyclerItems.add(
-                    MicroControllerRecyclerModel(
-                        MicroControllerRecyclerModel.METRIC_TYPE,
-                        Metric("Electrical Conductivity (EC)", reservoir.EC.toString().plus(" μS/cm")),
-                        null))
-
-                recyclerItems.add(
-                    MicroControllerRecyclerModel(
-                        MicroControllerRecyclerModel.METRIC_TYPE,
-                        Metric("Total Dissolved Solids (TDS)", reservoir.TDS.toString().plus(" ppm")),
-                        null))
-
-                recyclerItems.add(
-                    MicroControllerRecyclerModel(
-                        MicroControllerRecyclerModel.METRIC_TYPE,
-                        Metric("Oxygen Reduction Potential (ORP)", reservoir.ORP.toString().plus(" mV")),
-                        null))
-
-                recyclerItems.add(
-                    MicroControllerRecyclerModel(
-                        MicroControllerRecyclerModel.METRIC_TYPE,
-                        Metric("Dissolved Oxygen (DO)", reservoir.DO_mgL.toString().plus(" mg/L")),
-                        null))
-
-                recyclerItems.add(
-                    MicroControllerRecyclerModel(
-                        MicroControllerRecyclerModel.METRIC_TYPE,
-                        Metric("Dissolved Oxygen (DO)", reservoir.DO_PER.toString().plus("%")),
-                        null))
-
-                recyclerItems.add(
-                    MicroControllerRecyclerModel(
-                        MicroControllerRecyclerModel.METRIC_TYPE,
-                        Metric("Salinity", reservoir.SAL.toString().plus(" ppt")),
-                        null))
-
-                recyclerItems.add(
-                    MicroControllerRecyclerModel(
-                        MicroControllerRecyclerModel.METRIC_TYPE,
-                        Metric("Specific Gravity", reservoir.SG.toString()),
-                        null))
-
-                recyclerItems.add(
-                    MicroControllerRecyclerModel(
-                        MicroControllerRecyclerModel.METRIC_TYPE,
-                        Metric("Environment Temp", reservoir.envTemp.toString().plus("°")),
-                        null))
-
-                recyclerItems.add(
-                    MicroControllerRecyclerModel(
-                        MicroControllerRecyclerModel.METRIC_TYPE,
-                        Metric("Environment Humidity", reservoir.envHumidity.toString().plus("%")),
-                        null))
-
-                recyclerItems.add(
-                    MicroControllerRecyclerModel(
-                        MicroControllerRecyclerModel.METRIC_TYPE,
-                        Metric("Environment Heat Index", reservoir.envHeatIndex.toString().plus("°")),
-                        null))
-
-                if(reservoir.upperFloat <= 0) floatSwitchState = Constants.FLOAT_SWITCH_LOW
-                recyclerItems.add(
-                    MicroControllerRecyclerModel(
-                        MicroControllerRecyclerModel.METRIC_TYPE,
-                        Metric("Upper Float", floatSwitchState),
-                        null))
-
-                if(reservoir.lowerFloat <= 0) floatSwitchState = Constants.FLOAT_SWITCH_LOW
-                recyclerItems.add(
-                    MicroControllerRecyclerModel(
-                        MicroControllerRecyclerModel.METRIC_TYPE,
-                        Metric("Lower Float", floatSwitchState),
-                        null))
-
-                adapter!!.metricCount = recyclerItems.size
-
-                /*
-                val jsonChannels = json.getJSONArray("channels")
-                for(i in 0..jsonChannels.length()-1) {
-                    val jsonChannel = jsonChannels.getJSONObject(i)
-                    val id = jsonChannel.getInt("id")
-                    val name = jsonChannel.getString("name")
-                    val value = jsonChannel.getInt("value")
+                val jsonMetrics = json.getJSONArray("metrics")
+                var metrics = MetricParser.Parse(jsonMetrics)
+                for(metric in metrics) {
                     recyclerItems.add(
                         MicroControllerRecyclerModel(
-                            MicroControllerRecyclerModel.CHANNEL_TYPE,
-                            null,
-                            Channel(id, name, value)
-                        ))
-                }*/
+                            MicroControllerRecyclerModel.METRIC_TYPE,
+                            Metric(metric.id, metric.name, metric.display, metric.unit, metric.enabled, metric.notify, metric.alarmLow, metric.alarmHigh, metric.value),
+                            null))
+                }
+
+                adapter!!.metricCount = recyclerItems.size
 
                 val jsonChannels = json.getJSONArray("channels")
                 var channels = ChannelParser.Parse(jsonChannels)
@@ -225,7 +126,6 @@ class ReservoirFragment : Fragment() {
                 }
 
                 activity!!.runOnUiThread(Runnable() {
-                    //recyclerView!!.getRecycledViewPool().clear()
                     adapter!!.notifyDataSetChanged()
                     swipeContainer?.setRefreshing(false)
                 })

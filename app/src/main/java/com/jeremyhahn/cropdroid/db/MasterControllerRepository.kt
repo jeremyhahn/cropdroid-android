@@ -8,9 +8,10 @@ import android.database.sqlite.SQLiteOpenHelper
 import com.jeremyhahn.cropdroid.Constants.Companion.DATABASE_NAME
 import com.jeremyhahn.cropdroid.model.MasterController
 
-private const val DATABASE_VERSION = 4
+private const val DATABASE_VERSION = 6
 private const val TABLE_MASTER_CONTROLLERS = "master_controllers"
 private const val KEY_ID = "id"
+private const val KEY_SERVER_ID = "server_id" // controller id on the server
 private const val KEY_NAME = "name"
 private const val KEY_HOSTNAME = "hostname"
 private const val KEY_SECURE = "secure"
@@ -20,7 +21,6 @@ private const val KEY_TOKEN = "token"
 class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
     var context : Context? = null
-    var controllerCount = 0
 
     init {
         this.context = context
@@ -30,6 +30,7 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
         val createMasterControllerTableSql =
             ("CREATE TABLE " + TABLE_MASTER_CONTROLLERS + "("
                     + KEY_ID + " INTEGER PRIMARY KEY,"
+                    + KEY_SERVER_ID + " INTEGER,"
                     + KEY_NAME + " TEXT,"
                     + KEY_HOSTNAME + " TEXT" + ","
                     + KEY_SECURE + " INT" + ","
@@ -70,6 +71,7 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
         val db: SQLiteDatabase = this.getWritableDatabase()
         val values = ContentValues()
         values.put(KEY_NAME, controller.name)
+        values.put(KEY_SERVER_ID, controller.serverId)
         values.put(KEY_HOSTNAME, controller.hostname)
         values.put(KEY_SECURE, controller.secure)
         values.put(KEY_USERID, controller.userid)
@@ -86,6 +88,7 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
             TABLE_MASTER_CONTROLLERS,
             arrayOf(
                 KEY_ID,
+                KEY_SERVER_ID,
                 KEY_NAME,
                 KEY_HOSTNAME,
                 KEY_SECURE,
@@ -102,11 +105,12 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
         cursor.moveToFirst()
         var controller  = MasterController(
             cursor.getString(0).toInt(),
-            cursor.getString(1),
+            cursor.getString(1).toInt(),
             cursor.getString(2),
-            cursor.getInt(3),
+            cursor.getString(3),
             cursor.getInt(4),
-            cursor.getString(5)
+            cursor.getInt(5),
+            cursor.getString(6)
         )
         db.close()
         return controller
@@ -119,6 +123,7 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
             TABLE_MASTER_CONTROLLERS,
             arrayOf(
                 KEY_ID,
+                KEY_SERVER_ID,
                 KEY_NAME,
                 KEY_HOSTNAME,
                 KEY_SECURE,
@@ -136,11 +141,12 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
         if(cursor.count > 0) {
             controller = MasterController(
                 cursor.getString(0).toInt(),
-                cursor.getString(1),
+                cursor.getString(1).toInt(),
                 cursor.getString(2),
-                cursor.getInt(3),
+                cursor.getString(3),
                 cursor.getInt(4),
-                cursor.getString(5)
+                cursor.getInt(5),
+                cursor.getString(6)
             )
         }
         db.close()
@@ -157,11 +163,12 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
                 do {
                     controllerList.add(MasterController(
                         cursor.getString(0).toInt(),
-                        cursor.getString(1),
+                        cursor.getString(1).toInt(),
                         cursor.getString(2),
-                        cursor.getInt(3),
+                        cursor.getString(3),
                         cursor.getInt(4),
-                        cursor.getString(5)
+                        cursor.getInt(5),
+                        cursor.getString(6)
                     ))
                 } while (cursor.moveToNext())
             }
@@ -172,6 +179,7 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
     fun updateController(controller: MasterController): Int {
         val db: SQLiteDatabase = this.getWritableDatabase()
         val values = ContentValues()
+        values.put(KEY_SERVER_ID, controller.serverId)
         values.put(KEY_NAME, controller.name)
         values.put(KEY_HOSTNAME, controller.hostname)
         values.put(KEY_SECURE, controller.secure)

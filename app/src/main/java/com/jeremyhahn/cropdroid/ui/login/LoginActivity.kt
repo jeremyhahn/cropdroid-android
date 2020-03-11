@@ -25,6 +25,9 @@ import com.jeremyhahn.cropdroid.service.NotificationService
 import com.jeremyhahn.cropdroid.utils.JsonWebToken
 import io.jsonwebtoken.ExpiredJwtException
 import kotlinx.android.synthetic.main.activity_login.*
+import okhttp3.Call
+import okhttp3.Callback
+import java.io.IOException
 
 class LoginActivity : AppCompatActivity() {
 
@@ -49,13 +52,14 @@ class LoginActivity : AppCompatActivity() {
 
         controller = MasterController(
             intent.getIntExtra("controller_id", 0),
+            intent.getIntExtra("controller_server_id", 0),
             intent.getStringExtra("controller_name"),
             intent.getStringExtra("controller_hostname"),
             0,
             0,
             "")
 
-        Log.d("LoginActivity.onCreate", "controller_id: " + controller!!.id.toString())
+        Log.d("LoginActivity.onCreate", "controller: " + controller!!.toString())
 
         try {
             val selectedController = repository.getController(controller!!.id)
@@ -68,7 +72,9 @@ class LoginActivity : AppCompatActivity() {
                     userid,
                     username.text.toString(),
                     password.text.toString(),
-                    selectedController.token
+                    selectedController.token,
+                    "",
+                    ""
                 )
                 updateUiWithUser(user, selectedController)
                 return
@@ -77,6 +83,7 @@ class LoginActivity : AppCompatActivity() {
         catch(e: ExpiredJwtException) {
             Log.d("LoginActivity.onCreate", "JWT expired")
             controller!!.token = ""
+            return
         }
 
         for(controller in repository.allControllers) {
@@ -123,24 +130,15 @@ class LoginActivity : AppCompatActivity() {
 
                 var user = loginResult.success
 
-                /*
-                var publicKey: PublicKey? = null
-                val am: AssetManager = getAssets()
-                val jwtIs: InputStream = am.open("rsa.pub.der")
-                val spec = X509EncodedKeySpec(IOUtils.toByteArray(jwtIs))
-                val kf = KeyFactory.getInstance("RSA")
-                publicKey = kf.generatePublic(spec)
-
-                var jws = Jwts.parserBuilder().setSigningKey(publicKey).build().parseClaimsJws(user.token)
-                */
-
                 Log.d("LoginActivity token:", user.token)
 
                 var jws = JsonWebToken(this).parse(user.token)
                 Log.d("jws", jws.toString())
 
                 user.id = jws.body.get("id").toString()
+                user.orgId = jws.body.get("organizationId").toString()
 
+                controller!!.serverId = Integer.parseInt(jws.body.get("controllerId").toString())
                 controller!!.secure = if(useSSL.isChecked) 1 else 0
                 controller!!.userid = Integer.parseInt(user.id)
                 controller!!.token = user.token
@@ -157,7 +155,8 @@ class LoginActivity : AppCompatActivity() {
 
                 val prefs = getSharedPreferences(GLOBAL_PREFS, Context.MODE_PRIVATE)
                 val editor = prefs.edit()
-                editor.putInt("controller_id", controller!!.id)
+                editor.putInt("controller_id", controller!!.id)              //  local sqlite controller id
+                editor.putInt("controller_server_id", controller!!.serverId) // remote database controller id
                 editor.putString("controller_name", controller!!.name)
                 editor.putString("controller_hostname", controller!!.hostname)
                 editor.putString("user_id", user.id)
@@ -226,22 +225,24 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun updateUiWithUser(user: User, controller: MasterController = this.controller!!) {
-        //val welcome = getString(R.string.welcome)
-        //val displayName = user.username
 
-        var intent = Intent(this, NotificationService::class.java)
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        //startService(intent)
-        startForegroundService(intent)
+        val notificationServiceIntent = Intent(this, NotificationService::class.java)
+        notificationServiceIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
-        startActivity(Intent(this, MicroControllerActivity::class.java))
+        val microControllerActivity = Intent(this, MicroControllerActivity::class.java)
 
-        /*
-        Toast.makeText(
-            applicationContext,
-            "$welcome $displayName",
-            Toast.LENGTH_LONG
-        ).show()*/
+        CropDroidAPI(controller!!).getConfig(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.d(":LoginActivity.getConfig.onFailure", "onFailure response: " + e!!.message)
+            }
+            override fun onResponse(call: Call, response: okhttp3.Response) {
+                var responseBody = response.body().string()
+                Log.d("LoginActivity.getConfig.onResponse", "responseBody: " + responseBody)
+
+                startForegroundService(notificationServiceIntent)
+                startActivity(microControllerActivity)
+            }
+        })
     }
 
     private fun showLoginFailed(@StringRes errorString: Int) {

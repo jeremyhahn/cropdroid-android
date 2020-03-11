@@ -15,7 +15,14 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
-        <activity android:name=".MetricDetailActivity"></activity>
+        <activity
+            android:name=".VideoActivity"
+            android:label="@string/title_activity_video"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
+        <activity
+            android:name=".SettingsActivity"
+            android:label="@string/title_activity_settings" />
+        <activity android:name=".MetricDetailActivity" />
 
         <service
             android:name=".service.NotificationService"
@@ -44,11 +51,6 @@
         <activity
             android:name=".MicroControllerActivity"
             android:label="@string/title_activity_microcontrollers"
-            android:theme="@style/AppTheme.NoActionBar" />
-
-        <activity
-            android:name=".VideoActivity"
-            android:label="@string/title_activity_video"
             android:theme="@style/AppTheme.NoActionBar" />
 
         <receiver android:name=".StartupReceiver">

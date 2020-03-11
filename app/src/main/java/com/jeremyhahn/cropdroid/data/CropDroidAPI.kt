@@ -3,10 +3,12 @@ package com.jeremyhahn.cropdroid.data
 import android.util.Log
 import com.jeremyhahn.cropdroid.Constants.Companion.API_BASE
 import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
+import com.jeremyhahn.cropdroid.model.Config
 import com.jeremyhahn.cropdroid.model.MasterController
 import okhttp3.*
 import org.json.JSONObject
 import java.io.IOException
+import java.net.URLEncoder
 
 class CropDroidAPI(val controller: MasterController) {
 
@@ -16,6 +18,7 @@ class CropDroidAPI(val controller: MasterController) {
     val DOSER_RESOURCE = ControllerType.Doser.name.toLowerCase()
     val EVENTS_RESOURCE = "events"
     val DISPENSE_RESOURCE = "dispense"
+    val CONFIG_RESOURCE = "config"
 
     init {
         REST_ENDPOINT = if(controller.secure == 1)
@@ -61,11 +64,24 @@ class CropDroidAPI(val controller: MasterController) {
         doGet(resource, args, callback)
     }
 
+    fun setConfig(controllerId: String, key: String, value: String, callback: Callback) {
+        var args = ArrayList<String>(3)
+        args.add(controllerId)
+        args.add(key)
+        args.add("?value="+URLEncoder.encode(value, "utf-8"))
+        doGet(CONFIG_RESOURCE, args, callback)
+    }
+
+    fun getConfig(callback: Callback) {
+        val args = ArrayList<String>()
+        doGet(CONFIG_RESOURCE, args, callback)
+    }
+
     fun login(username: String, password: String, callback: Callback) {
         if(username.isEmpty()) return fail(callback, "Username required")
         if(password.isEmpty()) return fail(callback, "Password required")
         var json = JSONObject()
-        json.put("username", username)
+        json.put("email", username)
         json.put("password", password)
         doPost("/login", json, callback)
     }
@@ -74,7 +90,7 @@ class CropDroidAPI(val controller: MasterController) {
         if(username.isEmpty()) return fail(callback, "Username required")
         if(password.isEmpty()) return fail(callback, "Password required")
         var json = JSONObject()
-        json.put("username", username)
+        json.put("email", username)
         json.put("password", password)
         doPost("/register", json, callback)
     }

@@ -33,4 +33,51 @@
     <string name="menu_rename">Rename</string>
     <string name="number_picker_dispense_title">Timed Dose</string>
     <string name="number_picker_dispense_message">Choose number of seconds</string>
+    <string name="title_activity_settings">Settings</string>
+
+    <!-- Preference Titles -->
+    <string name="general_header">General</string>
+    <string name="room_header">Room</string>
+    <string name="reservoir_header">Reservoir</string>
+    <string name="doser_header">Doser</string>
+    <string name="smtp_header">Mail Server</string>
+
+    <string name="pref_enable">Enable</string>
+    <string name="pref_notify">Notifications</string>
+    <string name="pref_metrics">Metrics</string>
+    <string name="pref_channels">Channels</string>
+
+    <!-- General Preferences -->
+    <string name="interval_title">Interval</string>
+    <string name="space_name_title">Name</string>
+    <string name="timezone">Timezone</string>
+    <string name="mode">Mode</string>
+    <string name="pref_mode_virtual">Virtual</string>
+    <string name="pref_mode_server">Server</string>
+    <string name="pref_mode_cloud">Cloud</string>
+    <string name="pref_mode_maintenance">Maintenance</string>
+
+    <!-- Room Preferences -->
+    <string name="smtp_host_title">Hostname</string>
+    <string name="smtp_port_title">Port</string>
+    <string name="smtp_user_title">Username</string>
+    <string name="smtp_pass_title">Password</string>
+    <string name="smtp_to_title">Recipient</string>
+
+    <!-- Room Preferences -->
+    <string name="video_feed_url">Video Feed URL</string>
+
+    <!-- Messages Preferences -->
+    <string name="sync_header">Sync</string>
+    <string name="signature_title">Your signature</string>
+    <string name="reply_title">Default reply action</string>
+
+    <!-- Sync Preferences -->
+    <string name="sync_title">Sync state periodically</string>
+    <string name="attachment_title">Download incoming attachments</string>
+    <string name="attachment_summary_on">Automatically download attachments for incoming emails</string>
+    <string name="attachment_summary_off">Only download attachments when manually requested</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

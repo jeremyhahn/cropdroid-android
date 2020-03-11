@@ -1,0 +1,165 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="@string/general_header">
+
+        <EditTextPreference
+            app:key="name"
+            app:title="@string/space_name_title"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:key="interval"
+            app:title="@string/interval_title"
+            app:defaultValue="Interval"
+            app:entries="@array/interval_entries"
+            app:entryValues="@array/interval_values"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:key="mode"
+            app:title="@string/mode"
+            app:defaultValue="Mode"
+            app:entries="@array/mode_entries"
+            app:entryValues="@array/mode_values"
+            app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
+            app:key="timezone"
+            app:title="@string/timezone"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/room_header">
+
+        <SwitchPreferenceCompat
+            app:key="room.enable"
+            app:title="@string/pref_enable" />
+
+        <SwitchPreferenceCompat
+            app:key="room.notify"
+            app:title="@string/pref_notify"
+            app:dependency="room.enable"/>
+
+        <EditTextPreference
+            app:key="room.video"
+            app:title="@string/video_feed_url"
+            app:dependency="room.enable"
+            app:useSimpleSummaryProvider="true" />
+
+        <Preference
+            app:key="room.metrics"
+            app:title="@string/pref_metrics"
+            app:dependency="room.enable"
+            app:summary="Enable / disable room controller metrics"/>
+
+        <Preference
+            app:key="room.channels"
+            app:title="@string/pref_channels"
+            app:dependency="room.enable"
+            app:summary="Enable / disable room controller channels"/>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/reservoir_header">
+
+        <SwitchPreferenceCompat
+            app:key="reservoir.enable"
+            app:title="@string/pref_enable"/>
+
+        <SwitchPreferenceCompat
+            app:key="reservoir.notify"
+            app:title="@string/pref_notify"
+            app:dependency="reservoir.enable"/>
+
+        <Preference
+            app:key="reservoir.metrics"
+            app:title="@string/pref_metrics"
+            app:dependency="reservoir.enable"
+            app:summary="Enable / disable reservoir controller metrics"/>
+
+        <Preference
+            app:key="reservoir.channels"
+            app:title="@string/pref_channels"
+            app:dependency="reservoir.enable"
+            app:summary="Enable / disable reservoir controller channels"/>
+
+    </PreferenceCategory>
+
+
+
+    <PreferenceCategory app:title="@string/doser_header">
+
+        <SwitchPreferenceCompat
+            app:key="doser.enable"
+            app:title="@string/pref_enable" />
+
+        <SwitchPreferenceCompat
+            app:key="doser.notify"
+            app:title="@string/pref_notify"
+            app:dependency="doser.enable"/>
+
+        <Preference
+            app:key="doser.channels"
+            app:title="@string/pref_channels"
+            app:dependency="doser.enable"
+            app:summary="Enable / disable doser controller channels"/>
+
+    </PreferenceCategory>
+
+
+    <PreferenceCategory app:title="@string/smtp_header">
+
+        <SwitchPreferenceCompat
+            app:key="smtp.enable"
+            app:title="@string/pref_enable" />
+
+        <EditTextPreference
+            app:key="smtp.host"
+            app:title="@string/smtp_host_title"
+            app:dependency="smtp.enable"
+            app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
+            app:key="smtp.port"
+            app:title="@string/smtp_port_title"
+            app:dependency="smtp.enable"
+            app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
+            app:key="smtp.username"
+            app:title="@string/smtp_user_title"
+            app:dependency="smtp.enable"
+            app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
+            app:key="smtp.password"
+            app:title="@string/smtp_pass_title"
+            app:dependency="smtp.enable"
+            app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
+            app:key="smtp.to"
+            app:title="@string/smtp_to_title"
+            app:dependency="smtp.enable"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+
+
+    <PreferenceCategory app:title="@string/sync_header">
+
+        <SwitchPreferenceCompat
+            app:key="sync"
+            app:title="@string/sync_title" />
+
+        <SwitchPreferenceCompat
+            app:dependency="sync"
+            app:key="attachment"
+            app:summaryOff="@string/attachment_summary_off"
+            app:summaryOn="@string/attachment_summary_on"
+            app:title="@string/attachment_title" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

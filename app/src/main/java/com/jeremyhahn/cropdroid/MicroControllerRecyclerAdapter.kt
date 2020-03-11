@@ -19,15 +19,13 @@ import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Channel
 import com.jeremyhahn.cropdroid.model.Metric
 import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
+import kotlinx.android.synthetic.main.doser_switch_cardview.view.*
 import kotlinx.android.synthetic.main.microcontroller_cardview.view.*
-import kotlinx.android.synthetic.main.microcontroller_switch_cardview.view.*
+import kotlinx.android.synthetic.main.microcontroller_switch_cardview.view.switchName
+import kotlinx.android.synthetic.main.microcontroller_switch_cardview.view.switchValue
 import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
-import com.jeremyhahn.cropdroid.R
-import kotlinx.android.synthetic.main.doser_switch_cardview.view.*
-import kotlinx.android.synthetic.main.microcontroller_switch_cardview.view.switchName
-import kotlinx.android.synthetic.main.microcontroller_switch_cardview.view.switchValue
 
 class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: CropDroidAPI,
            val recyclerItems: ArrayList<MicroControllerRecyclerModel>, controllerType: ControllerType) : Clearable,
@@ -44,7 +42,7 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
         fun bindItems(item: Metric) {
             val title = itemView.findViewById(R.id.title) as TextView
             val value = itemView.findViewById(R.id.value) as TextView
-            title.text = item.title
+            title.text = item.display.plus(" ").plus(item.unit)
             value.text = item.value
         }
     }
@@ -62,7 +60,7 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
         fun bindItems(item: Metric) {
             val title = itemView.findViewById(R.id.title) as TextView
             val value = itemView.findViewById(R.id.value) as TextView
-            title.text = item.title
+            title.text = item.display.plus(" ").plus(item.unit)
             value.text = item.value
         }
     }
@@ -100,7 +98,7 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
 
         // Avoid java.lang.IndexOutOfBoundsException: Index: 0, Size: 0
-        // when switching from doser tab to reservoir tab
+        // when switching quickly between tabs
         if(recyclerItems.size < position) {
             return
         }
@@ -120,8 +118,7 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
                         d.setTitle(R.string.number_picker_dispense_title)
                         d.setMessage(R.string.number_picker_dispense_message)
                         d.setView(dialogView)
-                        val numberPicker =
-                            dialogView.findViewById<View>(R.id.dialog_number_picker) as NumberPicker
+                        val numberPicker = dialogView.findViewById<View>(R.id.dialog_number_picker) as NumberPicker
                         numberPicker.maxValue = 60
                         numberPicker.minValue = 1
                         numberPicker.wrapSelectorWheel = false
@@ -131,10 +128,8 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
                         d.setPositiveButton("Done") { dialogInterface, i ->
                             Log.d("btnDispense.onClick", "onClick: " + numberPicker.value)
 
-                            cropDroidAPI.dispense(
-                                model.channel!!.id,
-                                numberPicker.value,
-                                object : Callback {
+                            cropDroidAPI.dispense(model.channel!!.id, numberPicker.value, object : Callback {
+
                                     override fun onFailure(call: Call, e: IOException) {
                                         Log.d(
                                             "MicroControllerRecyclerAdapter.onSwitchState",
@@ -143,10 +138,7 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
                                         return
                                     }
 
-                                    override fun onResponse(
-                                        call: Call,
-                                        response: okhttp3.Response
-                                    ) {
+                                    override fun onResponse(call: Call, response: okhttp3.Response) {
                                         Log.d(
                                             "MicroControllerRecyclerAdapter.btnDispense.onClick",
                                             "onResponse response: " + response
@@ -165,7 +157,6 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
                                         })
                                     }
                                 })
-
                         }
                         d.setNegativeButton("Cancel") { dialogInterface, i ->
 
@@ -225,12 +216,12 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
             else {
 
                 var itemView = (holder as MetricTypeViewHolder).itemView
-                itemView.title.setText(model.metric!!.title)
-                itemView.value.setText(model.metric!!.value)
+                itemView.title.setText(model.metric!!.display)
+                itemView.value.setText(model.metric!!.value.plus(" ").plus(model.metric!!.unit))
                 itemView.setOnLongClickListener(
                     View.OnLongClickListener {
                         var intent = Intent(activity, MetricDetailActivity::class.java)
-                        intent.putExtra("metric", model.metric!!.title)
+                        intent.putExtra("metric", model.metric!!.name)
                         activity.startActivity(intent)
                         return@OnLongClickListener true
                     }

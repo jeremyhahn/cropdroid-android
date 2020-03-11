@@ -1,7 +1,6 @@
 package com.jeremyhahn.cropdroid.utils
 
 import com.jeremyhahn.cropdroid.model.Channel
-import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
 import org.json.JSONArray
 import org.json.JSONObject
 

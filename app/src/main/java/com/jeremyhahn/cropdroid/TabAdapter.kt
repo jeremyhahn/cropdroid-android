@@ -7,7 +7,7 @@ import androidx.fragment.app.FragmentManager
 
 class TabAdapter(private val myContext: Context, fm: FragmentManager, internal var totalTabs: Int) : FragmentPagerAdapter(fm) {
 
-    override fun getItem(position: Int): Fragment? {
+    override fun getItem(position: Int): Fragment {
         when (position) {
             0 -> {
                 return RoomFragment()
@@ -21,7 +21,7 @@ class TabAdapter(private val myContext: Context, fm: FragmentManager, internal v
             3 -> {
                 return EventListFragment()
             }
-            else -> return null
+            else -> return RoomFragment()
         }
     }
 

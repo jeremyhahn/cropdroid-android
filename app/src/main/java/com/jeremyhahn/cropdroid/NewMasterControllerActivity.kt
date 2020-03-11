@@ -32,7 +32,7 @@ class NewMasterControllerActivity : AppCompatActivity() {
             startActivity(Intent(this, MasterControllerListActivity::class.java))
         }
         else {
-            var persistedController = repository.addController(MasterController(0, name, hostname, 0, 0,""))
+            var persistedController = repository.addController(MasterController(0, 0, name, hostname, 0, 0,""))
             var intent = Intent(this, LoginActivity::class.java)
             intent.putExtra("controller_id", persistedController.id)
             intent.putExtra("controller_name", name)

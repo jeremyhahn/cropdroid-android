@@ -3,7 +3,9 @@ package com.jeremyhahn.cropdroid
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.net.Uri
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -79,9 +81,22 @@ class MicroControllerActivity: AppCompatActivity() {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
-            R.id.action_settings -> true
+            R.id.action_settings -> {
+                startActivity(Intent(this, SettingsActivity::class.java))
+                true
+            }
             R.id.action_video -> {
                 //startActivity(Intent(this, VideoActivity::class.java))
+                val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this /* Activity context */)
+                val video_url = sharedPreferences.getString("room.video", "")
+                if(video_url != "") {
+                    /*
+                    var intent = Intent(this, VideoActivity::class.java)
+                    intent.putExtra("video_url", video_url)
+                    startActivity(intent)
+                    */
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(video_url)))
+                }
                 true
             }
             R.id.action_logout -> {

@@ -46,8 +46,9 @@ class LoginViewModel() : ViewModel() {
                     return
                 }
 
-                var user : LoggedInUserView? = LoggedInUserView(displayName = username)
-                _loginResult.postValue(LoginResult(User("0", username, "", json.getString("token"))))
+                //var user : LoggedInUserView? = LoggedInUserView(displayName = username)
+                var token = json.getString("token")
+                _loginResult.postValue(LoginResult(User("0", username, "", token, "", "")))
             }
         })
     }
