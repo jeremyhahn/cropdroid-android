@@ -3,6 +3,10 @@
 
     <item android:id="@+id/rename"
         android:icon="@android:drawable/ic_menu_edit"
-        android:title="@string/menu_rename" />
+        android:title="@string/title_rename" />
+
+    <item android:id="@+id/alarm"
+        android:icon="@android:drawable/ic_dialog_alert"
+        android:title="@string/title_alarm" />
 
 </menu>

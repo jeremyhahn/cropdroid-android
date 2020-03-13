@@ -4,12 +4,10 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.DialogInterface
-import android.content.Intent
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.NumberPicker
+import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
@@ -20,12 +18,15 @@ import com.jeremyhahn.cropdroid.model.Channel
 import com.jeremyhahn.cropdroid.model.Metric
 import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
 import kotlinx.android.synthetic.main.doser_switch_cardview.view.*
+import kotlinx.android.synthetic.main.doser_switch_cardview.view.switchId
 import kotlinx.android.synthetic.main.microcontroller_cardview.view.*
+import kotlinx.android.synthetic.main.microcontroller_switch_cardview.view.*
 import kotlinx.android.synthetic.main.microcontroller_switch_cardview.view.switchName
 import kotlinx.android.synthetic.main.microcontroller_switch_cardview.view.switchValue
 import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
+
 
 class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: CropDroidAPI,
            val recyclerItems: ArrayList<MicroControllerRecyclerModel>, controllerType: ControllerType) : Clearable,
@@ -38,30 +39,255 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
         this.controllerType = controllerType
     }
 
-    class MetricTypeViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        fun bindItems(item: Metric) {
-            val title = itemView.findViewById(R.id.title) as TextView
-            val value = itemView.findViewById(R.id.value) as TextView
-            title.text = item.display.plus(" ").plus(item.unit)
-            value.text = item.value
+    class MetricTypeViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView),
+        View.OnCreateContextMenuListener {
+
+        init {
+            itemView.setOnCreateContextMenuListener(this)
+        }
+
+        fun bind(metric: Metric) {
+            itemView.id = Integer.parseInt(metric.id)
+            itemView.title.text = metric.display
+            itemView.value.text = metric.value.plus(" ").plus(metric.unit)
+            /*
+                itemView.setOnLongClickListener(
+                    View.OnLongClickListener {
+                        var intent = Intent(activity, MetricDetailActivity::class.java)
+                        intent.putExtra("metric", model.metric!!.name)
+                        activity.startActivity(intent)
+                        return@OnLongClickListener true
+                    }
+                )*/
+
+        }
+
+        override fun onCreateContextMenu(menu: ContextMenu?, v: View?, menuInfo: ContextMenu.ContextMenuInfo?) {
+
+            menu!!.setHeaderTitle("Metric Options")
+            menu.add(0, v!!.getId(), 0, "Rename")
+                .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
+                    val d = AlertDialog.Builder(v!!.context)
+                    val inflater: LayoutInflater = LayoutInflater.from(v.context)
+                    val dialogView: View = inflater.inflate(R.layout.dialog_edit_text, null)
+                    d.setTitle(R.string.title_rename)
+                    d.setMessage(R.string.dialog_message_rename)
+                    d.setView(dialogView)
+                    d.setPositiveButton("Apply") { dialogInterface, i ->
+                        Log.d("Rename", "onClick: " + it.itemId)
+                    }
+                    d.setNegativeButton("Cancel") { dialogInterface, i ->
+
+                    }
+                    d.create().show()
+                    true
+                })
+
+            menu.add(0, v!!.getId(), 0, "Alarm")
+                .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
+                    val d = AlertDialog.Builder(v!!.context)
+                    val inflater: LayoutInflater = LayoutInflater.from(v.context)
+                    val dialogView: View = inflater.inflate(R.layout.dialog_edit_alarm, null)
+                    d.setTitle(R.string.title_alarm)
+                    d.setMessage(R.string.dialog_message_alarm)
+                    d.setView(dialogView)
+                    d.setPositiveButton("Apply") { dialogInterface, i ->
+                        Log.d("Alarm", "onClick: " + it.itemId)
+                    }
+                    d.setNegativeButton("Cancel") { dialogInterface, i ->
+
+                    }
+                    d.create().show()
+                    true
+                })
         }
     }
 
-    class SwitchTypeViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        fun bindItems(channel: Channel) {
-            val id = itemView.findViewById(R.id.switchId) as TextView
-            val value = itemView.findViewById(R.id.switchValue) as TextView
-            id.text = channel.id.toString()
-            value.text = channel.state.toString()
-        }
-    }
+    class SwitchTypeViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView),
+        View.OnCreateContextMenuListener {
 
-    class DefaultViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        fun bindItems(item: Metric) {
-            val title = itemView.findViewById(R.id.title) as TextView
-            val value = itemView.findViewById(R.id.value) as TextView
-            title.text = item.display.plus(" ").plus(item.unit)
-            value.text = item.value
+        init {
+            itemView.setOnCreateContextMenuListener(this)
+        }
+
+        fun bindDispenseButton(activity: Activity, cropDroidAPI: CropDroidAPI, controllerType: ControllerType, channel: Channel) {
+            itemView.btnDispense.setOnClickListener({
+                val d = AlertDialog.Builder(activity)
+                val inflater: LayoutInflater = activity.getLayoutInflater()
+                val dialogView: View = inflater.inflate(R.layout.dialog_number_picker, null)
+                d.setTitle(R.string.number_picker_dispense_title)
+                d.setMessage(R.string.number_picker_dispense_message)
+                d.setView(dialogView)
+                val numberPicker = dialogView.findViewById<View>(R.id.dialog_number_picker) as NumberPicker
+                numberPicker.maxValue = 60
+                numberPicker.minValue = 1
+                numberPicker.wrapSelectorWheel = false
+                numberPicker.setOnValueChangedListener { numberPicker, i, i1 ->
+                    Log.d("btnDispense.onClick", "onValueChange: ")
+                }
+                d.setPositiveButton("Done") { dialogInterface, i ->
+                    Log.d("btnDispense.onClick", "onClick: " + numberPicker.value)
+                    cropDroidAPI.dispense(channel.id, numberPicker.value, object : Callback {
+                        override fun onFailure(call: Call, e: IOException) {
+                            Log.d("MicroControllerRecyclerAdapter.onSwitchState", "onFailure response: " + e!!.message)
+                            return
+                        }
+                        override fun onResponse(call: Call, response: okhttp3.Response) {
+                            Log.d("MicroControllerRecyclerAdapter.btnDispense.onClick", "onResponse response: " + response)
+                            Log.d("MicroControllerRecyclerAdapter.btnDispense.onClick", "onResponse response body: " + response.body().toString())
+                            activity.runOnUiThread(Runnable() {
+                                Toast.makeText(
+                                    activity,
+                                    "Dispensing " + channel.name,
+                                    Toast.LENGTH_SHORT
+                                ).show();
+                            })
+                        }
+                    })
+                }
+                d.setNegativeButton("Cancel") { dialogInterface, i ->
+                }
+                d.create().show()
+            })
+        }
+
+        fun bind(activity: Activity, cropDroidAPI: CropDroidAPI, controllerType: ControllerType, channel: Channel) {
+            val displayName = if(channel.name != "") channel.name else "Channel ".plus(channel.id)
+            itemView.setId(channel.id)
+            itemView.switchName.text = displayName
+            itemView.switchValue.isChecked = channel.state === 1
+            itemView.switchValue.setOnClickListener(
+                View.OnClickListener {
+                    var newState = itemView.switchValue.isChecked()
+                    var switchState = if(newState) SwitchState.ON else SwitchState.OFF
+                    var dialogMessage = activity.getResources().getString(R.string.action_confirm_switch)
+                        .plus(" the ")
+                        .plus(displayName)
+                        .plus(" ")
+                        .plus(switchState.name.toLowerCase())
+                        .plus("?")
+                    val builder = AlertDialog.Builder(activity)
+                    builder.setMessage(dialogMessage)
+                    builder.setPositiveButton(R.string.action_yes,
+                            DialogInterface.OnClickListener { dialog, id ->
+                                Log.d("SwitchTypeViewHolder.onClick", "DialogInterface.OnClickListener  " + channel.id)
+                                cropDroidAPI.switch(controllerType, channel.id, newState, object: Callback {
+                                    override fun onFailure(call: Call, e: IOException) {
+                                        Log.d("MicroControllerRecyclerAdapter.onSwitchState", "onFailure response: " + e!!.message)
+                                        itemView.switchValue.setChecked(!newState)
+                                        return
+                                    }
+                                    override fun onResponse(call: Call, response: okhttp3.Response) {
+                                        Log.d("MicroControllerRecyclerAdapter.onSwitchState", "onResponse response: " + response.body().toString())
+                                    }
+                                })
+                            })
+                    builder.setNegativeButton(R.string.action_cancel,
+                            DialogInterface.OnClickListener { dialog, id ->
+                                Log.d("confirmDelete", "cancel pressed")
+                                itemView.switchValue.setChecked(!newState)
+                            })
+                    builder.create().show()
+                }
+            )
+        }
+
+        override fun onCreateContextMenu(menu: ContextMenu?, v: View?, menuInfo: ContextMenu.ContextMenuInfo?) {
+
+            menu!!.add(0, itemView.id, 0, "Rename")
+                .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
+                    val d = AlertDialog.Builder(v!!.context)
+                    val inflater: LayoutInflater = LayoutInflater.from(v.context)
+                    val dialogView: View = inflater.inflate(R.layout.dialog_edit_text, null)
+                    d.setTitle(R.string.title_rename)
+                    d.setMessage(R.string.dialog_message_rename)
+                    d.setView(dialogView)
+                    d.setPositiveButton("Apply") { dialogInterface, i ->
+                        Log.d("Rename", "onClick: " + it.itemId)
+                    }
+                    d.setNegativeButton("Cancel") { dialogInterface, i ->
+
+                    }
+                    d.create().show()
+                    true
+                })
+
+            menu!!.add(0, itemView.id, 0, "Notify")
+                .setCheckable(true)
+
+            menu!!.add(0, itemView.id, 0, "Schedule")
+
+            var conditionItem = menu!!.add(0, itemView.id, 0, "Condition")
+                .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
+                    val d = AlertDialog.Builder(v!!.context)
+                    val inflater: LayoutInflater = LayoutInflater.from(v.context)
+                    val dialogView: View = inflater.inflate(R.layout.dialog_condition, null)
+                    d.setTitle(R.string.title_condition)
+                    d.setMessage(R.string.dialog_message_condition)
+                    d.setView(dialogView)
+                    d.setPositiveButton("Apply") { dialogInterface, i ->
+                        Log.d("Condition", "onClick: " + it.itemId)
+                    }
+                    d.setNegativeButton("Cancel") { dialogInterface, i ->
+
+                    }
+                    d.create().show()
+                    true
+                })
+
+            menu!!.add(0, itemView.id, 0, "Duration")
+                .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
+                    val d = AlertDialog.Builder(v!!.context)
+                    val inflater: LayoutInflater = LayoutInflater.from(v.context)
+                    val dialogView: View = inflater.inflate(R.layout.dialog_edit_number, null)
+                    d.setTitle(R.string.title_duration)
+                    d.setMessage(R.string.dialog_message_duration)
+                    d.setView(dialogView)
+                    d.setPositiveButton("Apply") { dialogInterface, i ->
+                        Log.d("Duration", "onClick: " + it.itemId)
+                    }
+                    d.setNegativeButton("Cancel") { dialogInterface, i ->
+
+                    }
+                    d.create().show()
+                    true
+                })
+
+            menu!!.add(0, itemView.id, 0, "Debounce")
+                .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
+                    val d = AlertDialog.Builder(v!!.context)
+                    val inflater: LayoutInflater = LayoutInflater.from(v.context)
+                    val dialogView: View = inflater.inflate(R.layout.dialog_edit_number, null)
+                    d.setTitle(R.string.title_debounce)
+                    d.setMessage(R.string.dialog_message_debounce)
+                    d.setView(dialogView)
+                    d.setPositiveButton("Apply") { dialogInterface, i ->
+                        Log.d("Debounce", "onClick: " + it.itemId)
+                    }
+                    d.setNegativeButton("Cancel") { dialogInterface, i ->
+
+                    }
+                    d.create().show()
+                    true
+                })
+
+            menu!!.add(0, itemView.id, 0, "Backoff")
+                .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
+                    val d = AlertDialog.Builder(v!!.context)
+                    val inflater: LayoutInflater = LayoutInflater.from(v.context)
+                    val dialogView: View = inflater.inflate(R.layout.dialog_edit_number, null)
+                    d.setTitle(R.string.title_backoff)
+                    d.setMessage(R.string.dialog_message_backoff)
+                    d.setView(dialogView)
+                    d.setPositiveButton("Apply") { dialogInterface, i ->
+                        Log.d("Backoff", "onClick: " + it.itemId)
+                    }
+                    d.setNegativeButton("Cancel") { dialogInterface, i ->
+
+                    }
+                    d.create().show()
+                    true
+                })
         }
     }
 
@@ -90,142 +316,27 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
             }
             return SwitchTypeViewHolder(view)
         }
-        //if(viewType == MicroControllerRecyclerModel.METRIC_TYPE) {
         view = LayoutInflater.from(parent.context).inflate(R.layout.microcontroller_cardview, parent, false)
         return MetricTypeViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-
         // Avoid java.lang.IndexOutOfBoundsException: Index: 0, Size: 0
         // when switching quickly between tabs
         if(recyclerItems.size < position) {
             return
         }
-
         val model = recyclerItems.get(position)
         if (model != null) {
             if (model.type == MicroControllerRecyclerModel.CHANNEL_TYPE) {
-                var itemView = (holder as SwitchTypeViewHolder).itemView
-                if(itemView == null) return
-
+                val switchTypeViewHolder = (holder as SwitchTypeViewHolder)
                 if(controllerType === ControllerType.Doser) {
-
-                    itemView.btnDispense.setOnClickListener({
-                        val d = AlertDialog.Builder(activity)
-                        val inflater: LayoutInflater = activity.getLayoutInflater()
-                        val dialogView: View = inflater.inflate(R.layout.number_picker_dialog, null)
-                        d.setTitle(R.string.number_picker_dispense_title)
-                        d.setMessage(R.string.number_picker_dispense_message)
-                        d.setView(dialogView)
-                        val numberPicker = dialogView.findViewById<View>(R.id.dialog_number_picker) as NumberPicker
-                        numberPicker.maxValue = 60
-                        numberPicker.minValue = 1
-                        numberPicker.wrapSelectorWheel = false
-                        numberPicker.setOnValueChangedListener { numberPicker, i, i1 ->
-                            Log.d("btnDispense.onClick", "onValueChange: ")
-                        }
-                        d.setPositiveButton("Done") { dialogInterface, i ->
-                            Log.d("btnDispense.onClick", "onClick: " + numberPicker.value)
-
-                            cropDroidAPI.dispense(model.channel!!.id, numberPicker.value, object : Callback {
-
-                                    override fun onFailure(call: Call, e: IOException) {
-                                        Log.d(
-                                            "MicroControllerRecyclerAdapter.onSwitchState",
-                                            "onFailure response: " + e!!.message
-                                        )
-                                        return
-                                    }
-
-                                    override fun onResponse(call: Call, response: okhttp3.Response) {
-                                        Log.d(
-                                            "MicroControllerRecyclerAdapter.btnDispense.onClick",
-                                            "onResponse response: " + response
-                                        )
-                                        Log.d(
-                                            "MicroControllerRecyclerAdapter.btnDispense.onClick",
-                                            "onResponse response body: " + response.body()
-                                                .toString()
-                                        )
-                                        activity.runOnUiThread(Runnable() {
-                                            Toast.makeText(
-                                                activity,
-                                                "Dispensing " + model.channel!!.name,
-                                                Toast.LENGTH_SHORT
-                                            ).show();
-                                        })
-                                    }
-                                })
-                        }
-                        d.setNegativeButton("Cancel") { dialogInterface, i ->
-
-                        }
-
-                        val alertDialog = d.create()
-                        alertDialog.show()
-                    })
+                    switchTypeViewHolder.bindDispenseButton(activity, cropDroidAPI, controllerType, model.channel!!)
                 }
-
-                var state = model.channel!!.state === 1
-                val displayName = if(model.channel!!.name != "") model.channel!!.name else "Channel ".plus(model.channel!!.id)
-                itemView.switchName.setText(displayName)
-                itemView.switchValue.setChecked(state)
-                itemView.switchValue.setOnClickListener(
-                    View.OnClickListener {
-                        var newState = itemView.switchValue.isChecked()
-                        var channelId = model.channel!!.id
-
-                        Log.d("SwitchTypeViewHolder.onClick", "channel " + channelId)
-
-                        var switchState = if(newState) SwitchState.ON else SwitchState.OFF
-                        var dialogMessage = activity.getResources().getString(R.string.action_confirm_switch)
-                            .plus(" the ")
-                            .plus(displayName)
-                            .plus(" ")
-                            .plus(switchState.name.toLowerCase())
-                            .plus("?")
-
-                        val builder = AlertDialog.Builder(activity)
-                        builder.setMessage(dialogMessage).setPositiveButton(R.string.action_yes,
-                            DialogInterface.OnClickListener { dialog, id ->
-
-                                Log.d("SwitchTypeViewHolder.onClick", "DialogInterface.OnClickListener  " + channelId)
-
-                                cropDroidAPI.switch(controllerType, channelId, newState, object: Callback {
-                                    override fun onFailure(call: Call, e: IOException) {
-                                        Log.d("MicroControllerRecyclerAdapter.onSwitchState", "onFailure response: " + e!!.message)
-                                        itemView.switchValue.setChecked(!newState)
-                                        return
-                                    }
-                                    override fun onResponse(call: Call, response: okhttp3.Response) {
-                                        Log.d("MicroControllerRecyclerAdapter.onSwitchState", "onResponse response: " + response.body().toString())
-                                    }
-                                })
-                            })
-                            .setNegativeButton(R.string.action_cancel,
-                                DialogInterface.OnClickListener { dialog, id ->
-                                    Log.d("confirmDelete", "cancel pressed")
-                                    itemView.switchValue.setChecked(!newState)
-                                })
-                        builder.create()
-                        builder.show()
-                    }
-                )
+                switchTypeViewHolder.bind(activity, cropDroidAPI, controllerType, model.channel!!)
             }
             else {
-
-                var itemView = (holder as MetricTypeViewHolder).itemView
-                itemView.title.setText(model.metric!!.display)
-                itemView.value.setText(model.metric!!.value.plus(" ").plus(model.metric!!.unit))
-                itemView.setOnLongClickListener(
-                    View.OnLongClickListener {
-                        var intent = Intent(activity, MetricDetailActivity::class.java)
-                        intent.putExtra("metric", model.metric!!.name)
-                        activity.startActivity(intent)
-                        return@OnLongClickListener true
-                    }
-                )
+                (holder as MetricTypeViewHolder).bind(model.metric!!)
             }
         }
     }

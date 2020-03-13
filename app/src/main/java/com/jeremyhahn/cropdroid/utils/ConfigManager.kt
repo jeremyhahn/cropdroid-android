@@ -1,7 +1,17 @@
 package com.jeremyhahn.cropdroid.utils
 
 import android.content.SharedPreferences
+import android.preference.PreferenceManager
 import android.util.Log
+import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_CHANNEL_BACKOFF_KEY
+import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_CHANNEL_CONDITION_KEY
+import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_CHANNEL_DEBOUNCE_KEY
+import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_CHANNEL_DURATION_KEY
+import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_CHANNEL_ENABLE_KEY
+import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_CHANNEL_ID_KEY
+import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_CHANNEL_NAME_KEY
+import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_CHANNEL_NOTIFY_KEY
+import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_CHANNEL_SCHEDULE_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_DOSER_ENABLE_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_DOSER_NOTIFY_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_DOSER_URI_KEY
@@ -25,8 +35,13 @@ import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_TO_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_USERNAME_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_TIMEZONE_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_CONTROLLER_ID
+import com.jeremyhahn.cropdroid.data.CropDroidAPI
+import com.jeremyhahn.cropdroid.model.Channel
 import com.jeremyhahn.cropdroid.model.Config
 import com.jeremyhahn.cropdroid.model.User
+import okhttp3.Call
+import okhttp3.Callback
+import java.io.IOException
 
 class ConfigManager(val sharedPreferences: SharedPreferences, val config: Config) {
 
@@ -49,7 +64,6 @@ class ConfigManager(val sharedPreferences: SharedPreferences, val config: Config
     fun getBoolean(key: String) : Boolean {
         return sharedPreferences.getBoolean(key, false)
     }
-
     private fun syncGlobal() {
         val name = getValue(CONFIG_NAME_KEY)
         val interval = getValue(CONFIG_INTERVAL_KEY)
@@ -162,29 +176,39 @@ class ConfigManager(val sharedPreferences: SharedPreferences, val config: Config
             setEditorValue(CONFIG_DOSER_URI_KEY, config.doser.uri)
         }
     }
-/*
+
+    private fun channelKey(controllerType: String, id: Int, key: String) : String {
+        return controllerType + ".channel." + id + "." + key
+    }
+
     private fun syncChannels(controllerType: String, channels: ArrayList<Channel>) {
 
-        for(channel in channels) {
-            val id = getValue(CONFIG_CHANNEL_ID_KEY)
-            val key = getValue(CONFIG_CHANNEL_NAME_KEY)
-            val enable = getValue(CONFIG_CHANNEL_ENABLE_KEY)
-            val notify = getValue(CONFIG_CHANNEL_NOTIFY_KEY)
-            val condition = getValue(CONFIG_CHANNEL_CONDITION_KEY)
-            val schedule = getValue(CONFIG_CHANNEL_SCHEDULE_KEY)
-            val duration = getValue(CONFIG_CHANNEL_DURATION_KEY)
-            val debounce = getValue(CONFIG_CHANNEL_DEBOUNCE_KEY)
-            val backoff = getValue(CONFIG_CHANNEL_BACKOFF_KEY)
-            if(id != config.doser.enable) {
-                setEditorValue(CONFIG_DOSER_ENABLE_KEY, enable)
+        for((i, channel) in channels.withIndex()) {
+            val id = getValue(channelKey(controllerType, i, CONFIG_CHANNEL_ID_KEY))
+            val key = getValue(channelKey(controllerType, i, CONFIG_CHANNEL_NAME_KEY))
+            val enable = getBoolean(channelKey(controllerType, i, CONFIG_CHANNEL_ENABLE_KEY))
+            val notify = getBoolean(channelKey(controllerType, i, CONFIG_CHANNEL_NOTIFY_KEY))
+            val condition = getValue(channelKey(controllerType, i, CONFIG_CHANNEL_CONDITION_KEY))
+            val schedule = getValue(channelKey(controllerType, i, CONFIG_CHANNEL_SCHEDULE_KEY))
+            val duration = getValue(channelKey(controllerType, i, CONFIG_CHANNEL_DURATION_KEY))
+            val debounce = getValue(channelKey(controllerType, i, CONFIG_CHANNEL_DEBOUNCE_KEY))
+            val backoff = getValue(channelKey(controllerType, i, CONFIG_CHANNEL_BACKOFF_KEY))
+/*
+            val bEnable = enable.toBoolean()
+            val bNotify = config.doser.notify.toBoolean()
+            if(channel.enable != bEnable) {
+                setEditorValue(channelKey(controllerType, i, CONFIG_DOSER_ENABLE_KEY), bEnable)
             }
-            if(notify != config.doser.notify) {
-                setEditorValue(CONFIG_DOSER_NOTIFY_KEY, notify)
+            if(channel.notify != bNotify) {
+                setEditorValue(channelKey(controllerType, i, CONFIG_DOSER_NOTIFY_KEY), bNotify)
             }
-
+            if(id != channel.id) {
+                setEditorValue(channelKey(controllerType, i, CONFIG_CHANNEL_ID_KEY), channel.id)
+            }
+*/
         }
     }
-*/
+
 
     private fun setEditorValue(key: String, value: String) {
         editor.putString(key, value)

@@ -21,19 +21,28 @@ class ChannelParser {
 
                 val id = jsonChannel.getInt("id")
                 val name = jsonChannel.getString("name")
+                val enable = jsonChannel.getBoolean("enable")
+                val notify = jsonChannel.getBoolean("notify")
+                val condition = jsonChannel.getString("condition")
+                val schedule = jsonChannel.getString("schedule")
+                val duration = jsonChannel.getInt("duration")
+                val debounce = jsonChannel.getInt("debounce")
+                val backoff = jsonChannel.getInt("backoff")
                 val value = jsonChannel.getInt("value")
-                channels.add(Channel(id, name, value))
+                channels.add(Channel(id, name, enable, value))
             }
             return channels
         }
 
+/*
         fun parse(jsonChannels : JSONObject) : ArrayList<Channel> {
             var channels = ArrayList<Channel>(jsonChannels.length())
             for(i in 0..jsonChannels.length()-1) {
                 val v = jsonChannels.getInt(i.toString())
-                channels.add(Channel(i, "", v))
+                channels.add(Channel(i, "", true, v))
             }
             return channels
         }
+        */
     }
 }

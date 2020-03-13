@@ -1,10 +1,10 @@
 package com.jeremyhahn.cropdroid
 
-import android.content.Context
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
@@ -19,7 +19,6 @@ import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.MasterController
 import com.jeremyhahn.cropdroid.model.Metric
 import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
-import com.jeremyhahn.cropdroid.model.Room
 import com.jeremyhahn.cropdroid.utils.ChannelParser
 import com.jeremyhahn.cropdroid.utils.MetricParser
 import okhttp3.Call
@@ -29,6 +28,7 @@ import java.io.IOException
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.concurrent.timerTask
+
 
 class RoomFragment : Fragment() {
 
@@ -83,6 +83,14 @@ class RoomFragment : Fragment() {
         refreshTimer!!.purge()
     }
 
+    override fun onContextItemSelected(item: MenuItem) : Boolean {
+
+        Log.d("onContextItemSelected", "ID: " + item.itemId)
+
+        return true
+    }
+
+
     fun getRoomData() {
 
         adapter!!.clear()
@@ -112,7 +120,7 @@ class RoomFragment : Fragment() {
                     recyclerItems.add(
                         MicroControllerRecyclerModel(
                             MicroControllerRecyclerModel.METRIC_TYPE,
-                            Metric(metric.id, metric.name, metric.enabled, metric.notify, metric.display, metric.unit, metric.alarmLow, metric.alarmHigh, metric.value),
+                            Metric(metric.id, metric.name, metric.enable, metric.notify, metric.display, metric.unit, metric.alarmLow, metric.alarmHigh, metric.value),
                             null))
                 }
 

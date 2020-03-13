@@ -1,5 +1,6 @@
 package com.jeremyhahn.cropdroid.utils
 
+import android.util.Log
 import com.jeremyhahn.cropdroid.model.Metric
 import org.json.JSONArray
 import org.json.JSONObject
@@ -19,6 +20,9 @@ class MetricParser {
             var metrics = ArrayList<Metric>(jsonMetrics.length())
             for (i in 0..jsonMetrics.length() - 1) {
                 val jsonMetric = jsonMetrics.getJSONObject(i)
+
+                Log.d("MetricParser.parse", jsonMetric.toString())
+
                 val id = jsonMetric.getString("id")
                 val name = jsonMetric.getString("name")
                 val enabled = jsonMetric.getString("enable")
