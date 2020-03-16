@@ -3,7 +3,6 @@ package com.jeremyhahn.cropdroid.utils
 import android.util.Log
 import com.jeremyhahn.cropdroid.model.Channel
 import org.json.JSONArray
-import org.json.JSONObject
 
 class ChannelParser {
 
@@ -20,6 +19,7 @@ class ChannelParser {
                 Log.d("ChannelParser.parse", jsonChannel.toString())
 
                 val id = jsonChannel.getInt("id")
+                val channelId = jsonChannel.getInt("channelId")
                 val name = jsonChannel.getString("name")
                 val enable = jsonChannel.getBoolean("enable")
                 val notify = jsonChannel.getBoolean("notify")
@@ -29,7 +29,7 @@ class ChannelParser {
                 val debounce = jsonChannel.getInt("debounce")
                 val backoff = jsonChannel.getInt("backoff")
                 val value = jsonChannel.getInt("value")
-                channels.add(Channel(id, name, enable, value))
+                channels.add(Channel(id, channelId, name, enable, notify, condition, schedule, duration, debounce, backoff, value))
             }
             return channels
         }

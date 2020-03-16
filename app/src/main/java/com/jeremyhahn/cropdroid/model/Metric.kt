@@ -1,4 +1,4 @@
 package com.jeremyhahn.cropdroid.model
 
-data class Metric(val id: String, val name: String, val enable: String, val notify: String,
-   val display: String, val unit: String, val alarmLow: String, val alarmHigh: String, val value: String)
+data class Metric(var id: Int, var name: String, var display: String, var enable: Boolean, var notify: Boolean,
+   var unit: String, var alarmLow: Double, var alarmHigh: Double, var value: Double)

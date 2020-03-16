@@ -23,7 +23,7 @@
                 android:visibility="gone" />
 
             <TextView
-                android:id="@+id/switchName"
+                android:id="@+id/channelName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:padding="5dp"
@@ -50,7 +50,7 @@
                     android:text="Dispense"/>
 
                 <Switch
-                    android:id="@+id/switchValue"
+                    android:id="@+id/channelValue"
                     android:layout_width="50dp"
                     android:layout_height="wrap_content"
                     android:width="5dp" />

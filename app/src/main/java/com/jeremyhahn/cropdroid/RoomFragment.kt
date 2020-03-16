@@ -120,7 +120,7 @@ class RoomFragment : Fragment() {
                     recyclerItems.add(
                         MicroControllerRecyclerModel(
                             MicroControllerRecyclerModel.METRIC_TYPE,
-                            Metric(metric.id, metric.name, metric.enable, metric.notify, metric.display, metric.unit, metric.alarmLow, metric.alarmHigh, metric.value),
+                            Metric(metric.id, metric.name, metric.display, metric.enable, metric.notify, metric.unit, metric.alarmLow, metric.alarmHigh, metric.value),
                             null))
                 }
 

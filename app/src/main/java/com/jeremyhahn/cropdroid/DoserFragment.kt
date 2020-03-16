@@ -20,6 +20,7 @@ import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
 import com.jeremyhahn.cropdroid.utils.ChannelParser
 import okhttp3.Call
 import okhttp3.Callback
+import org.json.JSONObject
 import java.io.IOException
 import java.util.*
 import kotlin.collections.ArrayList
@@ -99,7 +100,9 @@ class DoserFragment : Fragment() {
                     return
                 }
 
-                var channels = ChannelParser.parse(responseBody)
+                val json = JSONObject(responseBody)
+                val jsonChannels = json.getJSONArray("channels")
+                var channels = ChannelParser.parse(jsonChannels)
                 for(channel in channels) {
                     recyclerItems.add(
                         MicroControllerRecyclerModel(

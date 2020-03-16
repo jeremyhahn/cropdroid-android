@@ -52,5 +52,8 @@ dependencies {
     implementation 'com.github.blackfizz:eazegraph:1.2.2@aar'
     implementation 'com.nineoldandroids:library:2.4.0'
 
+    implementation 'com.github.prolificinteractive:material-calendarview:2.0.1'
     //implementation "de.mrmaffen:vlc-android-sdk:2.0.6"
+
+    implementation 'com.squareup:android-times-square:1.7.1'
 }

@@ -32,6 +32,7 @@
         android:spinnerMode="dropdown" />
 
     <EditText
+        android:id="@+id/conditionValue"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="@string/prompt_value"

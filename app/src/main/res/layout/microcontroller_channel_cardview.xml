@@ -17,20 +17,14 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/switchId"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/switchName"
+                android:id="@+id/channelName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:padding="5dp"
                 android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium" />
 
             <Switch
-                android:id="@+id/switchValue"
+                android:id="@+id/channelValue"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 

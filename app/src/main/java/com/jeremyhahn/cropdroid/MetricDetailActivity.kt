@@ -10,13 +10,19 @@ class MetricDetailActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.metric_detail)
+        setContentView(R.layout.microcontroller_metric_history)
 
         val mCubicValueLineChart: ValueLineChart = findViewById(R.id.cubiclinechart) as ValueLineChart
 
         val series = ValueLineSeries()
         series.setColor(-0xa9480f)
 
+        val metric = intent.getStringExtra("metric")
+        val values = intent.getDoubleArrayExtra("values")
+        for(value in values) {
+            series.addPoint(ValueLinePoint("", value.toFloat()))
+        }
+/*
         series.addPoint(ValueLinePoint("Jan", 2.4f))
         series.addPoint(ValueLinePoint("Feb", 3.4f))
         series.addPoint(ValueLinePoint("Mar", .4f))
@@ -29,7 +35,7 @@ class MetricDetailActivity : AppCompatActivity() {
         series.addPoint(ValueLinePoint("Oct", 3.4f))
         series.addPoint(ValueLinePoint("Nov", .4f))
         series.addPoint(ValueLinePoint("Dec", 1.3f))
-
+*/
         mCubicValueLineChart.addSeries(series)
         mCubicValueLineChart.startAnimation()
     }

@@ -22,6 +22,7 @@
     <string name="title_duration">Duration</string>
     <string name="title_debounce">Debounce</string>
     <string name="title_backoff">Backoff</string>
+    <string name="title_history">History</string>
 
     <string name="action_sign_in">Sign in</string>
     <string name="action_register">Register</string>

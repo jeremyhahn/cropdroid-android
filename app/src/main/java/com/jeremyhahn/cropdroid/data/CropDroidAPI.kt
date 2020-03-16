@@ -3,8 +3,9 @@ package com.jeremyhahn.cropdroid.data
 import android.util.Log
 import com.jeremyhahn.cropdroid.Constants.Companion.API_BASE
 import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
-import com.jeremyhahn.cropdroid.model.Config
+import com.jeremyhahn.cropdroid.model.Channel
 import com.jeremyhahn.cropdroid.model.MasterController
+import com.jeremyhahn.cropdroid.model.Metric
 import okhttp3.*
 import org.json.JSONObject
 import java.io.IOException
@@ -17,8 +18,10 @@ class CropDroidAPI(val controller: MasterController) {
     val RESERVOIR_RESOURCE = ControllerType.Reservoir.name.toLowerCase()
     val DOSER_RESOURCE = ControllerType.Doser.name.toLowerCase()
     val EVENTS_RESOURCE = "events"
-    val DISPENSE_RESOURCE = "dispense"
     val CONFIG_RESOURCE = "config"
+    val CHANNEL_RESOURCE = "/channels"
+    val METRIC_RESOURCE = "/metrics"
+    val ROOM_HISTORY_RESOURCE = ROOM_RESOURCE.plus("/history")
 
     init {
         REST_ENDPOINT = if(controller.secure == 1)
@@ -37,6 +40,12 @@ class CropDroidAPI(val controller: MasterController) {
         doGet(ROOM_RESOURCE, args, callback)
     }
 
+    fun roomHistory(metric: String, callback: Callback) {
+        var args = ArrayList<String>(0)
+        args.add(metric)
+        doGet(ROOM_HISTORY_RESOURCE, args, callback)
+    }
+
     fun reservoirStatus(callback: Callback) {
         var args = ArrayList<String>(0)
         doGet(RESERVOIR_RESOURCE, args, callback)
@@ -47,11 +56,13 @@ class CropDroidAPI(val controller: MasterController) {
         doGet(DOSER_RESOURCE, args, callback)
     }
 
-    fun dispense(channelId: Int, seconds: Int, callback: Callback) {
+    fun dispense(controllerType: ControllerType, channelId: Int, seconds: Int, callback: Callback) {
+        val resource = controllerType.name.toLowerCase()
         var args = ArrayList<String>(4)
+        args.add("dispense")
         args.add(channelId.toString())
         args.add(seconds.toString())
-        doGet(DISPENSE_RESOURCE, args, callback)
+        doGet(resource, args, callback)
     }
 
     fun switch(controllerType: ControllerType, channelId: Int, state: Boolean, callback: Callback) {
@@ -70,6 +81,35 @@ class CropDroidAPI(val controller: MasterController) {
         args.add(key)
         args.add("?value="+URLEncoder.encode(value, "utf-8"))
         doGet(CONFIG_RESOURCE, args, callback)
+    }
+
+    fun setMetricConfig(metric: Metric, callback: Callback) {
+        Log.d("CropDropAPI.setMetricConfig", "metric="+metric)
+        var json = JSONObject()
+        json.put("id", metric.id)
+        json.put("name", metric.name)
+        json.put("enable", metric.enable)
+        json.put("notify", metric.notify)
+        json.put("display", metric.display)
+        json.put("unit", metric.unit)
+        json.put("alarmLow", metric.alarmLow)
+        json.put("alarmHigh", metric.alarmHigh)
+        doPut(METRIC_RESOURCE, json, callback)
+    }
+
+    fun setChannelConfig(channel: Channel, callback: Callback) {
+        Log.d("CropDropAPI.setChannelConfig", "channel="+channel)
+        var json = JSONObject()
+        json.put("id", channel.id)
+        json.put("channelId", channel.channelId)
+        json.put("name", channel.name)
+        json.put("enable", channel.enable)
+        json.put("notify", channel.notify)
+        json.put("condition", channel.condition)
+        json.put("schedule", channel.schedule)
+        json.put("duration", channel.duration)
+        json.put("debounce", channel.debounce)
+        doPut(CHANNEL_RESOURCE, json, callback)
     }
 
     fun getConfig(callback: Callback) {
@@ -95,48 +135,47 @@ class CropDroidAPI(val controller: MasterController) {
         doPost("/register", json, callback)
     }
 
-    fun doGet(resource: String, args: ArrayList<String>, callback: Callback) {
+    fun doPut(resource: String, json: JSONObject, callback: Callback) {
         if(controller.hostname.isEmpty()) return fail(callback, "Hostname required")
-
-        var endpoint = REST_ENDPOINT.plus("/").plus(resource)
-        if(args.size > 0) {
-            for(arg in args) {
-                endpoint = endpoint.plus("/").plus(arg)
-            }
-        }
-
-        Log.d("CropDroidAPI.doGet", "endpoint: " + endpoint)
-        Log.d("CropDroidAPI.doGet", "token: " + controller.token)
-
-        //val logging = HttpLoggingInterceptor()
-        //logging.setLevel(HttpLoggingInterceptor.Level.BASIC)
-        //val client = OkHttpClient.Builder()
-            //.addInterceptor(logging)
-          //  .build()
-
-        val client = OkHttpClient()
-        var request = Request.Builder()
-            .header("Authorization","Bearer " + controller.token)
-            .url(endpoint)
-            .get()
-            .build();
-
-        client.newCall(request).enqueue(callback)
-    }
-
-    fun doPost(resource: String, json: JSONObject, callback: Callback) {
-
-        if(controller.hostname.isEmpty()) return fail(callback, "Hostname required")
-
         var endpoint = REST_ENDPOINT.plus(resource)
-
-        Log.d("CropDroidAPI.doPost", "endpoint: " + endpoint)
-
+        Log.d("CropDroidAPI.doPut", "endpoint: " + endpoint)
         var client = OkHttpClient()
         var JSON = MediaType.parse("application/json; charset=utf-8")
         var body = RequestBody.create(JSON, json.toString())
         var request: Request? = null
+        if(controller.token.isEmpty()) {
+            request = Request.Builder()
+                .url(endpoint)
+                .put(body)
+                .build();
+        }
+        else {
+            request = Request.Builder()
+                .url(endpoint)
+                .put(body)
+                .header("Authorization","Bearer " + controller.token)
+                .build();
+        }
+        try {
+            client.newCall(request).enqueue(callback)
+        }
+        catch(e: java.net.ConnectException) {
+            fail(callback, e.message!!)
+        }
+        catch(e: IOException) {
+            e.printStackTrace()
+            fail(callback, e.message!!)
+        }
+    }
 
+    fun doPost(resource: String, json: JSONObject, callback: Callback) {
+        if(controller.hostname.isEmpty()) return fail(callback, "Hostname required")
+        var endpoint = REST_ENDPOINT.plus(resource)
+        Log.d("CropDroidAPI.doPost", "endpoint: " + endpoint)
+        var client = OkHttpClient()
+        var JSON = MediaType.parse("application/json; charset=utf-8")
+        var body = RequestBody.create(JSON, json.toString())
+        var request: Request? = null
         if(controller.token.isEmpty()) {
             request = Request.Builder()
                 .url(endpoint)
@@ -150,14 +189,72 @@ class CropDroidAPI(val controller: MasterController) {
                 .header("Authorization","Bearer " + controller.token)
                 .build();
         }
-
         try {
             client.newCall(request).enqueue(callback)
         }
         catch(e: java.net.ConnectException) {
             fail(callback, e.message!!)
         }
+        catch(e: IOException) {
+            e.printStackTrace()
+            fail(callback, e.message!!)
+        }
     }
+
+    fun doGet(resource: String, args: ArrayList<String>, callback: Callback) {
+        if(controller.hostname.isEmpty()) return fail(callback, "Hostname required")
+        var endpoint = REST_ENDPOINT.plus("/").plus(resource)
+        if(args.size > 0) {
+            for(arg in args) {
+                endpoint = endpoint.plus("/").plus(arg)
+            }
+        }
+        Log.d("CropDroidAPI.doGet", "endpoint: " + endpoint)
+        Log.d("CropDroidAPI.doGet", "token: " + controller.token)
+        //val logging = HttpLoggingInterceptor()
+        //logging.setLevel(HttpLoggingInterceptor.Level.BASIC)
+        //val client = OkHttpClient.Builder()
+            //.addInterceptor(logging)
+          //  .build()
+        val client = OkHttpClient()
+        var request = Request.Builder()
+            .header("Authorization","Bearer " + controller.token)
+            .url(endpoint)
+            .get()
+            .build();
+        try {
+            client.newCall(request).enqueue(callback)
+        }
+        catch(e: java.net.ConnectException) {
+            fail(callback, e.message!!)
+        }
+        catch(e: IOException) {
+            e.printStackTrace()
+            fail(callback, e.message!!)
+        }
+    }
+
+    /*
+    fun doFormPost(resource: String, args: Map<String, String>, callback: Callback) {
+        val client = OkHttpClient()
+        val formBuilder = FormBody.Builder()
+        for((k, v) in args) {
+            formBuilder.add(k, v)
+        }
+        val request: Request = Request.Builder()
+            .url(REST_ENDPOINT.plus(resource))
+            .header("Authorization","Bearer " + controller.token)
+            .post(formBuilder.build())
+            .build()
+        try {
+            client.newCall(request).enqueue(callback)
+        }
+        catch(e: IOException) {
+            e.printStackTrace()
+            fail(callback, e.message!!)
+        }
+    }
+    */
 
     fun fail(callback: Callback, message: String) {
         callback.onFailure(null, IOException(message))
