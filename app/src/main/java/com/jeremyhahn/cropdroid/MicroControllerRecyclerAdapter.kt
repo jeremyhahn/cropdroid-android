@@ -405,17 +405,22 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
                                 val display = controller.type.capitalize()
                                 controllerArray.add(display)
                                 controllerMap[i] = controller
-                                if(controller.id == channel.controllerId) {
-                                    Log.d("condition", "controller and channel ids match! " + controller.id.toString())
-                                    //val spinnerPosition: Int = controllerAdapter.getPosition(display)
-                                    activity.runOnUiThread{
-                                        controllerSpinner.setSelection(i+1)
+                                if(conditionController.isEmpty()) {
+                                    if(controller.id == channel.controllerId) {
+                                        activity.runOnUiThread{
+                                            controllerSpinner.setSelection(controllerAdapter.getPosition(display))
+                                        }
+                                    }
+                                } else {
+                                    if(controller.type == conditionController) {
+                                        activity.runOnUiThread{
+                                            controllerSpinner.setSelection(controllerAdapter.getPosition(display))
+                                        }
                                     }
                                 }
                             }
                             activity.runOnUiThread{
                                 controllerAdapter.notifyDataSetChanged()
-                                //metricAdapter.notifyDataSetChanged()
                             }
                         }
                     })
