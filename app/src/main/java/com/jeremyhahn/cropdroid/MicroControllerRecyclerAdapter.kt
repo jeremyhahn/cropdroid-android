@@ -183,7 +183,7 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
                 }
                 d.setPositiveButton("Done") { dialogInterface, i ->
                     Log.d("btnDispense.onClick", "onClick: " + numberPicker.value)
-                    cropDroidAPI.dispense(ControllerType.Doser, channel.id, numberPicker.value, object : Callback {
+                    cropDroidAPI.dispense(ControllerType.Doser, channel.channelId, numberPicker.value, object : Callback {
                         override fun onFailure(call: Call, e: IOException) {
                             Log.d("MicroControllerRecyclerAdapter.onSwitchState", "onFailure response: " + e!!.message)
                             return
@@ -212,6 +212,8 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
 
             val displayName = if(channel.name != "") channel.name else "Channel ".plus(channel.id)
 
+            Log.d("MicroControllerRecyclerAdapter.bind", "channel: " + channel.toString())
+
             itemView.setTag(channel)
             itemView.channelName.text = displayName
             itemView.channelValue.isChecked = channel.value === 1
@@ -229,8 +231,8 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
                     builder.setMessage(dialogMessage)
                     builder.setPositiveButton(R.string.action_yes,
                             DialogInterface.OnClickListener { dialog, id ->
-                                Log.d("SwitchTypeViewHolder.onClick", "DialogInterface.OnClickListener  " + channel.id)
-                                cropDroidAPI.switch(controllerType, channel.id, newState, object: Callback {
+                                Log.d("SwitchTypeViewHolder.onClick", "DialogInterface.OnClickListener  " + channel.channelId)
+                                cropDroidAPI.switch(controllerType, channel.channelId, newState, object: Callback {
                                     override fun onFailure(call: Call, e: IOException) {
                                         Log.d("MicroControllerRecyclerAdapter.onSwitchState", "onFailure response: " + e!!.message)
                                         itemView.channelValue.setChecked(!newState)
