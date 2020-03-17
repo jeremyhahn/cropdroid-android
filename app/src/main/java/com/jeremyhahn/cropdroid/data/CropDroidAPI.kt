@@ -22,6 +22,7 @@ class CropDroidAPI(val controller: MasterController) {
     val CHANNEL_RESOURCE = "/channels"
     val METRIC_RESOURCE = "/metrics"
     val ROOM_HISTORY_RESOURCE = ROOM_RESOURCE.plus("/history")
+    val CONTROLLER_RESOURCE = "controllers"
 
     init {
         REST_ENDPOINT = if(controller.secure == 1)
@@ -115,6 +116,17 @@ class CropDroidAPI(val controller: MasterController) {
     fun getConfig(callback: Callback) {
         val args = ArrayList<String>()
         doGet(CONFIG_RESOURCE, args, callback)
+    }
+
+    fun getControllers(callback : Callback) {
+        val args = ArrayList<String>()
+        doGet(CONTROLLER_RESOURCE, args, callback)
+    }
+
+    fun getMetrics(controllerId: Int, callback: Callback) {
+        val endpoint = METRIC_RESOURCE.plus("/").plus(controllerId)
+        val args = ArrayList<String>()
+        doGet(endpoint, args, callback)
     }
 
     fun login(username: String, password: String, callback: Callback) {

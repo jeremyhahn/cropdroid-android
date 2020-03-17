@@ -6,10 +6,24 @@
     android:padding="@dimen/activity_horizontal_margin">
 
     <TextView
+        android:id="@+id/textController"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Controller" />
+
+    <Spinner
+        android:id="@+id/controllerSpinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:drawable/btn_dropdown"
+        android:spinnerMode="dropdown" />
+
+    <TextView
         android:id="@+id/textMetric"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Metric" />
+        android:text="Metric"
+        android:paddingTop="5dp"/>
 
     <Spinner
         android:id="@+id/metricSpinner"
@@ -22,7 +36,8 @@
         android:id="@+id/textView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Operator" />
+        android:text="Operator"
+        android:paddingTop="5dp"/>
 
     <Spinner
         android:id="@+id/operatorSpinner"
@@ -37,6 +52,7 @@
         android:layout_height="wrap_content"
         android:hint="@string/prompt_value"
         android:inputType="text"
-        android:selectAllOnFocus="true" />
+        android:selectAllOnFocus="true"
+        android:paddingTop="5dp"/>
 
 </LinearLayout>

@@ -7,17 +7,19 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.util.Log
 import android.view.*
-import android.widget.ArrayAdapter
-import android.widget.NumberPicker
-import android.widget.Spinner
-import android.widget.Toast
+import android.widget.*
+import android.widget.AdapterView.OnItemSelectedListener
+import androidx.core.view.get
 import androidx.recyclerview.widget.RecyclerView
 import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
 import com.jeremyhahn.cropdroid.Constants.Companion.SwitchState
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Channel
+import com.jeremyhahn.cropdroid.model.Controller
 import com.jeremyhahn.cropdroid.model.Metric
 import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
+import com.jeremyhahn.cropdroid.utils.ControllerParser
+import com.jeremyhahn.cropdroid.utils.MetricParser
 import kotlinx.android.synthetic.main.dialog_condition.view.*
 import kotlinx.android.synthetic.main.dialog_edit_alarm.view.*
 import kotlinx.android.synthetic.main.dialog_edit_number.view.*
@@ -150,19 +152,21 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
         }
     }
 
-    class SwitchTypeViewHolder(itemView: View, cropDroidAPI: CropDroidAPI, metrics: List<Metric>) : RecyclerView.ViewHolder(itemView),
+    class SwitchTypeViewHolder(activity: Activity, cropDroidAPI: CropDroidAPI, metrics: List<Metric>, itemView: View) : RecyclerView.ViewHolder(itemView),
         View.OnCreateContextMenuListener {
 
+        val activity: Activity
         val cropDroidAPI: CropDroidAPI
         val metrics: List<Metric>
 
         init {
+            this.activity = activity
             this.cropDroidAPI = cropDroidAPI
             this.metrics = metrics
             itemView.setOnCreateContextMenuListener(this)
         }
 
-        fun bindDispenseButton(activity: Activity, channel: Channel) {
+        fun bindDispenseButton(channel: Channel) {
             itemView.btnDispense.setOnClickListener {
                 val d = AlertDialog.Builder(activity)
                 val inflater: LayoutInflater = activity.getLayoutInflater()
@@ -204,7 +208,7 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
             }
         }
 
-        fun bind(activity: Activity, controllerType: ControllerType, channel: Channel) {
+        fun bind(controllerType: ControllerType, channel: Channel) {
 
             val displayName = if(channel.name != "") channel.name else "Channel ".plus(channel.id)
 
@@ -304,37 +308,117 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
             var conditionItem = menu!!.add(0, itemView.id, 0, "Condition")
                 .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
 
+                    val controllerMap = HashMap<Int, Controller>()
+                    val metricMap = HashMap<Int, Metric>()
+
+                    var conditionController = ""
                     var conditionMetric = ""
                     var conditionOperator = ""
                     var conditionValue = ""
 
-                    val inflater: LayoutInflater = LayoutInflater.from(v!!.context)
-                    val dialogView: View = inflater.inflate(R.layout.dialog_condition, null)
-
-                    // Parse condition -- metricName operator value  (mem > 500)
+                    // Parse condition -- metricName operator value  (controller?.mem > 500)
                     val conditionPieces = channel.condition.split(" ")
-
-                    Log.d("conditionPieces size:", conditionPieces.size.toString())
 
                     if(conditionPieces.size == 3) {
                         conditionMetric = conditionPieces[0].trim()
                         conditionOperator = conditionPieces[1].trim()
                         conditionValue = conditionPieces[2].trim()
-                        Log.d("condition pieces[0]:", conditionMetric)
-                        Log.d("condition pieces[1]:", conditionOperator)
-                        Log.d("condition pieces[2]:", conditionValue)
+                        if(conditionMetric.contains(".")) {
+                            val pieces = conditionMetric.split(".")
+                            conditionController = pieces[0]
+                            conditionMetric = pieces[1]
+                        }
+                        Log.d("conditionController", conditionController)
+                        Log.d("conditionMetric", conditionMetric)
+                        Log.d("conditionOperator", conditionOperator)
+                        Log.d("conditionValue", conditionValue)
                     }
+
+                    val inflater: LayoutInflater = LayoutInflater.from(v!!.context)
+                    val dialogView: View = inflater.inflate(R.layout.dialog_condition, null)
 
                     // Populate metric spinner
                     val metricArray: MutableList<String> = ArrayList()
                     for(metric in metrics) {
-                        metricArray.add(metric.name)
+                        metricArray.add(metric.display)
                     }
                     val metricAdapter = ArrayAdapter<String>(v.context, android.R.layout.simple_spinner_item, metricArray)
+                    metricAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                     val metricSpinner = dialogView.findViewById<View>(R.id.metricSpinner) as Spinner
                     metricSpinner.adapter = metricAdapter
-                    val spinnerPosition: Int = metricAdapter.getPosition(conditionMetric)
-                    metricSpinner.setSelection(spinnerPosition)
+                    val metricPosition: Int = metricAdapter.getPosition(conditionMetric)
+                    metricSpinner.setSelection(metricPosition)
+
+                    // Populate controller spinner
+                    val controllerArray: MutableList<String> = ArrayList()
+                    val controllerSpinner = dialogView.findViewById<View>(R.id.controllerSpinner) as Spinner
+                    val controllerAdapter = ArrayAdapter<String>(v.context, android.R.layout.simple_spinner_item, controllerArray)
+                    controllerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                    controllerSpinner.adapter = controllerAdapter
+                    controllerSpinner.onItemSelectedListener = object : OnItemSelectedListener {
+                        override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
+                            val selectedController = controllerMap.get(id.toInt())
+                            cropDroidAPI.getMetrics(selectedController!!.id, object: Callback {
+                                override fun onFailure(call: Call, e: IOException) {
+                                    Log.d("onFailure", "onFailure response: " + e!!.message)
+                                    return
+                                }
+                                override fun onResponse(call: Call, response: okhttp3.Response) {
+                                    val responseBody = response.body().string()
+                                    Log.d("controllerSpinner.onResponse", responseBody)
+                                    metricArray.clear()
+                                    val metrics = MetricParser.parse(responseBody)
+                                    for((i, metric) in metrics.withIndex()) {
+                                        metricArray.add(metric.display)
+                                        metricMap.put(i, metric)
+
+                                        Log.d("METRIC", "name=" + metric.name + ", conditionMetric=" + conditionMetric)
+
+                                        if(metric.name == conditionMetric) {
+                                            Log.d("condition", "metric and condition metric ids match! " + metric.id.toString() + ", name=" + metric.name)
+                                            //val spinnerPosition: Int = controllerAdapter.getPosition(metric.display)
+                                            activity.runOnUiThread{
+                                                metricSpinner.setSelection(i)
+                                            }
+                                        }
+                                    }
+                                    activity.runOnUiThread{
+                                        metricAdapter.notifyDataSetChanged()
+                                    }
+                                }
+                            })
+                        }
+                        override fun onNothingSelected(parent: AdapterView<*>) {}
+                    }
+
+                    // Load the controller list
+                    cropDroidAPI.getControllers(object: Callback {
+                        override fun onFailure(call: Call, e: IOException) {
+                            Log.d("onCreateContextMenu.Condition", "onFailure response: " + e!!.message)
+                            return
+                        }
+                        override fun onResponse(call: Call, response: okhttp3.Response) {
+                            val responseBody = response.body().string()
+                            val controllers = ControllerParser.parse(responseBody)
+                            controllerArray.clear()
+                            for((i, controller) in controllers.withIndex()) {
+                                val display = controller.type.capitalize()
+                                controllerArray.add(display)
+                                controllerMap[i] = controller
+                                if(controller.id == channel.controllerId) {
+                                    Log.d("condition", "controller and channel ids match! " + controller.id.toString())
+                                    //val spinnerPosition: Int = controllerAdapter.getPosition(display)
+                                    activity.runOnUiThread{
+                                        controllerSpinner.setSelection(i+1)
+                                    }
+                                }
+                            }
+                            activity.runOnUiThread{
+                                controllerAdapter.notifyDataSetChanged()
+                                //metricAdapter.notifyDataSetChanged()
+                            }
+                        }
+                    })
 
                     // Populate operator spinner
                     val operatorArray: MutableList<String> = ArrayList()
@@ -344,18 +428,52 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
                     operatorArray.add("<=")
                     operatorArray.add("=")
                     val operatorAdapter = ArrayAdapter<String>(v.context, android.R.layout.simple_spinner_item, operatorArray)
-                    val operatorItems = dialogView.findViewById<View>(R.id.operatorSpinner) as Spinner
-                    operatorItems.adapter = operatorAdapter
+                    operatorAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                    val operatorSpinner = dialogView.findViewById<View>(R.id.operatorSpinner) as Spinner
+                    operatorSpinner.adapter = operatorAdapter
+                    val operatorPosition: Int = operatorAdapter.getPosition(conditionOperator)
+                    operatorSpinner.setSelection(operatorPosition)
 
                     // Populate condition value
                     dialogView.conditionValue.setText(conditionValue)
 
+                    // Show the dialog box / condition view
                     val d = AlertDialog.Builder(v.context)
                     d.setTitle(R.string.title_condition)
                     d.setMessage(R.string.dialog_message_condition)
                     d.setView(dialogView)
                     d.setPositiveButton("Apply") { dialogInterface, i ->
-                        Log.d("Condition", "onClick: " + it.itemId)
+
+                        val selectedMetric = metricMap.get(metricSpinner.selectedItemPosition)
+                        val selectedController = controllerMap.get(controllerSpinner.selectedItemPosition)
+                        val operator = operatorSpinner.getSelectedItem().toString()
+
+                        val conditionValue = dialogView.findViewById<View>(R.id.conditionValue) as EditText
+
+                        val newConditionBuilder = StringBuilder()
+                        if(channel.controllerId != selectedController!!.id) {
+                            newConditionBuilder.append(selectedController!!.type.toLowerCase()).append(".")
+                        }
+                        newConditionBuilder.append(selectedMetric!!.name).append(" ")
+                        newConditionBuilder.append(operator).append(" ")
+                        newConditionBuilder.append(conditionValue.text.toString())
+                        val newCondition = newConditionBuilder.toString()
+
+                        Log.d("Condition", "current condition: " + channel.condition)
+                        Log.d("Condition", "new condition: " + newCondition)
+
+                        if(channel.condition != newCondition) {
+                            channel.condition = newCondition
+                            cropDroidAPI.setChannelConfig(channel, object: Callback {
+                                override fun onFailure(call: Call, e: IOException) {
+                                    Log.d("onFailure", "onFailure response: " + e!!.message)
+                                    return
+                                }
+                                override fun onResponse(call: Call, response: okhttp3.Response) {
+                                    Log.d("ApplyMetrics", "onResponse: " + response.body().string())
+                                }
+                            })
+                        }
                     }
                     d.setNegativeButton("Cancel") { dialogInterface, i ->
 
@@ -489,7 +607,7 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
                 view = LayoutInflater.from(parent.context)
                     .inflate(R.layout.microcontroller_channel_cardview, parent, false)
             }
-            return SwitchTypeViewHolder(view, cropDroidAPI, getMetrics())
+            return SwitchTypeViewHolder(activity, cropDroidAPI, getMetrics(), view)
         }
         view = LayoutInflater.from(parent.context).inflate(R.layout.microcontroller_metric_cardview, parent, false)
         return MetricTypeViewHolder(view, cropDroidAPI)
@@ -506,9 +624,9 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
             if (model.type == MicroControllerRecyclerModel.CHANNEL_TYPE) {
                 val switchTypeViewHolder = (holder as SwitchTypeViewHolder)
                 if(controllerType === ControllerType.Doser) {
-                    switchTypeViewHolder.bindDispenseButton(activity, model.channel!!)
+                    switchTypeViewHolder.bindDispenseButton(model.channel!!)
                 }
-                switchTypeViewHolder.bind(activity, controllerType, model.channel!!)
+                switchTypeViewHolder.bind(controllerType, model.channel!!)
             }
             else {
                 (holder as MetricTypeViewHolder).bind(model.metric!!)

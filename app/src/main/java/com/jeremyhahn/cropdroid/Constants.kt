@@ -65,8 +65,6 @@ class Constants {
         const val CONFIG_CHANNEL_DEBOUNCE_KEY = "debounce"
         const val CONFIG_CHANNEL_BACKOFF_KEY = "backoff"
 
-
-
         enum class SwitchState {
             ON,
             OFF
