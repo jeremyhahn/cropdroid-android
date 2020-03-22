@@ -1,7 +1,6 @@
 package com.jeremyhahn.cropdroid.utils
 
 import android.content.SharedPreferences
-import android.preference.PreferenceManager
 import android.util.Log
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_CHANNEL_BACKOFF_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_CHANNEL_CONDITION_KEY
@@ -31,17 +30,11 @@ import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_ENABLE_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_HOST_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_PASSWORD_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_PORT_KEY
-import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_TO_KEY
+import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_RECIPIENT_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_USERNAME_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_TIMEZONE_KEY
-import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_CONTROLLER_ID
-import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Channel
 import com.jeremyhahn.cropdroid.model.Config
-import com.jeremyhahn.cropdroid.model.User
-import okhttp3.Call
-import okhttp3.Callback
-import java.io.IOException
 
 class ConfigManager(val sharedPreferences: SharedPreferences, val config: Config) {
 
@@ -89,8 +82,9 @@ class ConfigManager(val sharedPreferences: SharedPreferences, val config: Config
         val port = getValue(CONFIG_SMTP_PORT_KEY)
         val username = getValue(CONFIG_SMTP_USERNAME_KEY)
         val password = getValue(CONFIG_SMTP_PASSWORD_KEY)
-        val to = getValue(CONFIG_SMTP_TO_KEY)
-        val bEnable = config.room.enable.toBoolean()
+        val to = getValue(CONFIG_SMTP_RECIPIENT_KEY)
+
+        val bEnable = config.smtp.enable.toBoolean()
 
         Log.d("syncSmtp", "bEnable=" + bEnable + ", enable="+ enable)
 
@@ -110,7 +104,7 @@ class ConfigManager(val sharedPreferences: SharedPreferences, val config: Config
             setEditorValue(CONFIG_SMTP_PASSWORD_KEY, config.smtp.password)
         }
         if(to != config.smtp.to) {
-            setEditorValue(CONFIG_SMTP_TO_KEY, config.smtp.to)
+            setEditorValue(CONFIG_SMTP_RECIPIENT_KEY, config.smtp.to)
         }
     }
 

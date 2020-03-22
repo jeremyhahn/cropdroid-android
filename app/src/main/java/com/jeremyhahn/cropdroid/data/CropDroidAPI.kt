@@ -21,7 +21,9 @@ class CropDroidAPI(val controller: MasterController) {
     val CONFIG_RESOURCE = "config"
     val CHANNEL_RESOURCE = "/channels"
     val METRIC_RESOURCE = "/metrics"
+    val VIRTUAL_RESOURCE = "/virtual"
     val ROOM_HISTORY_RESOURCE = ROOM_RESOURCE.plus("/history")
+    val RESERVOIR_HISTORY_RESOURCE = RESERVOIR_RESOURCE.plus("/history")
     val CONTROLLER_RESOURCE = "controllers"
 
     init {
@@ -40,16 +42,23 @@ class CropDroidAPI(val controller: MasterController) {
         var args = ArrayList<String>(0)
         doGet(ROOM_RESOURCE, args, callback)
     }
-
+/*
     fun roomHistory(metric: String, callback: Callback) {
         var args = ArrayList<String>(0)
         args.add(metric)
         doGet(ROOM_HISTORY_RESOURCE, args, callback)
     }
-
+*/
     fun reservoirStatus(callback: Callback) {
         var args = ArrayList<String>(0)
         doGet(RESERVOIR_RESOURCE, args, callback)
+    }
+
+    fun metricHistory(controllerType: ControllerType, metric: String, callback: Callback) {
+        var args = ArrayList<String>(2)
+        args.add("history")
+        args.add(metric)
+        doGet(controllerType.name.toLowerCase(), args, callback)
     }
 
     fun doserStatus(callback: Callback) {
@@ -88,14 +97,23 @@ class CropDroidAPI(val controller: MasterController) {
         Log.d("CropDropAPI.setMetricConfig", "metric="+metric)
         var json = JSONObject()
         json.put("id", metric.id)
+        json.put("key", metric.key)
         json.put("name", metric.name)
         json.put("enable", metric.enable)
         json.put("notify", metric.notify)
-        json.put("display", metric.display)
         json.put("unit", metric.unit)
         json.put("alarmLow", metric.alarmLow)
         json.put("alarmHigh", metric.alarmHigh)
         doPut(METRIC_RESOURCE, json, callback)
+    }
+
+    fun setVirtualMetricValue(controllerType: ControllerType, metric: Metric, callback: Callback) {
+        Log.d("CropDropAPI.setVirtualMetricValue", "metric="+metric)
+        var args = ArrayList<String>(4)
+        args.add(controllerType.name.toLowerCase())
+        args.add(metric.key)
+        args.add(metric.value.toString())
+        doGet(VIRTUAL_RESOURCE, args, callback)
     }
 
     fun setChannelConfig(channel: Channel, callback: Callback) {

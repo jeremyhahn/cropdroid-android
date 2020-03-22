@@ -42,11 +42,14 @@ class ReservoirFragment : Fragment() {
         val id = PreferenceManager.getDefaultSharedPreferences(activity!!.applicationContext)
             .getInt(Constants.PREF_KEY_CONTROLLER_ID, 0)
 
-        Log.d("ReservoirFragment.onCreateView", "PREF_KEY_CONTROLLER_ID: " + id.toString())
+        val mode = PreferenceManager.getDefaultSharedPreferences(activity!!.applicationContext)
+            .getString(Constants.CONFIG_MODE_KEY, "virtual")
+
+        Log.d("ReservoirFragment.onCreateView", "controller_id=" + id.toString() + ", mode=" + mode)
 
         controller = MasterControllerRepository(context!!).getController(id)
 
-        adapter =  MicroControllerRecyclerAdapter(activity!!, CropDroidAPI(controller!!), recyclerItems, ControllerType.Reservoir)
+        adapter = MicroControllerRecyclerAdapter(activity!!, CropDroidAPI(controller!!), recyclerItems, ControllerType.Reservoir, mode)
 
         var fragmentView = inflater.inflate(R.layout.fragment_reservoir, container, false)
         recyclerView = fragmentView.findViewById(R.id.reservoirRecyclerView) as RecyclerView
@@ -110,7 +113,7 @@ class ReservoirFragment : Fragment() {
                     recyclerItems.add(
                         MicroControllerRecyclerModel(
                             MicroControllerRecyclerModel.METRIC_TYPE,
-                            Metric(metric.id, metric.name,  metric.display, metric.enable, metric.notify, metric.unit, metric.alarmLow, metric.alarmHigh, metric.value),
+                            Metric(metric.id, metric.key,  metric.name, metric.enable, metric.notify, metric.unit, metric.alarmLow, metric.alarmHigh, metric.value),
                             null))
                 }
 

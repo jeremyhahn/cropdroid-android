@@ -39,7 +39,7 @@
         <EditTextPreference
             app:key="room.uri"
             app:title="@string/pref_uri"
-            app:dependency="room.uri"
+            app:dependency="room.enable"
             app:useSimpleSummaryProvider="true" />
 
         <SwitchPreferenceCompat
@@ -76,7 +76,7 @@
         <EditTextPreference
             app:key="reservoir.uri"
             app:title="@string/pref_uri"
-            app:dependency="reservoir.uri"
+            app:dependency="reservoir.enable"
             app:useSimpleSummaryProvider="true" />
 
         <SwitchPreferenceCompat
@@ -109,7 +109,7 @@
         <EditTextPreference
             app:key="doser.uri"
             app:title="@string/pref_uri"
-            app:dependency="doser.uri"
+            app:dependency="doser.enable"
             app:useSimpleSummaryProvider="true" />
 
         <SwitchPreferenceCompat
@@ -158,7 +158,7 @@
             app:useSimpleSummaryProvider="true" />
 
         <EditTextPreference
-            app:key="smtp.to"
+            app:key="smtp.recipient"
             app:title="@string/smtp_to_title"
             app:dependency="smtp.enable"
             app:useSimpleSummaryProvider="true" />

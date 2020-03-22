@@ -24,15 +24,15 @@ class MetricParser {
                 Log.d("MetricParser.parse", jsonMetric.toString())
 
                 val id = jsonMetric.getInt("id")
-                val name = jsonMetric.getString("name")
-                val display = jsonMetric.getString("display")
                 val enabled = jsonMetric.getBoolean("enable")
                 val notify = jsonMetric.getBoolean("notify")
+                val key = jsonMetric.getString("key")
+                val name = jsonMetric.getString("name")
                 val unit = jsonMetric.getString("unit")
                 val alarmLow = jsonMetric.getDouble("alarmLow")
                 val alarmHigh = jsonMetric.getDouble("alarmHigh")
                 val value = jsonMetric.getDouble("value")
-                metrics.add(Metric(id, name, display, enabled, notify, unit, alarmLow, alarmHigh, value))
+                metrics.add(Metric(id, key, name, enabled, notify, unit, alarmLow, alarmHigh, value))
             }
             return metrics
         }

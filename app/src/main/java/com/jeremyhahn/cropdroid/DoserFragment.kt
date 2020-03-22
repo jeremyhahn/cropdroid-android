@@ -39,10 +39,15 @@ class DoserFragment : Fragment() {
 
         val id = PreferenceManager.getDefaultSharedPreferences(activity!!.applicationContext)
             .getInt(Constants.PREF_KEY_CONTROLLER_ID, 0)
-        Log.d("Doserragment.onCreate", "controller_id: " + id.toString())
+
+        val mode = PreferenceManager.getDefaultSharedPreferences(activity!!.applicationContext)
+            .getString(Constants.CONFIG_MODE_KEY, "virtual")
+
+        Log.d("DoserFragment.onCreateView", "controller_id=" + id.toString() + ", mode=" + mode)
+
         controller = MasterControllerRepository(context!!).getController(id)
 
-        adapter = MicroControllerRecyclerAdapter(activity!!, CropDroidAPI(controller!!), recyclerItems, ControllerType.Doser)
+        adapter = MicroControllerRecyclerAdapter(activity!!, CropDroidAPI(controller!!), recyclerItems, ControllerType.Doser, mode)
 
         var fragmentView = inflater.inflate(R.layout.fragment_doser, container, false)
         recyclerView = fragmentView.findViewById(R.id.doserRecyclerView) as RecyclerView

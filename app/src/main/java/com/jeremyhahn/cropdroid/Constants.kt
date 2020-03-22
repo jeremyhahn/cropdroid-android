@@ -29,13 +29,18 @@ class Constants {
         const val CONFIG_TIMEZONE_KEY = "timezone"
         const val CONFIG_MODE_KEY = "mode"
 
+        const val CONFIG_MODE_VIRTUAL = "virtual"
+        const val CONFIG_MODE_SERVER = "server"
+        const val CONFIG_MODE_CLOUD = "cloud"
+        const val CONFIG_MODE_MAINTENANCE = "maintenance"
+
         const val CONFIG_SMTP_KEY = "smtp"
         const val CONFIG_SMTP_ENABLE_KEY = "smtp.enable"
         const val CONFIG_SMTP_HOST_KEY = "smtp.host"
         const val CONFIG_SMTP_PORT_KEY = "smtp.port"
         const val CONFIG_SMTP_USERNAME_KEY = "smtp.username"
         const val CONFIG_SMTP_PASSWORD_KEY = "smtp.password"
-        const val CONFIG_SMTP_TO_KEY = "smtp.to"
+        const val CONFIG_SMTP_RECIPIENT_KEY = "smtp.recipient"
 
         const val CONFIG_ROOM_KEY = "room"
         const val CONFIG_ROOM_ENABLE_KEY = "room.enable"

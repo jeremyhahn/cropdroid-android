@@ -33,10 +33,9 @@ import okhttp3.Callback
 import org.json.JSONArray
 import java.io.IOException
 
-
 class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: CropDroidAPI,
-           val recyclerItems: ArrayList<MicroControllerRecyclerModel>, controllerType: ControllerType) : Clearable,
-    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+           val recyclerItems: ArrayList<MicroControllerRecyclerModel>, controllerType: ControllerType,
+           val mode: String) : Clearable, RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     var metricCount: Int = 0
     val controllerType: ControllerType
@@ -45,19 +44,25 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
         this.controllerType = controllerType
     }
 
-    class MetricTypeViewHolder(itemView: View, cropDroidAPI: CropDroidAPI) : RecyclerView.ViewHolder(itemView),
-        View.OnCreateContextMenuListener {
+    class MetricTypeViewHolder(adapter: MicroControllerRecyclerAdapter, controllerType:
+            ControllerType, mode: String, itemView: View) : RecyclerView.ViewHolder(itemView), View.OnCreateContextMenuListener {
 
+        val adapter: MicroControllerRecyclerAdapter
+        val mode: String
+        val controllerType: ControllerType
         val cropDroidAPI: CropDroidAPI
 
         init {
-            this.cropDroidAPI = cropDroidAPI
+            this.adapter = adapter
+            this.mode = mode
+            this.controllerType = controllerType
+            this.cropDroidAPI = adapter.cropDroidAPI
             itemView.setOnCreateContextMenuListener(this)
         }
 
         fun bind(metric: Metric) {
             itemView.setTag(metric)
-            itemView.title.text = metric.display
+            itemView.title.text = metric.name
             itemView.value.text = metric.value.toString().plus(" ").plus(metric.unit)
         }
 
@@ -71,7 +76,7 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
                     val inflater: LayoutInflater = LayoutInflater.from(v!!.context)
 
                     val dialogView: View = inflater.inflate(R.layout.dialog_edit_text, null)
-                    dialogView.editText.setText(metric.display)
+                    dialogView.editText.setText(metric.name)
 
                     val d = AlertDialog.Builder(v!!.context)
                     d.setTitle(R.string.title_rename)
@@ -79,7 +84,7 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
                     d.setView(dialogView)
                     d.setPositiveButton("Apply") { dialogInterface, i ->
                         Log.d("Rename", "onClick: " + it.itemId)
-                        metric.display = dialogView.editText.text.toString()
+                        metric.name = dialogView.editText.text.toString()
                         cropDroidAPI.setMetricConfig(metric, object: Callback {
                             override fun onFailure(call: Call, e: IOException) {
                                 Log.d("onCreateContextMenu.Rename", "onFailure response: " + e!!.message)
@@ -111,6 +116,17 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
                     d.setView(dialogView)
                     d.setPositiveButton("Apply") { dialogInterface, i ->
                         Log.d("Alarm", "onClick: " + it.itemId)
+                        metric.alarmLow = dialogView.alarmLow.text.toString().toDouble()
+                        metric.alarmHigh = dialogView.alarmHigh.text.toString().toDouble()
+                        cropDroidAPI.setMetricConfig(metric, object: Callback {
+                            override fun onFailure(call: Call, e: IOException) {
+                                Log.d("onCreateContextMenu.Alarm", "onFailure response: " + e!!.message)
+                                return
+                            }
+                            override fun onResponse(call: Call, response: okhttp3.Response) {
+                                Log.d("onCreateContextMenu.Alarm", "onResponse response: " + response.body().toString())
+                            }
+                        })
                     }
                     d.setNegativeButton("Cancel") { dialogInterface, i ->
 
@@ -122,7 +138,7 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
             menu.add(0, metric.id, 0, "History")
                 .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
 
-                    cropDroidAPI.roomHistory(metric.name, object: Callback {
+                    cropDroidAPI.metricHistory(controllerType, metric.key, object: Callback {
                         override fun onFailure(call: Call, e: IOException) {
                             Log.d("onCreateContextMenu.History", "onFailure response: " + e!!.message)
                             return
@@ -142,27 +158,66 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
                             Log.d("onCreateContextMenu.History", "values: " + values)
 
                             var intent = Intent(v!!.context, MetricDetailActivity::class.java)
-                            intent.putExtra("metric", metric.display)
+                            intent.putExtra("metric", metric.name)
                             intent.putExtra("values", values)
                             v.context.startActivity(intent)
                         }
                     })
                     true
                 })
+
+            if(mode == Constants.CONFIG_MODE_VIRTUAL) {
+                menu.add(0, metric.id, 0, "Set Value")
+                    .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
+
+                        val inflater: LayoutInflater = LayoutInflater.from(v!!.context)
+
+                        val dialogView: View = inflater.inflate(R.layout.dialog_edit_number, null)
+                        dialogView.editNumber.setText(metric.value.toString())
+
+                        val d = AlertDialog.Builder(v.context)
+                        d.setTitle(metric.name)
+                        d.setMessage(R.string.dialog_message_metric_value)
+                        d.setView(dialogView)
+                        d.setPositiveButton("Apply") { dialogInterface, i ->
+                            Log.d("Duration", "onClick: " + it.itemId)
+                            metric.value = dialogView.editNumber.text.toString().toDouble()
+                            val _adapter = this.adapter
+                            cropDroidAPI.setVirtualMetricValue(controllerType, metric, object: Callback {
+                                override fun onFailure(call: Call, e: IOException) {
+                                    Log.d("onCreateContextMenu.SetValue", "onFailure response: " + e!!.message)
+                                    return
+                                }
+                                override fun onResponse(call: Call, response: okhttp3.Response) {
+                                    Log.d("onCreateContextMenu.SetValue", "onResponse response: " + response.body().toString())
+                                    _adapter.activity.runOnUiThread(Runnable() {
+                                        _adapter.notifyDataSetChanged()
+                                    })
+                                }
+                            })
+                        }
+                        d.setNegativeButton("Cancel") { dialogInterface, i ->
+                        }
+                        d.create().show()
+                        true
+                    })
+            }
         }
     }
 
-    class SwitchTypeViewHolder(activity: Activity, cropDroidAPI: CropDroidAPI, metrics: List<Metric>, itemView: View) : RecyclerView.ViewHolder(itemView),
+    class SwitchTypeViewHolder(adapter: MicroControllerRecyclerAdapter, itemView: View) : RecyclerView.ViewHolder(itemView),
         View.OnCreateContextMenuListener {
 
+        val adapter: MicroControllerRecyclerAdapter
         val activity: Activity
         val cropDroidAPI: CropDroidAPI
         val metrics: List<Metric>
 
         init {
-            this.activity = activity
-            this.cropDroidAPI = cropDroidAPI
-            this.metrics = metrics
+            this.adapter = adapter
+            this.activity = adapter.activity
+            this.cropDroidAPI = adapter.cropDroidAPI
+            this.metrics = adapter.getMetrics()
             itemView.setOnCreateContextMenuListener(this)
         }
 
@@ -249,15 +304,57 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
                                 itemView.channelValue.setChecked(!newState)
                             })
                     builder.create().show()
-                }
-            )
+                })
+            itemView.channelValue.isEnabled = channel.isEnabled()
         }
 
         override fun onCreateContextMenu(menu: ContextMenu?, v: View?, menuInfo: ContextMenu.ContextMenuInfo?) {
 
-           var channel = itemView.getTag() as Channel
+            var channel = itemView.getTag() as Channel
 
             Log.d("onCreateContextMenu", "channel: " + channel)
+
+            menu!!.add(0, channel.id, 0, "Enable")
+                .setCheckable(true)
+                .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
+                    channel.enable = if(it.isChecked) false else true
+                    val _adapter = this.adapter
+                    cropDroidAPI.setChannelConfig(channel, object: Callback {
+                        override fun onFailure(call: Call, e: IOException) {
+                            Log.d("onCreateContextMenu.Enable", "onFailure response: " + e!!.message)
+                            return
+                        }
+                        override fun onResponse(call: Call, response: okhttp3.Response) {
+                            Log.d("onCreateContextMenu.Enable", "onResponse response: " + response.body().toString())
+                            _adapter.activity.runOnUiThread(Runnable() {
+                                _adapter.notifyDataSetChanged()
+                            })
+                        }
+                    })
+                    true
+                })
+                .setChecked(channel.enable)
+
+
+            if(!channel.isEnabled()) return
+
+
+            menu!!.add(0, channel.id, 0, "Notify")
+                .setCheckable(true)
+                .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
+                    channel.notify = if(it.isChecked) false else true
+                    cropDroidAPI.setChannelConfig(channel, object: Callback {
+                        override fun onFailure(call: Call, e: IOException) {
+                            Log.d("onCreateContextMenu.Notify", "onFailure response: " + e!!.message)
+                            return
+                        }
+                        override fun onResponse(call: Call, response: okhttp3.Response) {
+                            Log.d("onCreateContextMenu.Notify", "onResponse response: " + response.body().toString())
+                        }
+                    })
+                    true
+                })
+                .setChecked(channel.notify)
 
             menu!!.add(0, channel.id, 0, "Rename")
                 .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
@@ -290,23 +387,6 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
                     true
                 })
 
-            menu!!.add(0, channel.id, 0, "Notify")
-                .setCheckable(true)
-                .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
-                    channel.notify = if(it.isChecked) false else true
-                    cropDroidAPI.setChannelConfig(channel, object: Callback {
-                        override fun onFailure(call: Call, e: IOException) {
-                            Log.d("onCreateContextMenu.Rename", "onFailure response: " + e!!.message)
-                            return
-                        }
-                        override fun onResponse(call: Call, response: okhttp3.Response) {
-                            Log.d("onCreateContextMenu.Rename", "onResponse response: " + response.body().toString())
-                        }
-                    })
-                    true
-                })
-                .setChecked(channel.notify)
-
             var conditionItem = menu!!.add(0, itemView.id, 0, "Condition")
                 .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
 
@@ -320,6 +400,8 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
 
                     // Parse condition -- metricName operator value  (controller?.mem > 500)
                     val conditionPieces = channel.condition.split(" ")
+
+                    Log.d("conditionPieces", conditionPieces.toString())
 
                     if(conditionPieces.size == 3) {
                         conditionMetric = conditionPieces[0].trim()
@@ -342,7 +424,7 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
                     // Populate metric spinner
                     val metricArray: MutableList<String> = ArrayList()
                     for(metric in metrics) {
-                        metricArray.add(metric.display)
+                        metricArray.add(metric.name)
                     }
                     val metricAdapter = ArrayAdapter<String>(v.context, android.R.layout.simple_spinner_item, metricArray)
                     metricAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -371,12 +453,12 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
                                     metricArray.clear()
                                     val metrics = MetricParser.parse(responseBody)
                                     for((i, metric) in metrics.withIndex()) {
-                                        metricArray.add(metric.display)
+                                        metricArray.add(metric.name)
                                         metricMap.put(i, metric)
 
                                         Log.d("METRIC", "name=" + metric.name + ", conditionMetric=" + conditionMetric)
 
-                                        if(metric.name == conditionMetric) {
+                                        if(metric.key == conditionMetric) {
                                             Log.d("condition", "metric and condition metric ids match! " + metric.id.toString() + ", name=" + metric.name)
                                             //val spinnerPosition: Int = controllerAdapter.getPosition(metric.display)
                                             activity.runOnUiThread{
@@ -461,7 +543,7 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
                         if(channel.controllerId != selectedController!!.id) {
                             newConditionBuilder.append(selectedController!!.type.toLowerCase()).append(".")
                         }
-                        newConditionBuilder.append(selectedMetric!!.name).append(" ")
+                        newConditionBuilder.append(selectedMetric!!.key).append(" ")
                         newConditionBuilder.append(operator).append(" ")
                         newConditionBuilder.append(conditionValue.text.toString())
                         val newCondition = newConditionBuilder.toString()
@@ -614,10 +696,10 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
                 view = LayoutInflater.from(parent.context)
                     .inflate(R.layout.microcontroller_channel_cardview, parent, false)
             }
-            return SwitchTypeViewHolder(activity, cropDroidAPI, getMetrics(), view)
+            return SwitchTypeViewHolder(this, view)
         }
         view = LayoutInflater.from(parent.context).inflate(R.layout.microcontroller_metric_cardview, parent, false)
-        return MetricTypeViewHolder(view, cropDroidAPI)
+        return MetricTypeViewHolder(this, controllerType, mode, view)
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {

@@ -39,7 +39,7 @@ class ConfigParser {
                 smtp.getString("port"),
                 smtp.getString("username"),
                 smtp.getString("password"),
-                smtp.getString("to"))
+                smtp.getString("recipient"))
         }
 
         fun parseRoom(room : JSONObject) : RoomConfig {
@@ -77,8 +77,8 @@ class ConfigParser {
 
         fun parseWaterChangeConfig(waterChange: JSONObject) : WaterChangeConfig {
             return WaterChangeConfig(
-                waterChange.getString("enable"),
-                waterChange.getString("notify"),
+                waterChange.getBoolean("enable"),
+                waterChange.getBoolean("notify"),
                 waterChange.getString("subscribes"))
         }
 

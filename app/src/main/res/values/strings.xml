@@ -57,8 +57,9 @@
     <string name="dialog_message_schedule">Specify your schedule criteria</string>
     <string name="dialog_message_condition">Specify your condition criteria</string>
     <string name="dialog_message_duration">How many seconds?</string>
-    <string name="dialog_message_debounce">Specify grace period</string>
+    <string name="dialog_message_debounce">Grace period (minutes)</string>
     <string name="dialog_message_backoff">How many minutes to wait?</string>
+    <string name="dialog_message_metric_value">New value?</string>
 
     <!-- Preference Titles -->
     <string name="general_header">General</string>

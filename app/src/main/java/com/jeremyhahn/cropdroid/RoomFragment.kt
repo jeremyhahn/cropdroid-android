@@ -29,7 +29,6 @@ import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.concurrent.timerTask
 
-
 class RoomFragment : Fragment() {
 
     private var recyclerView: RecyclerView? = null
@@ -44,11 +43,14 @@ class RoomFragment : Fragment() {
         val id = PreferenceManager.getDefaultSharedPreferences(activity!!.applicationContext)
             .getInt(Constants.PREF_KEY_CONTROLLER_ID, 0)
 
-        Log.d("RoomFragment.onCreateView", "PREF_KEY_CONTROLLER_ID: " + id.toString())
+        val mode = PreferenceManager.getDefaultSharedPreferences(activity!!.applicationContext)
+            .getString(Constants.CONFIG_MODE_KEY, "virtual")
+
+        Log.d("RoomFragment.onCreateView", "controller_id=" + id.toString() + ", mode=" + mode)
 
         controller = MasterControllerRepository(context!!).getController(id)
 
-        adapter = MicroControllerRecyclerAdapter(activity!!, CropDroidAPI(controller!!), recyclerItems, ControllerType.Room)
+        adapter = MicroControllerRecyclerAdapter(activity!!, CropDroidAPI(controller!!), recyclerItems, ControllerType.Room, mode)
 
         var fragmentView = inflater.inflate(R.layout.fragment_room, container, false)
         recyclerView = fragmentView.findViewById(R.id.recyclerView) as RecyclerView
@@ -120,7 +122,7 @@ class RoomFragment : Fragment() {
                     recyclerItems.add(
                         MicroControllerRecyclerModel(
                             MicroControllerRecyclerModel.METRIC_TYPE,
-                            Metric(metric.id, metric.name, metric.display, metric.enable, metric.notify, metric.unit, metric.alarmLow, metric.alarmHigh, metric.value),
+                            Metric(metric.id, metric.key, metric.name, metric.enable, metric.notify, metric.unit, metric.alarmLow, metric.alarmHigh, metric.value),
                             null))
                 }
 

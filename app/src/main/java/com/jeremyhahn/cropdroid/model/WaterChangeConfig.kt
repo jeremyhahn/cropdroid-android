@@ -1,3 +1,3 @@
 package com.jeremyhahn.cropdroid.model
 
-data class WaterChangeConfig(val enable: String, val notify: String, val subscribe: String)
+data class WaterChangeConfig(val enable: Boolean, val notify: Boolean, val subscribe: String)
