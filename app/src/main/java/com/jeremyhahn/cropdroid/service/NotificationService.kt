@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.IBinder
 import android.provider.Settings.System.DEFAULT_NOTIFICATION_URI
 import android.util.Log
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import com.jeremyhahn.cropdroid.Constants
 import com.jeremyhahn.cropdroid.Constants.Companion.API_BASE
@@ -134,17 +135,21 @@ class NotificationService : Service() {
     }
 
     fun createWebsocket(controller: MasterController) {
-        val client = OkHttpClient()
-        val protocol = if(controller.secure == 1) "wss://" else "ws://"
-        val request = Request.Builder()
-            .url(protocol.plus(controller.hostname).plus(API_BASE).plus("/notification"))
-            .addHeader("Authorization", "Bearer " + controller.token)
-            .build()
-        val listener = NotificationWebSocketListener()
-        websockets[controller] = client.newWebSocket(request, listener)
-        client.dispatcher().executorService().shutdown()
-        client.retryOnConnectionFailure()
-
+        try {
+            val client = OkHttpClient()
+            val protocol = if (controller.secure == 1) "wss://" else "ws://"
+            val request = Request.Builder()
+                .url(protocol.plus(controller.hostname).plus(API_BASE).plus("/notification"))
+                .addHeader("Authorization", "Bearer " + controller.token)
+                .build()
+            val listener = NotificationWebSocketListener()
+            websockets[controller] = client.newWebSocket(request, listener)
+            client.dispatcher().executorService().shutdown()
+            client.retryOnConnectionFailure()
+        }
+        catch(e: java.lang.IllegalArgumentException) {
+            Toast.makeText(applicationContext, e.message, Toast.LENGTH_LONG).show()
+        }
         Log.d("NotificationService.createWebsocket", "Created WebSocket " + websockets[controller].hashCode() + " for " + controller.name)
     }
 

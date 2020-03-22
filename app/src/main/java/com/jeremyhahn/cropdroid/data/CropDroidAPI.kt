@@ -128,6 +128,7 @@ class CropDroidAPI(val controller: MasterController) {
         json.put("schedule", channel.schedule)
         json.put("duration", channel.duration)
         json.put("debounce", channel.debounce)
+        json.put("backoff", channel.backoff)
         doPut(CHANNEL_RESOURCE, json, callback)
     }
 

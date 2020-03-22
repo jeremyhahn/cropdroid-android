@@ -172,7 +172,7 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
 
                         val inflater: LayoutInflater = LayoutInflater.from(v!!.context)
 
-                        val dialogView: View = inflater.inflate(R.layout.dialog_edit_number, null)
+                        val dialogView: View = inflater.inflate(R.layout.dialog_edit_decimal, null)
                         dialogView.editNumber.setText(metric.value.toString())
 
                         val d = AlertDialog.Builder(v.context)
@@ -456,13 +456,14 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
                                         metricArray.add(metric.name)
                                         metricMap.put(i, metric)
 
-                                        Log.d("METRIC", "name=" + metric.name + ", conditionMetric=" + conditionMetric)
+                                        //Log.d("METRIC", "name=" + metric.name + ", conditionMetric=" + conditionMetric)
+                                        Log.d("condition", "comparing: metric.key=" + metric.key + ", conditionMetric=" + conditionMetric)
 
                                         if(metric.key == conditionMetric) {
-                                            Log.d("condition", "metric and condition metric ids match! " + metric.id.toString() + ", name=" + metric.name)
-                                            //val spinnerPosition: Int = controllerAdapter.getPosition(metric.display)
+                                            val spinnerPosition: Int = metricAdapter.getPosition(metric.name)
+                                            Log.d("condition", "metric and condition metric ids match! " + metric.id.toString() + ", name=" + metric.name + ", position=" + spinnerPosition)
                                             activity.runOnUiThread{
-                                                metricSpinner.setSelection(i)
+                                                metricSpinner.setSelection(spinnerPosition)
                                             }
                                         }
                                     }
@@ -621,6 +622,16 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
                     d.setView(dialogView)
                     d.setPositiveButton("Apply") { dialogInterface, i ->
                         Log.d("Duration", "onClick: " + it.itemId)
+                        channel.duration = dialogView.editNumber.text.toString().toInt()
+                        cropDroidAPI.setChannelConfig(channel, object: Callback {
+                            override fun onFailure(call: Call, e: IOException) {
+                                Log.d("onCreateContextMenu.Schedule", "onFailure response: " + e!!.message)
+                                return
+                            }
+                            override fun onResponse(call: Call, response: okhttp3.Response) {
+                                Log.d("onCreateContextMenu.Schedule", "onResponse response: " + response.body().toString())
+                            }
+                        })
                     }
                     d.setNegativeButton("Cancel") { dialogInterface, i ->
 
@@ -642,6 +653,16 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
                     d.setView(dialogView)
                     d.setPositiveButton("Apply") { dialogInterface, i ->
                         Log.d("Debounce", "onClick: " + it.itemId)
+                        channel.debounce = dialogView.editNumber.text.toString().toInt()
+                        cropDroidAPI.setChannelConfig(channel, object: Callback {
+                            override fun onFailure(call: Call, e: IOException) {
+                                Log.d("onCreateContextMenu.Schedule", "onFailure response: " + e!!.message)
+                                return
+                            }
+                            override fun onResponse(call: Call, response: okhttp3.Response) {
+                                Log.d("onCreateContextMenu.Schedule", "onResponse response: " + response.body().toString())
+                            }
+                        })
                     }
                     d.setNegativeButton("Cancel") { dialogInterface, i ->
 
@@ -663,6 +684,16 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
                     d.setView(dialogView)
                     d.setPositiveButton("Apply") { dialogInterface, i ->
                         Log.d("Backoff", "onClick: " + it.itemId)
+                        channel.backoff = dialogView.editNumber.text.toString().toInt()
+                        cropDroidAPI.setChannelConfig(channel, object: Callback {
+                            override fun onFailure(call: Call, e: IOException) {
+                                Log.d("onCreateContextMenu.Schedule", "onFailure response: " + e!!.message)
+                                return
+                            }
+                            override fun onResponse(call: Call, response: okhttp3.Response) {
+                                Log.d("onCreateContextMenu.Schedule", "onResponse response: " + response.body().toString())
+                            }
+                        })
                     }
                     d.setNegativeButton("Cancel") { dialogInterface, i ->
 
