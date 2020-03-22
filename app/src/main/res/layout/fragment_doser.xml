@@ -6,6 +6,14 @@
     android:layout_height="match_parent"
     tools:context=".DoserFragment">
 
+    <TextView
+        android:id="@+id/doserDisabledText"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:visibility="gone"
+        android:text="@string/disabled" />
+
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/doserSwipeRefresh"
         android:layout_width="match_parent"

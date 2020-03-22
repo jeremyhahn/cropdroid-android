@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -39,6 +40,17 @@ class ReservoirFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
+        var fragmentView = inflater.inflate(R.layout.fragment_reservoir, container, false)
+
+        val enabled = PreferenceManager.getDefaultSharedPreferences(activity!!.applicationContext)
+            .getBoolean(Constants.CONFIG_RESERVOIR_ENABLE_KEY, false)
+
+        if(!enabled) {
+            val emptyView = fragmentView.findViewById(R.id.reservoirDisabledText) as TextView
+            emptyView.visibility = View.VISIBLE
+            return fragmentView
+        }
+
         val id = PreferenceManager.getDefaultSharedPreferences(activity!!.applicationContext)
             .getInt(Constants.PREF_KEY_CONTROLLER_ID, 0)
 
@@ -51,7 +63,6 @@ class ReservoirFragment : Fragment() {
 
         adapter = MicroControllerRecyclerAdapter(activity!!, CropDroidAPI(controller!!), recyclerItems, ControllerType.Reservoir, mode)
 
-        var fragmentView = inflater.inflate(R.layout.fragment_reservoir, container, false)
         recyclerView = fragmentView.findViewById(R.id.reservoirRecyclerView) as RecyclerView
         recyclerView!!.layoutManager = LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
         recyclerView!!.adapter = adapter!!
@@ -80,8 +91,10 @@ class ReservoirFragment : Fragment() {
     override fun onStop() {
         super.onStop()
         Log.d("ReservoirFragment.onStop()", "called")
-        refreshTimer!!.cancel()
-        refreshTimer!!.purge()
+        if(refreshTimer != null) {
+           refreshTimer!!.cancel()
+           refreshTimer!!.purge()
+        }
     }
 
     fun getReservoirData() {

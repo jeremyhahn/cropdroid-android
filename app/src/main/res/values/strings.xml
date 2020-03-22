@@ -5,6 +5,7 @@
     <string name="reservoir_fragment">Reservoir</string>
     <string name="doser_fragment">Doser</string>
     <string name="events_fragment">Events</string>
+    <string name="disabled">Disabled</string>
 
     <string name="title_activity_masters">Grow Spaces</string>
     <string name="title_activity_microcontrollers">Controllers</string>
@@ -53,13 +54,13 @@
 
     <!-- Dialog titles -->
     <string name="dialog_message_rename">Enter the new name</string>
-    <string name="dialog_message_alarm">Enter the new low and high thresholds</string>
-    <string name="dialog_message_schedule">Specify your schedule criteria</string>
-    <string name="dialog_message_condition">Specify your condition criteria</string>
-    <string name="dialog_message_duration">How many seconds?</string>
-    <string name="dialog_message_debounce">Grace period (minutes)</string>
-    <string name="dialog_message_backoff">How many minutes to wait?</string>
-    <string name="dialog_message_metric_value">New value?</string>
+    <string name="dialog_message_alarm">Enter the alarm low and high thresholds</string>
+    <string name="dialog_message_schedule">Enter the schedule criteria</string>
+    <string name="dialog_message_condition">Enter the condition criteria</string>
+    <string name="dialog_message_duration">How many seconds to stay on?</string>
+    <string name="dialog_message_debounce">Short-cycle grace period (minutes)</string>
+    <string name="dialog_message_backoff">How many minutes to wait before allowing again?</string>
+    <string name="dialog_message_metric_value">Enter the new sensor value</string>
 
     <!-- Preference Titles -->
     <string name="general_header">General</string>

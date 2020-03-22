@@ -52,7 +52,7 @@
             app:title="@string/video_feed_url"
             app:dependency="room.enable"
             app:useSimpleSummaryProvider="true" />
-
+<!--
         <Preference
             app:key="room.metrics"
             app:title="@string/pref_metrics"
@@ -64,7 +64,7 @@
             app:title="@string/pref_channels"
             app:dependency="room.enable"
             app:summary="Enable / disable room controller channels"/>
-
+-->
     </PreferenceCategory>
 
     <PreferenceCategory app:title="@string/reservoir_header">
@@ -83,7 +83,7 @@
             app:key="reservoir.notify"
             app:title="@string/pref_notify"
             app:dependency="reservoir.enable"/>
-
+<!--
         <Preference
             app:key="reservoir.metrics"
             app:title="@string/pref_metrics"
@@ -95,7 +95,7 @@
             app:title="@string/pref_channels"
             app:dependency="reservoir.enable"
             app:summary="Enable / disable reservoir controller channels"/>
-
+-->
     </PreferenceCategory>
 
 
@@ -116,13 +116,13 @@
             app:key="doser.notify"
             app:title="@string/pref_notify"
             app:dependency="doser.enable"/>
-
+<!--
         <Preference
             app:key="doser.channels"
             app:title="@string/pref_channels"
             app:dependency="doser.enable"
             app:summary="Enable / disable doser controller channels"/>
-
+-->
     </PreferenceCategory>
 
 
@@ -165,7 +165,7 @@
 
     </PreferenceCategory>
 
-
+<!--
     <PreferenceCategory app:title="@string/sync_header">
 
         <SwitchPreferenceCompat
@@ -180,5 +180,6 @@
             app:title="@string/attachment_title" />
 
     </PreferenceCategory>
+-->
 
 </PreferenceScreen>

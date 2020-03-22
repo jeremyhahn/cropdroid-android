@@ -7,6 +7,14 @@
     android:orientation="vertical"
     tools:context=".ReservoirFragment">
 
+    <TextView
+        android:id="@+id/reservoirDisabledText"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:visibility="gone"
+        android:text="@string/disabled" />
+
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/reservoirSwipeRefresh"
         android:layout_width="match_parent"

@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -40,6 +41,20 @@ class RoomFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
+        var fragmentView = inflater.inflate(R.layout.fragment_room, container, false)
+
+        val enabled = PreferenceManager.getDefaultSharedPreferences(activity!!.applicationContext)
+            .getBoolean(Constants.CONFIG_ROOM_ENABLE_KEY, false)
+
+        Log.d("RoomFragment.onCreateView", "enabled=" + enabled.toString())
+
+        if(!enabled) {
+            Log.d("RoomFragment.onCreateView", "Room disabled!")
+            val emptyView = fragmentView.findViewById(R.id.roomDisabledText) as TextView
+            emptyView.visibility = View.VISIBLE
+            return fragmentView
+        }
+
         val id = PreferenceManager.getDefaultSharedPreferences(activity!!.applicationContext)
             .getInt(Constants.PREF_KEY_CONTROLLER_ID, 0)
 
@@ -52,7 +67,6 @@ class RoomFragment : Fragment() {
 
         adapter = MicroControllerRecyclerAdapter(activity!!, CropDroidAPI(controller!!), recyclerItems, ControllerType.Room, mode)
 
-        var fragmentView = inflater.inflate(R.layout.fragment_room, container, false)
         recyclerView = fragmentView.findViewById(R.id.recyclerView) as RecyclerView
         recyclerView!!.layoutManager = LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
         recyclerView!!.adapter = adapter!!
@@ -81,8 +95,10 @@ class RoomFragment : Fragment() {
     override fun onStop() {
         super.onStop()
         Log.d("RoomFragment.onStop()", "called")
-        refreshTimer!!.cancel()
-        refreshTimer!!.purge()
+        if(refreshTimer != null) {
+           refreshTimer!!.cancel()
+           refreshTimer!!.purge()
+        }
     }
 
     override fun onContextItemSelected(item: MenuItem) : Boolean {
