@@ -287,8 +287,11 @@ class NotificationService : Service() {
         }
 
         override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-            Log.d("NotificationService.onFailure", t.message)
+
             t.printStackTrace()
+
+            Log.d("NotificationService.onFailure", "response: " + response.toString())
+            Log.d("NotificationService.onFailure", "t:" + t.toString())
 
             sleep(CONNECTION_FAILED_DELAY)
 

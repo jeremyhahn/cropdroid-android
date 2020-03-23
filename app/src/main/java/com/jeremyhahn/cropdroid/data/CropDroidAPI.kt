@@ -22,6 +22,7 @@ class CropDroidAPI(val controller: MasterController) {
     val CHANNEL_RESOURCE = "/channels"
     val METRIC_RESOURCE = "/metrics"
     val VIRTUAL_RESOURCE = "/virtual"
+    val ALGORITHMS_RESOURCE = "/algorithms"
     val ROOM_HISTORY_RESOURCE = ROOM_RESOURCE.plus("/history")
     val RESERVOIR_HISTORY_RESOURCE = RESERVOIR_RESOURCE.plus("/history")
     val CONTROLLER_RESOURCE = "controllers"
@@ -129,6 +130,7 @@ class CropDroidAPI(val controller: MasterController) {
         json.put("duration", channel.duration)
         json.put("debounce", channel.debounce)
         json.put("backoff", channel.backoff)
+        json.put("algorithmId", channel.algorithmId)
         doPut(CHANNEL_RESOURCE, json, callback)
     }
 
@@ -146,6 +148,11 @@ class CropDroidAPI(val controller: MasterController) {
         val endpoint = METRIC_RESOURCE.plus("/").plus(controllerId)
         val args = ArrayList<String>()
         doGet(endpoint, args, callback)
+    }
+
+    fun getAlgorithms(callback: Callback) {
+        val args = ArrayList<String>()
+        doGet(ALGORITHMS_RESOURCE, args, callback)
     }
 
     fun login(username: String, password: String, callback: Callback) {

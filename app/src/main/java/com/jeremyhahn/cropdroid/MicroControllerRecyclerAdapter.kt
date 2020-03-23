@@ -14,10 +14,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
 import com.jeremyhahn.cropdroid.Constants.Companion.SwitchState
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
-import com.jeremyhahn.cropdroid.model.Channel
-import com.jeremyhahn.cropdroid.model.Controller
-import com.jeremyhahn.cropdroid.model.Metric
-import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
+import com.jeremyhahn.cropdroid.model.*
+import com.jeremyhahn.cropdroid.utils.AlgorithmParser
 import com.jeremyhahn.cropdroid.utils.ControllerParser
 import com.jeremyhahn.cropdroid.utils.MetricParser
 import kotlinx.android.synthetic.main.dialog_condition.view.*
@@ -31,6 +29,7 @@ import kotlinx.android.synthetic.main.microcontroller_metric_cardview.view.*
 import okhttp3.Call
 import okhttp3.Callback
 import org.json.JSONArray
+import org.json.JSONObject
 import java.io.IOException
 
 class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: CropDroidAPI,
@@ -625,11 +624,11 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
                         channel.duration = dialogView.editNumber.text.toString().toInt()
                         cropDroidAPI.setChannelConfig(channel, object: Callback {
                             override fun onFailure(call: Call, e: IOException) {
-                                Log.d("onCreateContextMenu.Schedule", "onFailure response: " + e!!.message)
+                                Log.d("onCreateContextMenu.Duration", "onFailure response: " + e!!.message)
                                 return
                             }
                             override fun onResponse(call: Call, response: okhttp3.Response) {
-                                Log.d("onCreateContextMenu.Schedule", "onResponse response: " + response.body().toString())
+                                Log.d("onCreateContextMenu.Duration", "onResponse response: " + response.body().toString())
                             }
                         })
                     }
@@ -646,6 +645,7 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
 
                     val dialogView: View = inflater.inflate(R.layout.dialog_edit_number, null)
                     dialogView.editNumber.setText(channel.debounce.toString())
+                    dialogView.editNumber.setHint(R.string.minutes)
 
                     val d = AlertDialog.Builder(v.context)
                     d.setTitle(R.string.title_debounce)
@@ -656,11 +656,11 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
                         channel.debounce = dialogView.editNumber.text.toString().toInt()
                         cropDroidAPI.setChannelConfig(channel, object: Callback {
                             override fun onFailure(call: Call, e: IOException) {
-                                Log.d("onCreateContextMenu.Schedule", "onFailure response: " + e!!.message)
+                                Log.d("onCreateContextMenu.Debounce", "onFailure response: " + e!!.message)
                                 return
                             }
                             override fun onResponse(call: Call, response: okhttp3.Response) {
-                                Log.d("onCreateContextMenu.Schedule", "onResponse response: " + response.body().toString())
+                                Log.d("onCreateContextMenu.Debounce", "onResponse response: " + response.body().toString())
                             }
                         })
                     }
@@ -687,11 +687,11 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
                         channel.backoff = dialogView.editNumber.text.toString().toInt()
                         cropDroidAPI.setChannelConfig(channel, object: Callback {
                             override fun onFailure(call: Call, e: IOException) {
-                                Log.d("onCreateContextMenu.Schedule", "onFailure response: " + e!!.message)
+                                Log.d("onCreateContextMenu.Backoff", "onFailure response: " + e!!.message)
                                 return
                             }
                             override fun onResponse(call: Call, response: okhttp3.Response) {
-                                Log.d("onCreateContextMenu.Schedule", "onResponse response: " + response.body().toString())
+                                Log.d("onCreateContextMenu.Backoff", "onResponse response: " + response.body().toString())
                             }
                         })
                     }
@@ -701,6 +701,84 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
                     d.create().show()
                     true
                 })
+
+            if(adapter.controllerType.equals(ControllerType.Doser)) {
+
+                menu!!.add(0, channel.id, 0, "Algorithm")
+                    .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
+
+                        var algorithmMap = HashMap<Int, Algorithm>()
+
+                        val inflater: LayoutInflater = LayoutInflater.from(v!!.context)
+                        val dialogView: View = inflater.inflate(R.layout.dialog_algorithm, null)
+
+                        // Populate algorithm spinner
+                        val algorithmArray: MutableList<String> = ArrayList()
+                        val algorithmSpinner =
+                            dialogView.findViewById<View>(R.id.algorithmSpinner) as Spinner
+                        val algorithmAdapter = ArrayAdapter<String>(
+                            v.context,
+                            android.R.layout.simple_spinner_item,
+                            algorithmArray
+                        )
+                        algorithmAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                        algorithmSpinner.adapter = algorithmAdapter
+                        cropDroidAPI.getAlgorithms(object : Callback {
+                            override fun onFailure(call: Call, e: IOException) {
+                                Log.d("onCreateContextMenu.Algorithm", "onFailure response: " + e!!.message)
+                                return
+                            }
+                            override fun onResponse(call: Call, response: okhttp3.Response) {
+                                val responseBody = response.body().string()
+                                val algorithms = AlgorithmParser.parse(responseBody)
+                                algorithmArray.clear()
+                                for ((i, algorithm) in algorithms.withIndex()) {
+                                    algorithmArray.add(algorithm.name)
+                                    algorithmMap[i] = algorithm
+                                    if (algorithm.id == channel.algorithmId) {
+                                        activity.runOnUiThread {
+                                            algorithmSpinner.setSelection(i)
+                                        }
+                                    }
+                                }
+                                activity.runOnUiThread {
+                                    algorithmAdapter.notifyDataSetChanged()
+                                }
+                            }
+                        })
+
+                        val d = AlertDialog.Builder(v.context)
+                        d.setTitle(R.string.title_algorithm)
+                        d.setMessage(R.string.dialog_message_algorithm)
+                        d.setView(dialogView)
+                        d.setPositiveButton("Apply") { dialogInterface, i ->
+                            Log.d("Algorithm", "onClick: " + it.itemId)
+                            val selectedAlgorithm =
+                                algorithmMap.get(algorithmSpinner.selectedItemPosition)
+                            channel.algorithmId = selectedAlgorithm!!.id
+                            cropDroidAPI.setChannelConfig(channel, object : Callback {
+                                override fun onFailure(call: Call, e: IOException) {
+                                    Log.d(
+                                        "onCreateContextMenu.Algorithm",
+                                        "onFailure response: " + e!!.message
+                                    )
+                                    return
+                                }
+                                override fun onResponse(call: Call, response: okhttp3.Response) {
+                                    Log.d(
+                                        "onCreateContextMenu.Algorithm",
+                                        "onResponse response: " + response.body().toString()
+                                    )
+                                }
+                            })
+                        }
+                        d.setNegativeButton("Cancel") { dialogInterface, i ->
+
+                        }
+                        d.create().show()
+                        true
+                    })
+            }
         }
     }
 

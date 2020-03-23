@@ -29,8 +29,9 @@ class ChannelParser {
                 val duration = jsonChannel.getInt("duration")
                 val debounce = jsonChannel.getInt("debounce")
                 val backoff = jsonChannel.getInt("backoff")
+                val algorithmId = jsonChannel.getInt("algorithmId")
                 val value = jsonChannel.getInt("value")
-                channels.add(Channel(id, controllerId, channelId, name, enable, notify, condition, schedule, duration, debounce, backoff, value))
+                channels.add(Channel(id, controllerId, channelId, name, enable, notify, condition, schedule, duration, debounce, backoff, algorithmId, value))
             }
             return channels
         }
