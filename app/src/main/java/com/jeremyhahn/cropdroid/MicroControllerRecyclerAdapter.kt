@@ -422,6 +422,7 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
 
                     // Populate metric spinner
                     val metricArray: MutableList<String> = ArrayList()
+                    metricArray.add("")
                     for(metric in metrics) {
                         metricArray.add(metric.name)
                     }
@@ -434,6 +435,7 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
 
                     // Populate controller spinner
                     val controllerArray: MutableList<String> = ArrayList()
+                    controllerArray.add("")
                     val controllerSpinner = dialogView.findViewById<View>(R.id.controllerSpinner) as Spinner
                     val controllerAdapter = ArrayAdapter<String>(v.context, android.R.layout.simple_spinner_item, controllerArray)
                     controllerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -537,7 +539,8 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
                         val selectedController = controllerMap.get(controllerSpinner.selectedItemPosition)
                         val operator = operatorSpinner.getSelectedItem().toString()
 
-                        val conditionValue = dialogView.findViewById<View>(R.id.conditionValue) as EditText
+                        val _conditionValue = dialogView.findViewById<View>(R.id.conditionValue) as EditText
+                        val conditionValue = _conditionValue.text.toString()
 
                         val newConditionBuilder = StringBuilder()
                         if(channel.controllerId != selectedController!!.id) {
@@ -545,24 +548,26 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
                         }
                         newConditionBuilder.append(selectedMetric!!.key).append(" ")
                         newConditionBuilder.append(operator).append(" ")
-                        newConditionBuilder.append(conditionValue.text.toString())
+                        newConditionBuilder.append(conditionValue)
                         val newCondition = newConditionBuilder.toString()
 
                         Log.d("Condition", "current condition: " + channel.condition)
                         Log.d("Condition", "new condition: " + newCondition)
 
-                        if(channel.condition != newCondition) {
+                        if(conditionValue.isEmpty()) {
+                           channel.condition = ""
+                        } else if(channel.condition != newCondition) {
                             channel.condition = newCondition
-                            cropDroidAPI.setChannelConfig(channel, object: Callback {
-                                override fun onFailure(call: Call, e: IOException) {
-                                    Log.d("onFailure", "onFailure response: " + e!!.message)
-                                    return
-                                }
-                                override fun onResponse(call: Call, response: okhttp3.Response) {
-                                    Log.d("ApplyMetrics", "onResponse: " + response.body().string())
-                                }
-                            })
                         }
+                        cropDroidAPI.setChannelConfig(channel, object: Callback {
+                            override fun onFailure(call: Call, e: IOException) {
+                                Log.d("onFailure", "onFailure response: " + e!!.message)
+                                return
+                            }
+                            override fun onResponse(call: Call, response: okhttp3.Response) {
+                                Log.d("ApplyMetrics", "onResponse: " + response.body().string())
+                            }
+                        })
                     }
                     d.setNegativeButton("Cancel") { dialogInterface, i ->
 
