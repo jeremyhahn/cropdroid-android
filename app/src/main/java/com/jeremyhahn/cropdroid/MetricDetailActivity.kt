@@ -2,6 +2,7 @@ package com.jeremyhahn.cropdroid
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import kotlinx.android.synthetic.main.activity_main.*
 import org.eazegraph.lib.charts.ValueLineChart
 import org.eazegraph.lib.models.ValueLinePoint
 import org.eazegraph.lib.models.ValueLineSeries
@@ -18,6 +19,8 @@ class MetricDetailActivity : AppCompatActivity() {
         series.setColor(-0xa9480f)
 
         val metric = intent.getStringExtra("metric")
+        setTitle(metric)
+
         val values = intent.getDoubleArrayExtra("values")
         for(value in values) {
             series.addPoint(ValueLinePoint("", value.toFloat()))
