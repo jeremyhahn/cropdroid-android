@@ -2,8 +2,10 @@ package com.jeremyhahn.cropdroid.utils
 
 import android.content.SharedPreferences
 import android.util.Log
+import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_CHANNEL_ALGORITHM_ID_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_CHANNEL_BACKOFF_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_CHANNEL_CONDITION_KEY
+import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_CHANNEL_CONTROLLER_ID_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_CHANNEL_DEBOUNCE_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_CHANNEL_DURATION_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_CHANNEL_ENABLE_KEY
@@ -174,11 +176,12 @@ class ConfigManager(val sharedPreferences: SharedPreferences, val config: Config
     private fun channelKey(controllerType: String, id: Int, key: String) : String {
         return controllerType + ".channel." + id + "." + key
     }
-
+/*
     private fun syncChannels(controllerType: String, channels: ArrayList<Channel>) {
 
         for((i, channel) in channels.withIndex()) {
             val id = getValue(channelKey(controllerType, i, CONFIG_CHANNEL_ID_KEY))
+            val controllerId = getValue(channelKey(controllerType, i, CONFIG_CHANNEL_CONTROLLER_ID_KEY))
             val key = getValue(channelKey(controllerType, i, CONFIG_CHANNEL_NAME_KEY))
             val enable = getBoolean(channelKey(controllerType, i, CONFIG_CHANNEL_ENABLE_KEY))
             val notify = getBoolean(channelKey(controllerType, i, CONFIG_CHANNEL_NOTIFY_KEY))
@@ -187,7 +190,8 @@ class ConfigManager(val sharedPreferences: SharedPreferences, val config: Config
             val duration = getValue(channelKey(controllerType, i, CONFIG_CHANNEL_DURATION_KEY))
             val debounce = getValue(channelKey(controllerType, i, CONFIG_CHANNEL_DEBOUNCE_KEY))
             val backoff = getValue(channelKey(controllerType, i, CONFIG_CHANNEL_BACKOFF_KEY))
-/*
+            val algorithmId = getValue(channelKey(controllerType, i, CONFIG_CHANNEL_ALGORITHM_ID_KEY))
+
             val bEnable = enable.toBoolean()
             val bNotify = config.doser.notify.toBoolean()
             if(channel.enable != bEnable) {
@@ -199,10 +203,9 @@ class ConfigManager(val sharedPreferences: SharedPreferences, val config: Config
             if(id != channel.id) {
                 setEditorValue(channelKey(controllerType, i, CONFIG_CHANNEL_ID_KEY), channel.id)
             }
-*/
         }
     }
-
+*/
 
     private fun setEditorValue(key: String, value: String) {
         editor.putString(key, value)

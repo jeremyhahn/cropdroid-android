@@ -61,6 +61,7 @@ class Constants {
         const val CONFIG_DOSER_URI_KEY = "doser.uri"
 
         const val CONFIG_CHANNEL_ID_KEY = "id"
+        const val CONFIG_CHANNEL_CONTROLLER_ID_KEY = "controllerId"
         const val CONFIG_CHANNEL_NAME_KEY = "name"
         const val CONFIG_CHANNEL_ENABLE_KEY = "enable"
         const val CONFIG_CHANNEL_NOTIFY_KEY = "notify"
@@ -69,6 +70,7 @@ class Constants {
         const val CONFIG_CHANNEL_DURATION_KEY = "duration"
         const val CONFIG_CHANNEL_DEBOUNCE_KEY = "debounce"
         const val CONFIG_CHANNEL_BACKOFF_KEY = "backoff"
+        const val CONFIG_CHANNEL_ALGORITHM_ID_KEY = "algorithmId"
 
         enum class SwitchState {
             ON,
