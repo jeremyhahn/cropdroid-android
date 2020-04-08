@@ -25,6 +25,7 @@ import com.jeremyhahn.cropdroid.service.NotificationService
 import com.jeremyhahn.cropdroid.utils.ConfigManager
 import com.jeremyhahn.cropdroid.utils.ConfigParser
 import com.jeremyhahn.cropdroid.utils.JsonWebToken
+import com.jeremyhahn.cropdroid.utils.Preferences
 import io.jsonwebtoken.ExpiredJwtException
 import kotlinx.android.synthetic.main.activity_login.*
 import okhttp3.Call
@@ -34,17 +35,19 @@ import java.io.IOException
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var loginViewModel: LoginViewModel
-    var controller : MasterController? = null
-    val repository: MasterControllerRepository
+    private var controller : MasterController? = null
+    private val repository: MasterControllerRepository
+    lateinit private var preferences: Preferences
 
     init {
-        this.repository = MasterControllerRepository(this)
+        repository = MasterControllerRepository(this)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContentView(R.layout.activity_login)
+
+        preferences = Preferences(applicationContext)
 
         val username = findViewById<EditText>(R.id.username)
         val password = findViewById<EditText>(R.id.password)
@@ -54,7 +57,7 @@ class LoginActivity : AppCompatActivity() {
 
         controller = MasterController(
             intent.getIntExtra("controller_id", 0),
-            intent.getIntExtra("controller_server_id", 0),
+            0,
             intent.getStringExtra("controller_name"),
             intent.getStringExtra("controller_hostname"),
             0,
@@ -91,11 +94,6 @@ class LoginActivity : AppCompatActivity() {
         for(controller in repository.allControllers) {
             Log.d("LoginActivity.onCreate", "registered controller: " + controller!!.toString())
         }
-
-        Log.d("LoginActivity.onCreate: controller_id", "" + controller!!.id)
-        Log.d("LoginActivity.onCreate: controller_server_id", "" + controller!!.serverId)
-        Log.d("LoginActivity.onCreate: controller_name", "" + controller!!.name)
-        Log.d("LoginActivity.onCreate: controller_hostname", controller!!.hostname)
 
         loginViewModel = ViewModelProviders.of(this, LoginViewModelFactory()).get(LoginViewModel::class.java)
 
@@ -156,17 +154,7 @@ class LoginActivity : AppCompatActivity() {
                 }
                 Log.i("LoginActivity.loginResult.token","Controller successfully authenticated")
 
-                val prefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
-                val editor = prefs.edit()
-                editor.putInt(PREF_KEY_CONTROLLER_ID, controller!!.id)              //  local sqlite controller id
-                editor.putInt("controller_server_id", controller!!.serverId) // remote database controller id
-                editor.putString("controller_name", controller!!.name)
-                editor.putString("controller_hostname", controller!!.hostname)
-                editor.putString("user_id", user.id)
-                editor.putString("jwt", user.token)
-                if(!editor.commit()) {
-                    Log.e("LoginActivity", "Error committing defaultSharedPreferences")
-                }
+                preferences.setController(controller!!, user)
 
                 updateUiWithUser(user)
                 finish()
@@ -246,7 +234,7 @@ class LoginActivity : AppCompatActivity() {
                 Log.d("LoginActivity.getConfig.onResponse", "responseBody: " + responseBody)
 
                 ConfigManager(
-                    PreferenceManager.getDefaultSharedPreferences(applicationContext),
+                    preferences.getControllerPreferences(),
                     ConfigParser.parse(responseBody)).sync()
 
                 startForegroundService(notificationServiceIntent)

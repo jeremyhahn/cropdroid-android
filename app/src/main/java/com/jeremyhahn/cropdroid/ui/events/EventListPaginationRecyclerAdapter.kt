@@ -1,4 +1,4 @@
-package com.jeremyhahn.cropdroid
+package com.jeremyhahn.cropdroid.ui.events
 
 import android.content.Context
 import android.os.Handler
@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.NonNull
 import androidx.recyclerview.widget.RecyclerView
+import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.model.EventLog
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter

@@ -1,7 +1,6 @@
-package com.jeremyhahn.cropdroid
+package com.jeremyhahn.cropdroid.ui.events
 
 import android.os.Bundle
-import android.preference.PreferenceManager
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -13,12 +12,13 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.EventLog
 import com.jeremyhahn.cropdroid.model.EventsPage
 import com.jeremyhahn.cropdroid.model.MasterController
-import kotlinx.android.synthetic.main.fragment_room.*
+import com.jeremyhahn.cropdroid.utils.Preferences
 import okhttp3.Call
 import okhttp3.Callback
 import org.json.JSONObject
@@ -39,20 +39,22 @@ class EventListFragment : Fragment() {
     private var isLastPage = false
     private var TOTAL_PAGES : Int = 10
     private var currentPage = PAGE_START
-
     private var controller : MasterController? = null
 
      override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
-        val id = PreferenceManager.getDefaultSharedPreferences(activity!!.applicationContext)
-            .getInt(Constants.PREF_KEY_CONTROLLER_ID, 0)
+        val preferences = Preferences(activity!!.applicationContext)
+        val id = preferences.currentControllerId()
         Log.d("EventListFragment.onCreate", "controller_id: " + id.toString())
         controller = MasterControllerRepository(context!!).getController(id)
 
         var fragmentView = inflater.inflate(R.layout.fragment_events, container, false)
 
         progressBar = fragmentView.findViewById<View>(R.id.eventsProgress) as ProgressBar
-        adapter = EventListPaginationRecyclerAdapter(context!!)
+        adapter =
+            EventListPaginationRecyclerAdapter(
+                context!!
+            )
         linearLayoutManager = LinearLayoutManager(context!!, LinearLayoutManager.VERTICAL, false)
 
         rv = fragmentView.findViewById<View>(R.id.eventsRecycler) as RecyclerView

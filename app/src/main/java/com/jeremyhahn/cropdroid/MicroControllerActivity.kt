@@ -15,6 +15,7 @@ import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_NAME_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ROOM_VIDEO_KEY
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.MasterController
+import com.jeremyhahn.cropdroid.utils.Preferences
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MicroControllerActivity: AppCompatActivity() {
@@ -22,22 +23,25 @@ class MicroControllerActivity: AppCompatActivity() {
     var tabLayout: TabLayout? = null
     var viewPager: ViewPager? = null
     var controller: MasterController? = null
-    var preferences : SharedPreferences? = null
     var videoUrl: String? = null
+    lateinit private var preferences: Preferences
+    lateinit private var defaultPreferences: SharedPreferences
+    lateinit private var controllerPreferences: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        preferences =  PreferenceManager.getDefaultSharedPreferences(applicationContext)
+        preferences = Preferences(applicationContext)
+        defaultPreferences = preferences.getDefaultPreferences()
+        controllerPreferences = preferences.getControllerPreferences()
 
-        videoUrl = preferences!!.getString(CONFIG_ROOM_VIDEO_KEY, "")
+        videoUrl = controllerPreferences.getString(CONFIG_ROOM_VIDEO_KEY, "")
 
-        val id = preferences!!.getInt(Constants.PREF_KEY_CONTROLLER_ID, 0)
+        controller = MasterControllerRepository(this)
+            .getController(preferences.currentControllerId())
 
-        controller = MasterControllerRepository(this).getController(id)
-
-        toolbar.setTitle(preferences!!.getString(CONFIG_NAME_KEY, controller!!.name))
+        toolbar.setTitle(controllerPreferences.getString(CONFIG_NAME_KEY, controller!!.name))
         setSupportActionBar(toolbar)
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
         supportActionBar!!.setDisplayShowHomeEnabled(true)
@@ -94,8 +98,7 @@ class MicroControllerActivity: AppCompatActivity() {
             }
             R.id.action_video -> {
                 //startActivity(Intent(this, VideoActivity::class.java))
-                val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this /* Activity context */)
-                val video_url = sharedPreferences.getString(CONFIG_ROOM_VIDEO_KEY, "")
+                val video_url = controllerPreferences.getString(CONFIG_ROOM_VIDEO_KEY, "")
                 if(video_url != "") {
                     startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(video_url)))
                 }
@@ -114,15 +117,7 @@ class MicroControllerActivity: AppCompatActivity() {
                 val repo = MasterControllerRepository(this)
                 repo.updateController(controller!!)
 
-                val editor = preferences!!.edit()
-                editor.remove("controller_id")
-                editor.remove("controller_name")
-                editor.remove("controller_hostname")
-                editor.remove("user_id")
-                editor.remove("jwt")
-                if(!editor.commit()) {
-                    Log.e("MainActivity.Logout", "Unable to commit session invalidation to shared preferences")
-                }
+                preferences.clear()
 
                 finish()
                 startActivity(Intent(this, MasterControllerListActivity::class.java))

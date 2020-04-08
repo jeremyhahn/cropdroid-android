@@ -1,13 +1,22 @@
 package com.jeremyhahn.cropdroid
 
+import com.appeaser.sublimepickerlibrary.recurrencepicker.SublimeRecurrencePicker.RecurrenceOption
+
 class Constants {
 
     companion object {
 
         const val APP_NAME = "cropdroid"
         const val DATABASE_NAME = APP_NAME
-        //const val GLOBAL_PREFS = APP_NAME
+        //const val DATE_FORMAT_RFC3339 = "yyyy-MM-dd'T'HH:mm:ssz"
+          const val DATE_FORMAT_RFC3339 = "yyyy-MM-dd'T'HH:mm:ssXXX"
+
         const val PREF_KEY_CONTROLLER_ID = "controller_id"
+        const val PREF_KEY_CONTROLLER_SERVER_ID = "controller_server_id"
+        const val PREF_KEY_CONTROLLER_NAME = "controller_name"
+        const val PREF_KEY_CONTROLLER_HOSTNAME = "controller_hostname"
+        const val PREF_KEY_USER_ID = "user_id"
+        const val PREF_KEY_JWT = "jwt"
         const val API_VERSION = "v1"
         const val API_BASE = "/api/".plus(API_VERSION)
         const val ACTION_STOP_SERVICE = "ACTION_STOP_SERVICE"
@@ -82,5 +91,49 @@ class Constants {
             Reservoir,
             Doser
         }
+
+        const val SCHEDULE_TIME_ONLY_FORMAT = "h:mm:ss a"
+        //const val SCHEDULE_DATE_DISPLAY_FORMAT = "MM-dd-yyyy hh:mm a"
+        const val SCHEDULE_DATE_TIME_LONG_FORMAT = "EEE, MMM d, yyyy '@' h:mm a z"
+        const val SCHEDULE_NULL_DATE = "0001-01-01T00:00:00Z"
+
+        const val SCHEDULE_TYPE_ONCE = 0
+        const val SCHEDULE_TYPE_DAILY = 1
+        const val SCHEDULE_TYPE_WEEKLY = 2
+        const val SCHEDULE_TYPE_MONTHLY = 3
+        const val SCHEDULE_TYPE_YEARLY = 4
+        const val SCHEDULE_TYPE_CUSTOM = 5
+
+        val SCHEDULE_FREQUENCY_MAP: HashMap<Int, RecurrenceOption> = hashMapOf(
+            0 to RecurrenceOption.DOES_NOT_REPEAT,
+            1 to RecurrenceOption.DAILY,
+            2 to RecurrenceOption.WEEKLY,
+            3 to RecurrenceOption.MONTHLY,
+            4 to RecurrenceOption.YEARLY,
+            5 to RecurrenceOption.CUSTOM)
+
+        val SCHEDULE_FREQUENCY_ID_MAP: HashMap<String, Int> = hashMapOf(
+            RecurrenceOption.DOES_NOT_REPEAT.name to SCHEDULE_TYPE_ONCE,
+            RecurrenceOption.DAILY.name to SCHEDULE_TYPE_DAILY,
+            RecurrenceOption.WEEKLY.name to SCHEDULE_TYPE_WEEKLY,
+            RecurrenceOption.MONTHLY.name to SCHEDULE_TYPE_MONTHLY,
+            RecurrenceOption.YEARLY.name to SCHEDULE_TYPE_YEARLY,
+            RecurrenceOption.CUSTOM.name to SCHEDULE_TYPE_CUSTOM)
+
+        val SCHEDULE_DAY_MAP: HashMap<String, String> = hashMapOf(
+            "SU" to "Sunday",
+            "MO" to "Monday",
+            "TU" to "Tuesday",
+            "WE" to "Wednesday",
+            "TH" to "Thursday",
+            "FR" to "Friday",
+            "SA" to "Saturday")
+
+        const val SECONDS_IN_MINUTE = 60
+        const val SECONDS_IN_HOUR = 3600
+        const val SECONDS_IN_DAY = 86400
+        const val SECONDS_IN_WEEK = 604800
+        const val SECONDS_IN_MONTH = 2629800
+        const val SECONDS_IN_YEAR = 31557600
     }
 }

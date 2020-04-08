@@ -55,8 +55,8 @@ class NotificationService : Service() {
             }
 
         val foregroundChannel = NotificationChannel("foreground_channel_id", "High priority notifications", NotificationManager.IMPORTANCE_HIGH)
-        foregroundChannel.enableLights(false)
-        foregroundChannel.enableVibration(false)
+        foregroundChannel.enableLights(true)
+        foregroundChannel.enableVibration(true)
         foregroundChannel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PRIVATE)
         notificationManager!!.createNotificationChannel(foregroundChannel)
 

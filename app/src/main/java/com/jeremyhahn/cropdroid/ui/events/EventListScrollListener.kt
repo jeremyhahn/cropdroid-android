@@ -1,4 +1,4 @@
-package com.jeremyhahn.cropdroid
+package com.jeremyhahn.cropdroid.ui.events
 
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView

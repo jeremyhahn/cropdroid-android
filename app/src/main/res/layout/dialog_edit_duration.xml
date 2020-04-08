@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="center"
+    android:gravity="center_horizontal"
+    android:padding="@dimen/activity_horizontal_margin">
+
+    <EditText
+        android:id="@+id/editDuration"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight=".60"
+        android:hint="@string/prompt_seconds"
+        android:inputType="number"
+        android:selectAllOnFocus="true" />
+
+    <Spinner
+        android:id="@+id/durationSpinner"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight=".40"
+        android:drawSelectorOnTop="true"
+        android:entries="@array/time_entries" />
+
+</LinearLayout>

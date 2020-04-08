@@ -15,12 +15,16 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_CONTROLLER_HOSTNAME
 import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_CONTROLLER_ID
+import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_CONTROLLER_NAME
 import com.jeremyhahn.cropdroid.MasterControllerRecyclerAdapter.OnMasterListener
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.MasterController
+import com.jeremyhahn.cropdroid.model.User
 import com.jeremyhahn.cropdroid.service.NotificationService
 import com.jeremyhahn.cropdroid.ui.login.LoginActivity
+import com.jeremyhahn.cropdroid.utils.Preferences
 import kotlinx.android.synthetic.main.activity_masters.*
 
 
@@ -76,15 +80,14 @@ class MasterControllerListActivity : AppCompatActivity(), OnMasterListener {
             return
         }
 
-        var editor = PreferenceManager.getDefaultSharedPreferences(applicationContext).edit()
-        editor.putInt(PREF_KEY_CONTROLLER_ID, controllers.get(position).id)
-        editor.apply()
+        val selected = controllers.get(position)
 
-        var selected = controllers.get(position)
+        Preferences(applicationContext).setController(selected, null)
+
         var intent = Intent(this, LoginActivity::class.java)
-        intent.putExtra("controller_id", selected.id)
-        intent.putExtra("controller_name", selected.name)
-        intent.putExtra("controller_hostname", selected.hostname)
+        intent.putExtra(PREF_KEY_CONTROLLER_ID, selected.id)
+        intent.putExtra(PREF_KEY_CONTROLLER_NAME, selected.name)
+        intent.putExtra(PREF_KEY_CONTROLLER_HOSTNAME, selected.hostname)
         startActivity(intent)
     }
 
