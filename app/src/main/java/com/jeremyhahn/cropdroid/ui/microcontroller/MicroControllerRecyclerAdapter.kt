@@ -1,16 +1,16 @@
-package com.jeremyhahn.cropdroid
+package com.jeremyhahn.cropdroid.ui.microcontroller
 
 import android.app.Activity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.jeremyhahn.cropdroid.Clearable
 import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
+import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Metric
 import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
-import com.jeremyhahn.cropdroid.ui.microcontroller.MetricTypeViewHolder
-import com.jeremyhahn.cropdroid.ui.microcontroller.SwitchTypeViewHolder
 
 class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: CropDroidAPI,
            val recyclerItems: ArrayList<MicroControllerRecyclerModel>, controllerType: ControllerType,

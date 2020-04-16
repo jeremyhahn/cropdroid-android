@@ -7,11 +7,9 @@ import android.view.ContextMenu
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
-import com.jeremyhahn.cropdroid.MicroControllerRecyclerAdapter
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Channel
-import com.jeremyhahn.cropdroid.model.Metric
 import kotlinx.android.synthetic.main.dialog_edit_text.view.*
 import okhttp3.Call
 import okhttp3.Callback

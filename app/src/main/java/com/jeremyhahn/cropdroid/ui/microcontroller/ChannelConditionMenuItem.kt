@@ -12,7 +12,6 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.Spinner
-import com.jeremyhahn.cropdroid.MicroControllerRecyclerAdapter
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Channel
@@ -21,13 +20,13 @@ import com.jeremyhahn.cropdroid.model.Metric
 import com.jeremyhahn.cropdroid.utils.ControllerParser
 import com.jeremyhahn.cropdroid.utils.MetricParser
 import kotlinx.android.synthetic.main.dialog_condition.view.*
-import kotlinx.android.synthetic.main.dialog_edit_text.view.*
 import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
 
 class ChannelConditionMenuItem(activity: Activity, context: Context, menu: ContextMenu, channel: Channel,
-        metrics: List<Metric>, cropDroidAPI: CropDroidAPI, adapter: MicroControllerRecyclerAdapter) {
+        metrics: List<Metric>, cropDroidAPI: CropDroidAPI, adapter: MicroControllerRecyclerAdapter
+) {
 
     init {
         menu!!.add(0, channel.id, 0, "Condition")

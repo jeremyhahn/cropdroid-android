@@ -1,15 +1,16 @@
 package com.jeremyhahn.cropdroid.utils
 
 import android.util.Log
-import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_DOSER_KEY
+import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_CONTROLLERS_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_INTERVAL_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_MODE_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_NAME_KEY
-import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_RESERVOIR_KEY
-import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ROOM_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_TIMEZONE_KEY
-import com.jeremyhahn.cropdroid.model.*
+import com.jeremyhahn.cropdroid.model.Config
+import com.jeremyhahn.cropdroid.model.ControllerConfig
+import com.jeremyhahn.cropdroid.model.SmtpConfig
+import org.json.JSONArray
 import org.json.JSONObject
 
 class ConfigParser {
@@ -19,19 +20,23 @@ class ConfigParser {
             return parse(JSONObject(json))
         }
 
-        fun parse(config : JSONObject) : Config {
+        fun parse(config: JSONObject): Config {
             return Config(
                 config.getString(CONFIG_NAME_KEY),
                 config.getString(CONFIG_INTERVAL_KEY),
                 config.getString(CONFIG_TIMEZONE_KEY),
                 config.getString(CONFIG_MODE_KEY),
                 parseSmtp(config.getJSONObject(CONFIG_SMTP_KEY)),
+                parseControllers(config.getJSONArray(CONFIG_CONTROLLERS_KEY))
+            )
+            /*
                 parseRoom(config.getJSONObject(CONFIG_ROOM_KEY)),
                 parseReservoir(config.getJSONObject(CONFIG_RESERVOIR_KEY)),
                 parseDoser(config.getJSONObject(CONFIG_DOSER_KEY)))
+                */
         }
 
-        fun parseSmtp(smtp : JSONObject) : SmtpConfig {
+        fun parseSmtp(smtp: JSONObject): SmtpConfig {
             Log.d("parseSmtp", smtp.toString())
             return SmtpConfig(
                 smtp.getString("enable"),
@@ -39,9 +44,10 @@ class ConfigParser {
                 smtp.getString("port"),
                 smtp.getString("username"),
                 smtp.getString("password"),
-                smtp.getString("recipient"))
+                smtp.getString("recipient")
+            )
         }
-
+/*
         fun parseRoom(room : JSONObject) : RoomConfig {
             Log.d("parseRoom", room.toString())
             return RoomConfig(
@@ -81,12 +87,31 @@ class ConfigParser {
                 waterChange.getBoolean("notify"),
                 waterChange.getString("subscribes"))
         }
+*/
 
-        fun buildMetrics(controllerType: String, metrics: ArrayList<Metric>) {
-            //val items = mapOf(controllerType to )
-            for(metric in metrics) {
+        fun parseControllers(jsonControllers: JSONArray): ArrayList<ControllerConfig> {
+            Log.d("parseControllers", jsonControllers.toString())
 
+            var controllers = ArrayList<ControllerConfig>(jsonControllers.length())
+            for (i in 0..jsonControllers.length() - 1) {
+
+                val jsonChannel = jsonControllers.getJSONObject(i)
+
+                Log.d("ConfigParser.parseControllers", jsonChannel.toString())
+
+                val id = jsonChannel.getInt("id")
+                val type = jsonChannel.getString("type")
+                val description = jsonChannel.getString("description")
+                val enabled = jsonChannel.getBoolean("enable")
+                val notify = jsonChannel.getBoolean("notify")
+                val uri = jsonChannel.getString("uri")
+                val hardwareVersion = jsonChannel.getString("hardwareVersion")
+                val firmwareVersion = jsonChannel.getString("firmwareVersion")
+                val metrics = MetricParser.parse(jsonChannel.getJSONArray("metrics"))
+                val channels = ChannelParser.parse(jsonChannel.getJSONArray("channels"))
+                controllers.add(ControllerConfig(id, type, description, enabled, notify, uri, hardwareVersion, firmwareVersion, metrics, channels))
             }
+            return controllers
         }
     }
 }

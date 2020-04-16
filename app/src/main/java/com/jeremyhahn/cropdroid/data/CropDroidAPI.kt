@@ -202,7 +202,7 @@ class CropDroidAPI(val controller: MasterController) {
         doGet(CONFIG_RESOURCE, args, callback)
     }
 
-    fun getControllers(callback : Callback) {
+    fun getControllers(callback: Callback) {
         val args = ArrayList<String>()
         doGet(CONTROLLER_RESOURCE, args, callback)
     }

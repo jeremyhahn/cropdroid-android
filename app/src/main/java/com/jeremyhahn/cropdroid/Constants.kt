@@ -51,6 +51,8 @@ class Constants {
         const val CONFIG_SMTP_PASSWORD_KEY = "smtp.password"
         const val CONFIG_SMTP_RECIPIENT_KEY = "smtp.recipient"
 
+        const val CONFIG_CONTROLLERS_KEY = "controllers"
+
         const val CONFIG_ROOM_KEY = "room"
         const val CONFIG_ROOM_ENABLE_KEY = "room.enable"
         const val CONFIG_ROOM_NOTIFY_KEY = "room.notify"

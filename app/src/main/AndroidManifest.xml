@@ -39,7 +39,7 @@
             android:label="@string/title_activity_masters"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name=".MicroControllerActivity"
+            android:name=".ui.microcontroller.MicroControllerActivity"
             android:label="@string/title_activity_microcontrollers"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity

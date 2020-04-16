@@ -6,7 +6,6 @@ import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_MODE_VIRTUAL
 import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
-import com.jeremyhahn.cropdroid.MicroControllerRecyclerAdapter
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Metric
 import kotlinx.android.synthetic.main.microcontroller_metric_cardview.view.*

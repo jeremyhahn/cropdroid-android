@@ -17,7 +17,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener
 import com.jeremyhahn.cropdroid.Constants
 import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
-import com.jeremyhahn.cropdroid.MicroControllerRecyclerAdapter
+import com.jeremyhahn.cropdroid.ui.microcontroller.MicroControllerRecyclerAdapter
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
@@ -63,7 +63,14 @@ class RoomFragment : Fragment() {
         recyclerView = fragmentView.findViewById(R.id.recyclerView) as RecyclerView
         recyclerView.layoutManager = LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
         recyclerView.itemAnimator = DefaultItemAnimator()
-        recyclerView.adapter = MicroControllerRecyclerAdapter(activity!!, cropDroidAPI, recyclerItems, ControllerType.Room, mode)
+        recyclerView.adapter =
+            MicroControllerRecyclerAdapter(
+                activity!!,
+                cropDroidAPI,
+                recyclerItems,
+                ControllerType.Room,
+                mode
+            )
 
         swipeContainer = fragmentView.findViewById(R.id.roomSwipeRefresh) as SwipeRefreshLayout
         swipeContainer?.setOnRefreshListener(OnRefreshListener {

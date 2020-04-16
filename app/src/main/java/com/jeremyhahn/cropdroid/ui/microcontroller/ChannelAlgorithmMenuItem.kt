@@ -10,15 +10,11 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Spinner
-import com.jeremyhahn.cropdroid.Constants
-import com.jeremyhahn.cropdroid.MicroControllerRecyclerAdapter
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Algorithm
 import com.jeremyhahn.cropdroid.model.Channel
 import com.jeremyhahn.cropdroid.utils.AlgorithmParser
-import kotlinx.android.synthetic.main.dialog_edit_duration.view.*
-import kotlinx.android.synthetic.main.dialog_edit_number.view.*
 import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException

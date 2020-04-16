@@ -1,10 +1,9 @@
-package com.jeremyhahn.cropdroid
+package com.jeremyhahn.cropdroid.ui.microcontroller
 
 import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Bundle
-import android.preference.PreferenceManager
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -13,6 +12,10 @@ import androidx.viewpager.widget.ViewPager
 import com.google.android.material.tabs.TabLayout
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_NAME_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ROOM_VIDEO_KEY
+import com.jeremyhahn.cropdroid.MasterControllerListActivity
+import com.jeremyhahn.cropdroid.R
+import com.jeremyhahn.cropdroid.SettingsActivity
+import com.jeremyhahn.cropdroid.TabAdapter
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.MasterController
 import com.jeremyhahn.cropdroid.utils.Preferences
@@ -56,7 +59,11 @@ class MicroControllerActivity: AppCompatActivity() {
 
         tabLayout!!.tabGravity = TabLayout.GRAVITY_FILL
 
-        val adapter = TabAdapter(this, supportFragmentManager, tabLayout!!.tabCount)
+        val adapter = TabAdapter(
+            this,
+            supportFragmentManager,
+            tabLayout!!.tabCount
+        )
         viewPager!!.adapter = adapter
 
         viewPager!!.addOnPageChangeListener(TabLayout.TabLayoutOnPageChangeListener(tabLayout))

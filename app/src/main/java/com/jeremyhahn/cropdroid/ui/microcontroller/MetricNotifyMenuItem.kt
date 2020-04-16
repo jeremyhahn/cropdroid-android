@@ -3,7 +3,6 @@ package com.jeremyhahn.cropdroid.ui.microcontroller
 import android.util.Log
 import android.view.ContextMenu
 import android.view.MenuItem
-import com.jeremyhahn.cropdroid.MicroControllerRecyclerAdapter
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Metric
 import okhttp3.Call

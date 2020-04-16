@@ -14,21 +14,13 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.jeremyhahn.cropdroid.Constants
 import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
-import com.jeremyhahn.cropdroid.MicroControllerRecyclerAdapter
+import com.jeremyhahn.cropdroid.ui.microcontroller.MicroControllerRecyclerAdapter
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.MasterController
-import com.jeremyhahn.cropdroid.model.Metric
 import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
-import com.jeremyhahn.cropdroid.ui.room.RoomViewModelFactory
-import com.jeremyhahn.cropdroid.utils.ChannelParser
-import com.jeremyhahn.cropdroid.utils.MetricParser
 import com.jeremyhahn.cropdroid.utils.Preferences
-import okhttp3.Call
-import okhttp3.Callback
-import org.json.JSONObject
-import java.io.IOException
 
 class ReservoirFragment : Fragment() {
 
@@ -65,7 +57,14 @@ class ReservoirFragment : Fragment() {
 
         recyclerView = fragmentView.findViewById(R.id.reservoirRecyclerView) as RecyclerView
         recyclerView!!.layoutManager = LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
-        recyclerView!!.adapter = MicroControllerRecyclerAdapter(activity!!, CropDroidAPI(controller!!), recyclerItems, ControllerType.Reservoir, mode)
+        recyclerView!!.adapter =
+            MicroControllerRecyclerAdapter(
+                activity!!,
+                CropDroidAPI(controller!!),
+                recyclerItems,
+                ControllerType.Reservoir,
+                mode
+            )
 
         swipeContainer = fragmentView.findViewById(R.id.reservoirSwipeRefresh) as SwipeRefreshLayout
         swipeContainer?.setOnRefreshListener(SwipeRefreshLayout.OnRefreshListener {
