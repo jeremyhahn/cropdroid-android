@@ -15,11 +15,13 @@ import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Channel
 import com.jeremyhahn.cropdroid.model.Metric
+import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
 import kotlinx.android.synthetic.main.doser_switch_cardview.view.btnDispense
 import kotlinx.android.synthetic.main.microcontroller_channel_cardview.view.channelName
 import kotlinx.android.synthetic.main.microcontroller_channel_cardview.view.channelValue
 import okhttp3.Call
 import okhttp3.Callback
+import org.json.JSONObject
 import java.io.IOException
 
 class SwitchTypeViewHolder(adapter: MicroControllerRecyclerAdapter, itemView: View) : RecyclerView.ViewHolder(itemView), View.OnCreateContextMenuListener {
@@ -61,7 +63,6 @@ class SwitchTypeViewHolder(adapter: MicroControllerRecyclerAdapter, itemView: Vi
                         return
                     }
                     override fun onResponse(call: Call, response: okhttp3.Response) {
-                        Log.d("MicroControllerRecyclerAdapter.btnDispense.onClick", "onResponse response: " + response)
                         Log.d("MicroControllerRecyclerAdapter.btnDispense.onClick", "onResponse response body: " + response.body().string())
                         activity.runOnUiThread(Runnable() {
                             Toast.makeText(activity, "Dispensing " + channel.name, Toast.LENGTH_SHORT).show();
@@ -101,17 +102,31 @@ class SwitchTypeViewHolder(adapter: MicroControllerRecyclerAdapter, itemView: Vi
                     DialogInterface.OnClickListener { dialog, id ->
                         Log.d("SwitchTypeViewHolder.onClick", "DialogInterface.OnClickListener  " + channel.channelId)
                         val _adapter = this.adapter
-                        cropDroidAPI.switch(controllerType, channel.channelId, newState, object:
-                            Callback {
+                        val _channel = channel
+                        cropDroidAPI.switch(controllerType, channel.channelId, newState, object: Callback {
                             override fun onFailure(call: Call, e: IOException) {
                                 Log.d("MicroControllerRecyclerAdapter.onSwitchState", "onFailure response: " + e!!.message)
                                 itemView.channelValue.setChecked(!newState)
                                 return
                             }
                             override fun onResponse(call: Call, response: okhttp3.Response) {
-                                Log.d("MicroControllerRecyclerAdapter.onSwitchState", "onResponse response: " + response.body().string())
+                                val responseBody = response.body().string()
+                                Log.d("MicroControllerRecyclerAdapter.onSwitchState", "onResponse response: " + responseBody)
+
+                                val channelState = JSONObject(responseBody)
+                                val position = channelState.getInt("position")
+
+                                Log.d("MicroControllerRecyclerAdapter.onSwitchState", "switch position: " + position)
+
                                 _adapter.activity.runOnUiThread(Runnable() {
-                                    _adapter.notifyDataSetChanged()
+                                    channel.value = if(position == 1) 1 else 0
+                                    for((i, recyclerModel) in  adapter.recyclerItems.withIndex()) {
+                                        if(recyclerModel.channel != null && recyclerModel.channel.id == channel.id) {
+                                            _adapter.recyclerItems[i] = MicroControllerRecyclerModel(MicroControllerRecyclerModel.CHANNEL_TYPE, null, channel)
+                                            _adapter.notifyDataSetChanged()
+                                            break
+                                        }
+                                    }
                                 })
                             }
                         })

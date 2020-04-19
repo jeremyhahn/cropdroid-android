@@ -93,7 +93,8 @@ class MasterControllerListActivity : AppCompatActivity(), OnMasterListener {
 
     fun getMasterControllers() {
 
-        controllers.clear()
+        swipeContainer?.setRefreshing(false)
+        adapter.clear()
 
         var savedControllers = MasterControllerRepository(this).allControllers
         for(controller in savedControllers) {
@@ -101,16 +102,14 @@ class MasterControllerListActivity : AppCompatActivity(), OnMasterListener {
         }
 
         controllers.addAll(savedControllers)
+        adapter.notifyDataSetChanged()
 
         if(controllers.size <= 0) {
             Log.d("MasterControllerListActivity", "No controllers in local sqlite database.")
 
-            var emptyListText = findViewById(R.id.textMasterEmptyList) as TextView
+            var emptyListText = findViewById(R.id.masterEmptyText) as TextView
             emptyListText.visibility = View.VISIBLE
         }
-
-        adapter.notifyDataSetChanged()
-        swipeContainer?.setRefreshing(false)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

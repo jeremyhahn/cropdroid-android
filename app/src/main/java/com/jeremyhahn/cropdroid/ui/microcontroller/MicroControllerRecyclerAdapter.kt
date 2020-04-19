@@ -92,6 +92,7 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
         recyclerItems.addAll(list)
         notifyDataSetChanged()
     }
+
 /*
     fun confirmDelete(): Dialog {
         return let {

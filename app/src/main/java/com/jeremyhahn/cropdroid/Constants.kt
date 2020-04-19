@@ -11,6 +11,9 @@ class Constants {
         //const val DATE_FORMAT_RFC3339 = "yyyy-MM-dd'T'HH:mm:ssz"
           const val DATE_FORMAT_RFC3339 = "yyyy-MM-dd'T'HH:mm:ssXXX"
 
+        const val CONFIG_CONTROLLER_COUNT_KEY = "controller_count"
+        const val CONFIG_CONTROLLER_PREFIX_KEY = "controller_"
+
         const val PREF_KEY_CONTROLLER_ID = "controller_id"
         const val PREF_KEY_CONTROLLER_SERVER_ID = "controller_server_id"
         const val PREF_KEY_CONTROLLER_NAME = "controller_name"
@@ -52,6 +55,14 @@ class Constants {
         const val CONFIG_SMTP_RECIPIENT_KEY = "smtp.recipient"
 
         const val CONFIG_CONTROLLERS_KEY = "controllers"
+        const val CONFIG_TYPE_KEY = "type"
+        const val CONFIG_DESCRIPTION_KEY = "description"
+        const val CONFIG_ENABLE_KEY = "enable"
+        const val CONFIG_NOTIFY_KEY = "notify"
+        const val CONFIG_URI_KEY = "uri"
+        const val CONFIG_VIDEO_KEY = "video"
+        const val CONFIG_HARDWARE_VERSION_KEY = "hardwareVersion"
+        const val CONFIG_FIRMWARE_VERSION_KEY = "firmwareVersion"
 
         const val CONFIG_ROOM_KEY = "room"
         const val CONFIG_ROOM_ENABLE_KEY = "room.enable"

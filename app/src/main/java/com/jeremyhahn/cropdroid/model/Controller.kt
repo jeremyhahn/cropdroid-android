@@ -1,5 +1,5 @@
 package com.jeremyhahn.cropdroid.model
 
-data class Controller(var id: Int, var orgId: Int, var type: String,
-     var description: String, var hardwareVersion: String, var softwareVersion: String,
-     var metrics: List<Metric>, var channels: List<Channel>)
+data class Controller(val id: Int, val orgId: Int, val type: String, val description: String, val enabled: Boolean,
+                      val notify: Boolean, val uri: String, val hardwareVersion: String, val firmwareVersion: String,
+                      val metrics: List<Metric>, val channels: List<Channel>)

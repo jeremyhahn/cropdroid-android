@@ -50,7 +50,7 @@ class MetricTypeViewHolder(adapter: MicroControllerRecyclerAdapter, controllerTy
         MetricHistoryMenuItem(v.context, menu, metric, cropDroidAPI, controllerType)
 
         if(mode == CONFIG_MODE_VIRTUAL) {
-            MetricSeValueMenuItem(v.context, menu, metric, cropDroidAPI, adapter, controllerType)
+            MetricSetValueMenuItem(v.context, menu, metric, cropDroidAPI, adapter, controllerType)
         }
     }
 }

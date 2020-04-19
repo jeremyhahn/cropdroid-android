@@ -50,7 +50,6 @@ class ReservoirViewModel(cropDroidAPI: CropDroidAPI) : ViewModel() {
                 }
 
                 val json = JSONObject(responseBody)
-
                 val jsonMetrics = json.getJSONArray("metrics")
                 val _metrics = MetricParser.parse(jsonMetrics)
                 metrics.postValue(_metrics)

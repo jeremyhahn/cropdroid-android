@@ -1,4 +1,4 @@
-package com.jeremyhahn.cropdroid.ui.schedule
+package com.jeremyhahn.cropdroid.ui.condition
 
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
@@ -10,7 +10,7 @@ import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
 
-class ScheduleViewModel(cropDroidAPI: CropDroidAPI, channelId: Int) : ViewModel() {
+class ConditionViewModel(cropDroidAPI: CropDroidAPI, channelId: Int) : ViewModel() {
 
     private val cropDroidAPI: CropDroidAPI
     private val channelId: Int

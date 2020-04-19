@@ -48,7 +48,7 @@ class CropDroidAPI(val controller: MasterController) {
 
     fun roomStatus(callback: Callback) {
         var args = ArrayList<String>(0)
-        doGet(ROOM_RESOURCE, args, callback)
+        doGet(ROOM_RESOURCE.plus("/view"), args, callback)
     }
 /*
     fun roomHistory(metric: String, callback: Callback) {
@@ -59,19 +59,19 @@ class CropDroidAPI(val controller: MasterController) {
 */
     fun reservoirStatus(callback: Callback) {
         var args = ArrayList<String>(0)
-        doGet(RESERVOIR_RESOURCE, args, callback)
+        doGet(RESERVOIR_RESOURCE.plus("/view"), args, callback)
     }
 
     fun metricHistory(controllerType: ControllerType, metric: String, callback: Callback) {
         var args = ArrayList<String>(2)
         args.add("history")
         args.add(metric)
-        doGet(controllerType.name.toLowerCase(), args, callback)
+        doGet("/".plus(controllerType.name.toLowerCase()), args, callback)
     }
 
     fun doserStatus(callback: Callback) {
         var args = ArrayList<String>(0)
-        doGet(DOSER_RESOURCE, args, callback)
+        doGet(DOSER_RESOURCE.plus("/view"), args, callback)
     }
 
     fun dispense(controllerType: ControllerType, channelId: Int, seconds: Int, callback: Callback) {
@@ -84,7 +84,7 @@ class CropDroidAPI(val controller: MasterController) {
     }
 
     fun switch(controllerType: ControllerType, channelId: Int, state: Boolean, callback: Callback) {
-        val resource = controllerType.name.toLowerCase()
+        val resource = "/".plus(controllerType.name.toLowerCase())
         var state = if(state) "1" else "0"
         var args = ArrayList<String>(4)
         args.add("switch")
@@ -93,9 +93,9 @@ class CropDroidAPI(val controller: MasterController) {
         doGet(resource, args, callback)
     }
 
-    fun setConfig(key: String, value: String, callback: Callback) {
+    fun setConfig(controllerId: Int, key: String, value: String, callback: Callback) {
         var args = ArrayList<String>(3)
-        args.add(controller.id.toString())
+        args.add(controllerId.toString())
         args.add(key)
         args.add("?value="+URLEncoder.encode(value, "utf-8"))
         doGet(CONFIG_RESOURCE, args, callback)

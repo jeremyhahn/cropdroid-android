@@ -12,6 +12,7 @@ import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.MasterController
 import com.jeremyhahn.cropdroid.ui.microcontroller.MicroControllerActivity
 import com.jeremyhahn.cropdroid.utils.Preferences
+import kotlinx.android.synthetic.main.microcontroller_metric_cardview.*
 import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
@@ -69,6 +70,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
+            val controllerId = parseControllerId(key!!)
             var value = ""
             try {
                 value = sharedPreferences!!.getString(key, "")
@@ -79,7 +81,7 @@ class SettingsActivity : AppCompatActivity() {
                 }
             }
             Log.d("SettingsActivity.onSharedPreferenceChanged", "key=" + key + ", value="+ value + ", controller=" + controller!!.toString())
-            cropdroid!!.setConfig(key!!, value, object : Callback {
+            cropdroid!!.setConfig(controllerId, key!!, value, object : Callback {
                 override fun onFailure(call: Call, e: IOException) {
                     Log.d("SettingsActivity.onPreferenceClick()", "onFailure response: " + e!!.message)
                 }
@@ -89,5 +91,17 @@ class SettingsActivity : AppCompatActivity() {
                 }
             })
         }
+
+        private fun parseControllerId(key: String) : Int{
+            val pieces = key.split(".")
+            if(pieces.size == 1) {
+                return 1 // cropdroid server id
+            }
+            val controller_key = Constants.CONFIG_CONTROLLER_PREFIX_KEY.plus(pieces[0]) // ex: controller_room
+            Log.d("SettingsActivity", "Looking for controller key: " + controller_key)
+            return sharedPreferences!!.getInt(controller_key, 1)
+        }
     }
 }
+
+//LEAVING OFF ON figuring out why configs arent updating (ConfigurationService.SetValue)

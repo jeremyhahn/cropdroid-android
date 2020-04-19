@@ -1,4 +1,4 @@
-package com.jeremyhahn.cropdroid.ui.schedule
+package com.jeremyhahn.cropdroid.ui.condition
 
 import android.app.Activity
 import android.os.Bundle
@@ -16,8 +16,8 @@ import com.jeremyhahn.cropdroid.Constants.Companion.SCHEDULE_TIME_ONLY_FORMAT
 import com.jeremyhahn.cropdroid.Constants.Companion.SCHEDULE_TYPE_ONCE
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
-import com.jeremyhahn.cropdroid.model.Schedule
-import com.jeremyhahn.cropdroid.utils.ScheduleParser
+import com.jeremyhahn.cropdroid.model.Condition
+import com.jeremyhahn.cropdroid.utils.ConditionParser
 import kotlinx.android.synthetic.main.microcontroller_schedule_cardview.view.*
 import okhttp3.Call
 import okhttp3.Callback
@@ -25,14 +25,14 @@ import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
 
-class ScheduleListRecyclerAdapter(val activity: Activity, val cropDroidAPI: CropDroidAPI,
-           var recyclerItems: ArrayList<Schedule>, val timerDuration: Int) : RecyclerView.Adapter<ScheduleListRecyclerAdapter.ViewHolder>() {
+class ConditionListRecyclerAdapter(val activity: Activity, val cropDroidAPI: CropDroidAPI,
+              var recyclerItems: ArrayList<Condition>, val timerDuration: Int) : RecyclerView.Adapter<ConditionListRecyclerAdapter.ViewHolder>() {
 
-    class ViewHolder(adapter: ScheduleListRecyclerAdapter, activity: Activity, cropDroidAPI: CropDroidAPI,
+    class ViewHolder(adapter: ConditionListRecyclerAdapter, activity: Activity, cropDroidAPI: CropDroidAPI,
                      itemView: View, timerDuration: Int) : RecyclerView.ViewHolder(itemView), View.OnCreateContextMenuListener {
 
         private val TAG = "ConditionListRecyclerAdapter"
-        private val adapter: ScheduleListRecyclerAdapter
+        private val adapter: ConditionListRecyclerAdapter
         private val activity: AppCompatActivity
         private val cropDroidAPI: CropDroidAPI
         private val timerDuration: Int
@@ -45,7 +45,7 @@ class ScheduleListRecyclerAdapter(val activity: Activity, val cropDroidAPI: Crop
             itemView.setOnCreateContextMenuListener(this)
         }
 
-        fun bind(schedule: Schedule) {
+        fun bind(schedule: Condition) {
 
             itemView.setTag(schedule)
 
@@ -59,7 +59,7 @@ class ScheduleListRecyclerAdapter(val activity: Activity, val cropDroidAPI: Crop
             var frequencyText = ""
 
             if(schedule.interval > 0) { // CUSTOM frequency
-                frequencyText = ScheduleParser.frequencyToText(activity.resources, schedule)
+                frequencyText = ConditionParser.frequencyToText(activity.resources, schedule)
             }
             else {
                 when (schedule.frequency) {
@@ -113,7 +113,7 @@ class ScheduleListRecyclerAdapter(val activity: Activity, val cropDroidAPI: Crop
 
             if (timerDuration > 0) {
                 itemView.tableRowTimer.visibility = View.VISIBLE
-                itemView.timerValue.text = ScheduleParser.timerToText(activity.resources, timerDuration)
+                itemView.timerValue.text = ConditionParser.timerToText(activity.resources, timerDuration)
 
                 if(schedule.endDate == null) {
                     val endDate = Calendar.getInstance()
@@ -132,7 +132,7 @@ class ScheduleListRecyclerAdapter(val activity: Activity, val cropDroidAPI: Crop
 
         override fun onCreateContextMenu(menu: ContextMenu?, v: View?, menuInfo: ContextMenu.ContextMenuInfo?) {
 
-            var schedule = itemView.getTag() as Schedule
+            var schedule = itemView.getTag() as Condition
 
             Log.d("onCreateContextMenu", "schedule: " + schedule)
 
@@ -141,9 +141,9 @@ class ScheduleListRecyclerAdapter(val activity: Activity, val cropDroidAPI: Crop
 
                     val _adapter = this.adapter
                     val listener = object:
-                        ScheduleSelectionListener {
-                        override fun onScheduleSelected(schedule: Schedule) {
-                            cropDroidAPI.updateSchedule(schedule, object: Callback {
+                        ConditionSelectionListener {
+                        override fun onConditionSelected(schedule: Condition) {
+                            cropDroidAPI.updateCondition(schedule, object: Callback {
                                 override fun onFailure(call: Call, e: IOException) {
                                     Log.d("ConditionListActivity.onFailure", "onFailure response: " + e!!.message)
                                     return
@@ -189,7 +189,7 @@ class ScheduleListRecyclerAdapter(val activity: Activity, val cropDroidAPI: Crop
             menu!!.add(0, schedule.id, 0, "Delete")
                 .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
                     val _adapter = this.adapter
-                    cropDroidAPI.deleteSchedule(schedule, object : Callback {
+                    cropDroidAPI.deleteCondition(schedule, object : Callback {
                         override fun onFailure(call: Call, e: IOException) {
                             Log.d("ConditionListActivity.onFailure", "onFailure response: " + e!!.message)
                             return
@@ -208,12 +208,12 @@ class ScheduleListRecyclerAdapter(val activity: Activity, val cropDroidAPI: Crop
                 })
         }
 
-        fun createRecurrenceRule(schedule: Schedule) : String {
+        fun createRecurrenceRule(schedule: Condition) : String {
             if(schedule.frequency == SCHEDULE_TYPE_ONCE) {
                 return ""
             }
             if(schedule.interval <= 0) {
-                //schedule.frequency = //ScheduleParser.frequencyToText(activity.resources, schedule)
+                //schedule.frequency = //ConditionParser.frequencyToText(activity.resources, schedule)
                 return "" // interval only specified for CUSTOM frequency
             }
             var rule = StringBuffer()
@@ -234,12 +234,12 @@ class ScheduleListRecyclerAdapter(val activity: Activity, val cropDroidAPI: Crop
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ScheduleListRecyclerAdapter.ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ConditionListRecyclerAdapter.ViewHolder {
         val v = LayoutInflater.from(parent.context).inflate(R.layout.microcontroller_schedule_cardview, parent, false)
         return ViewHolder(this, activity, cropDroidAPI, v, timerDuration)
     }
 
-    override fun onBindViewHolder(holder: ScheduleListRecyclerAdapter.ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: ConditionListRecyclerAdapter.ViewHolder, position: Int) {
         if(recyclerItems.size < position) {
             return
         }
@@ -255,7 +255,7 @@ class ScheduleListRecyclerAdapter(val activity: Activity, val cropDroidAPI: Crop
         notifyDataSetChanged()
     }
 
-    fun setData(data: ArrayList<Schedule>) {
+    fun setData(data: ArrayList<Condition>) {
         recyclerItems = data
         notifyDataSetChanged()
     }

@@ -24,6 +24,10 @@ class ControllerParser {
                 val orgId = jsonController.getInt("organizationId")
                 val type = jsonController.getString("type")
                 val description = jsonController.getString("description")
+                val enable = jsonController.getBoolean("enable")
+                val notify = jsonController.getBoolean("notify")
+                val uri = jsonController.getString("uri")
+                //val configs = jsonController.getJSONObject("configs")
                 val hardwareVersion = jsonController.getString("hardwareVersion")
                 val firmwareVersion = jsonController.getString("firmwareVersion")
 
@@ -38,9 +42,14 @@ class ControllerParser {
                     parsedChannels = ChannelParser.parse(channels)
                 }
 
-                controllers.add(Controller(id, orgId, type, description, hardwareVersion, firmwareVersion, parsedMetrics, parsedChannels))
+                controllers.add(Controller(id, orgId, type, description, enable, notify, uri, hardwareVersion, firmwareVersion, parsedMetrics, parsedChannels))
             }
             return controllers
         }
     }
 }
+
+
+data class Controller(val id: Int, val orgId: Int, val type: String, val description: String, val enabled: Boolean,
+                      val notify: Boolean, val uri: String, val hardwareVersion: String, val firmwareVersion: String,
+                      val metrics: List<Metric>, val channels: List<Channel>)

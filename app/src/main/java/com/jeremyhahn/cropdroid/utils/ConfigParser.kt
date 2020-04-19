@@ -8,7 +8,7 @@ import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_NAME_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_TIMEZONE_KEY
 import com.jeremyhahn.cropdroid.model.Config
-import com.jeremyhahn.cropdroid.model.ControllerConfig
+import com.jeremyhahn.cropdroid.model.Controller
 import com.jeremyhahn.cropdroid.model.SmtpConfig
 import org.json.JSONArray
 import org.json.JSONObject
@@ -89,10 +89,10 @@ class ConfigParser {
         }
 */
 
-        fun parseControllers(jsonControllers: JSONArray): ArrayList<ControllerConfig> {
+        fun parseControllers(jsonControllers: JSONArray): ArrayList<Controller> {
             Log.d("parseControllers", jsonControllers.toString())
 
-            var controllers = ArrayList<ControllerConfig>(jsonControllers.length())
+            var controllers = ArrayList<Controller>(jsonControllers.length())
             for (i in 0..jsonControllers.length() - 1) {
 
                 val jsonChannel = jsonControllers.getJSONObject(i)
@@ -100,6 +100,7 @@ class ConfigParser {
                 Log.d("ConfigParser.parseControllers", jsonChannel.toString())
 
                 val id = jsonChannel.getInt("id")
+                val orgId = jsonChannel.getInt("orgId")
                 val type = jsonChannel.getString("type")
                 val description = jsonChannel.getString("description")
                 val enabled = jsonChannel.getBoolean("enable")
@@ -109,7 +110,7 @@ class ConfigParser {
                 val firmwareVersion = jsonChannel.getString("firmwareVersion")
                 val metrics = MetricParser.parse(jsonChannel.getJSONArray("metrics"))
                 val channels = ChannelParser.parse(jsonChannel.getJSONArray("channels"))
-                controllers.add(ControllerConfig(id, type, description, enabled, notify, uri, hardwareVersion, firmwareVersion, metrics, channels))
+                controllers.add(Controller(id, orgId, type, description, enabled, notify, uri, hardwareVersion, firmwareVersion, metrics, channels))
             }
             return controllers
         }

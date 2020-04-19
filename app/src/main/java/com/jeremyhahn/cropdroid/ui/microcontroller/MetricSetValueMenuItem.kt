@@ -11,12 +11,13 @@ import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Metric
+import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
 import kotlinx.android.synthetic.main.dialog_edit_number.view.*
 import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
 
-class MetricSeValueMenuItem(context: Context, menu: ContextMenu, metric: Metric, cropDroidAPI: CropDroidAPI, adapter: MicroControllerRecyclerAdapter, controllerType: ControllerType) {
+class MetricSetValueMenuItem(context: Context, menu: ContextMenu, metric: Metric, cropDroidAPI: CropDroidAPI, adapter: MicroControllerRecyclerAdapter, controllerType: ControllerType) {
 
     init {
         menu.add(0, metric.id, 0, "Set Value")
@@ -42,7 +43,13 @@ class MetricSeValueMenuItem(context: Context, menu: ContextMenu, metric: Metric,
                         override fun onResponse(call: Call, response: okhttp3.Response) {
                             Log.d("onCreateContextMenu.SetValue", "onResponse response: " + response.body().string())
                             adapter.activity.runOnUiThread(Runnable() {
-                                adapter.notifyDataSetChanged()
+                                for((i, recyclerModel) in  adapter.recyclerItems.withIndex()) {
+                                    if(recyclerModel.metric!!.id == it.itemId) {
+                                        adapter.recyclerItems[i] = MicroControllerRecyclerModel(MicroControllerRecyclerModel.METRIC_TYPE, metric, null)
+                                        adapter.notifyDataSetChanged()
+                                        break
+                                    }
+                                }
                             })
                         }
                     })

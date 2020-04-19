@@ -35,6 +35,10 @@
             android:name=".ui.schedule.WeekViewActivity"
             android:label="@string/title_activity_schedule" />
         <activity
+            android:name=".NewMasterControllerActivity"
+            android:label="@string/title_activity_masters"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
             android:name=".MasterControllerListActivity"
             android:label="@string/title_activity_masters"
             android:theme="@style/AppTheme.NoActionBar" />

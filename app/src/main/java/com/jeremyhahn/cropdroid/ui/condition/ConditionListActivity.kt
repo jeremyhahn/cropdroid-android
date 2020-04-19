@@ -1,4 +1,4 @@
-package com.jeremyhahn.cropdroid.ui.schedule
+package com.jeremyhahn.cropdroid.ui.condition
 
 import android.os.Bundle
 import android.util.Log
@@ -14,8 +14,8 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
+import com.jeremyhahn.cropdroid.model.Condition
 import com.jeremyhahn.cropdroid.model.MasterController
-import com.jeremyhahn.cropdroid.model.Schedule
 import com.jeremyhahn.cropdroid.utils.Preferences
 import kotlinx.android.synthetic.main.activity_masters.*
 import okhttp3.Call
@@ -23,8 +23,8 @@ import okhttp3.Callback
 import java.io.IOException
 import java.util.*
 
-class ScheduleListActivity : AppCompatActivity(),
-    ScheduleSelectionListener {
+class ConditionListActivity : AppCompatActivity(),
+    ConditionSelectionListener {
 
     lateinit private var recyclerView: RecyclerView
     lateinit private var swipeContainer: SwipeRefreshLayout
@@ -32,8 +32,8 @@ class ScheduleListActivity : AppCompatActivity(),
     private var channelId = 0
     private var channelName = ""
     private var channelDuration = 0
-    private var recyclerItems = ArrayList<Schedule>()
-    lateinit private var viewModel: ScheduleViewModel
+    private var recyclerItems = ArrayList<Condition>()
+    lateinit private var viewModel: ConditionViewModel
     lateinit private var cropDroidAPI: CropDroidAPI
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,21 +47,21 @@ class ScheduleListActivity : AppCompatActivity(),
         val preferences = Preferences(applicationContext)
         val id = preferences.currentControllerId()
 
-        Log.d("ScheduleActivity.onCreateView", "channel_id=$channelId, controller.id=$id, controller.duration=$channelDuration")
+        Log.d("ConditionActivity.onCreateView", "channel_id=$channelId, controller.id=$id, controller.duration=$channelDuration")
 
-        setTitle(channelName + " Schedule")
+        setTitle(channelName + " Condition")
 
         controller = MasterControllerRepository(this).getController(id)
 
         cropDroidAPI = CropDroidAPI(controller)
-        viewModel = ViewModelProviders.of(this, ScheduleViewModelFactory(cropDroidAPI, channelId)).get(ScheduleViewModel::class.java)
+        viewModel = ViewModelProviders.of(this, ConditionViewModelFactory(cropDroidAPI, channelId)).get(ConditionViewModel::class.java)
 
         recyclerView = findViewById(R.id.scheduleRecyclerView) as RecyclerView
         recyclerView.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
 
         swipeContainer = findViewById(R.id.scheduleSwipeRefresh) as SwipeRefreshLayout
         swipeContainer?.setOnRefreshListener(SwipeRefreshLayout.OnRefreshListener {
-            viewModel.getSchedule()
+            viewModel.getCondition()
         })
         swipeContainer?.setColorSchemeResources(
             R.color.holo_blue_bright,
@@ -70,13 +70,13 @@ class ScheduleListActivity : AppCompatActivity(),
             R.color.holo_red_light
         )
 
-        viewModel.schedules.observe(this@ScheduleListActivity, Observer {
+        viewModel.schedules.observe(this@ConditionListActivity, Observer {
             swipeContainer.setRefreshing(false)
 
             recyclerItems = viewModel.schedules.value!!
 
             recyclerView.itemAnimator = DefaultItemAnimator()
-            recyclerView.adapter = ScheduleListRecyclerAdapter(this, cropDroidAPI, recyclerItems, channelDuration)
+            recyclerView.adapter = ConditionListRecyclerAdapter(this, cropDroidAPI, recyclerItems, channelDuration)
             recyclerView.adapter!!.notifyDataSetChanged()
 
             if(recyclerItems.size <= 0) {
@@ -84,20 +84,20 @@ class ScheduleListActivity : AppCompatActivity(),
                 emptyText.visibility = View.VISIBLE
             }
         })
-        viewModel.getSchedule()
+        viewModel.getCondition()
 
         fab.setOnClickListener { view ->
             val fragmentManager = supportFragmentManager
-            var sublimePickerDialogFragment = SublimePickerDialogFragment(this, Schedule(), null)
+            var sublimePickerDialogFragment = SublimePickerDialogFragment(this, Condition(), null)
             sublimePickerDialogFragment.arguments = Bundle()
             sublimePickerDialogFragment.isCancelable = false
             sublimePickerDialogFragment.show(fragmentManager,null)
         }
     }
 
-    override fun onScheduleSelected(schedule: Schedule) {
+    override fun onConditionSelected(schedule: Condition) {
         schedule.channelId = channelId
-        cropDroidAPI.createSchedule(schedule, object: Callback {
+        cropDroidAPI.createCondition(schedule, object: Callback {
             override fun onFailure(call: Call, e: IOException) {
                 Log.d("ConditionListActivity.onFailure", "onFailure response: " + e!!.message)
                 return
@@ -105,7 +105,7 @@ class ScheduleListActivity : AppCompatActivity(),
             override fun onResponse(call: Call, response: okhttp3.Response) {
                 val responseBody = response.body().string()
                 Log.d("ConditionListActivity.onResponse", responseBody)
-                viewModel.getSchedule()
+                viewModel.getCondition()
             }
         })
     }
