@@ -1,242 +1,68 @@
 package com.jeremyhahn.cropdroid.ui.condition
 
-import android.app.Activity
-import android.os.Bundle
 import android.util.Log
 import android.view.*
-import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
-import com.appeaser.sublimepickerlibrary.helpers.SublimeOptions
-import com.appeaser.sublimepickerlibrary.recurrencepicker.SublimeRecurrencePicker
-import com.jeremyhahn.cropdroid.Constants
-import com.jeremyhahn.cropdroid.Constants.Companion.SCHEDULE_DATE_TIME_LONG_FORMAT
-import com.jeremyhahn.cropdroid.Constants.Companion.SCHEDULE_DAY_MAP
-import com.jeremyhahn.cropdroid.Constants.Companion.SCHEDULE_FREQUENCY_MAP
-import com.jeremyhahn.cropdroid.Constants.Companion.SCHEDULE_TIME_ONLY_FORMAT
-import com.jeremyhahn.cropdroid.Constants.Companion.SCHEDULE_TYPE_ONCE
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Condition
-import com.jeremyhahn.cropdroid.utils.ConditionParser
-import kotlinx.android.synthetic.main.microcontroller_schedule_cardview.view.*
+import com.jeremyhahn.cropdroid.model.ConditionConfig
+import kotlinx.android.synthetic.main.microcontroller_condition_cardview.view.*
 import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
-import java.text.SimpleDateFormat
 import java.util.*
 
-class ConditionListRecyclerAdapter(val activity: Activity, val cropDroidAPI: CropDroidAPI,
-              var recyclerItems: ArrayList<Condition>, val timerDuration: Int) : RecyclerView.Adapter<ConditionListRecyclerAdapter.ViewHolder>() {
+class ConditionListRecyclerAdapter(val activity: ConditionListActivity, val cropDroidAPI: CropDroidAPI, var recyclerItems: ArrayList<Condition>) :
+    RecyclerView.Adapter<ConditionListRecyclerAdapter.ViewHolder>() {
 
-    class ViewHolder(adapter: ConditionListRecyclerAdapter, activity: Activity, cropDroidAPI: CropDroidAPI,
-                     itemView: View, timerDuration: Int) : RecyclerView.ViewHolder(itemView), View.OnCreateContextMenuListener {
+    class ViewHolder(adapter: ConditionListRecyclerAdapter, activity: ConditionListActivity, cropDroidAPI: CropDroidAPI,
+                     itemView: View) : RecyclerView.ViewHolder(itemView), View.OnCreateContextMenuListener {
 
         private val TAG = "ConditionListRecyclerAdapter"
         private val adapter: ConditionListRecyclerAdapter
-        private val activity: AppCompatActivity
+        private val activity: ConditionListActivity
         private val cropDroidAPI: CropDroidAPI
-        private val timerDuration: Int
 
         init {
             this.adapter = adapter
-            this.activity = (activity as AppCompatActivity)
+            this.activity = activity
             this.cropDroidAPI = cropDroidAPI
-            this.timerDuration = timerDuration
             itemView.setOnCreateContextMenuListener(this)
         }
 
-        fun bind(schedule: Condition) {
+        fun bind(condition: Condition) {
 
-            itemView.setTag(schedule)
+            itemView.setTag(condition)
 
-            Log.d(TAG, "binding schedule: " + schedule)
+            Log.d(TAG, "binding condition: " + condition)
 
-            //itemView.tableRowEndDate.id = schedule.id
-            //itemView.tableRowTimer.id = schedule.id
-            //itemView.tableRowDays.id = schedule.id
-
-            val formatter = SimpleDateFormat(SCHEDULE_DATE_TIME_LONG_FORMAT)
-            var frequencyText = ""
-
-            if(schedule.interval > 0) { // CUSTOM frequency
-                frequencyText = ConditionParser.frequencyToText(activity.resources, schedule)
-            }
-            else {
-                when (schedule.frequency) {
-                    Constants.SCHEDULE_TYPE_ONCE -> {
-                        frequencyText = "One Time Event"
-                    }
-                    Constants.SCHEDULE_TYPE_DAILY -> {
-                        frequencyText = "Daily "
-                    }
-                    Constants.SCHEDULE_TYPE_WEEKLY -> {
-                        frequencyText = "Weekly "
-                    }
-                    Constants.SCHEDULE_TYPE_MONTHLY -> {
-                        frequencyText = "Monthly "
-                    }
-                    Constants.SCHEDULE_TYPE_YEARLY -> {
-                        frequencyText = "Yearly "
-                    }
-                    else -> {
-                        Log.e(TAG, "Unsupported frequency ID: " + schedule.frequency)
-                    }
-                }
-            }
-
-            itemView.frequency.text = frequencyText
-
-            formatter.calendar = schedule.startDate
-            itemView.startDateValue.text = formatter.format(schedule.startDate.time)
-
-            if(schedule.endDate != null) {
-                formatter.calendar = schedule.endDate
-                itemView.endDateValue.text = formatter.format(schedule.endDate!!.time)
-
-                itemView.tableRowEndDate.visibility = View.VISIBLE
-                //itemView.endDateTitle.visibility = View.VISIBLE
-                //itemView.endDateValue.visibility = View.VISIBLE
-            }
-
-            if(schedule.days.size > 0) {
-                val days = ArrayList<String>(schedule.days.size)
-                for(day in schedule.days) {
-                    var _day = day
-                    if(day[0].isDigit()) {  // nthDay is used by recurring month view
-                        _day = day.substring(1, 3)
-                    }
-                    days.add(SCHEDULE_DAY_MAP[_day]!!)
-                }
-                itemView.tableRowDays.visibility = View.VISIBLE
-                itemView.daysValue.text = days.joinToString(", ")
-            }
-
-            if (timerDuration > 0) {
-                itemView.tableRowTimer.visibility = View.VISIBLE
-                itemView.timerValue.text = ConditionParser.timerToText(activity.resources, timerDuration)
-
-                if(schedule.endDate == null) {
-                    val endDate = Calendar.getInstance()
-
-                    endDate.time = schedule.startDate.time
-                    endDate.add(Calendar.SECOND, timerDuration)
-
-                    var formatter = SimpleDateFormat(SCHEDULE_TIME_ONLY_FORMAT)
-                    formatter.calendar = endDate
-
-                    itemView.endDateValue.text = formatter.format(endDate.time)
-                    itemView.tableRowEndDate.visibility = View.VISIBLE
-                }
-            }
+            itemView.conditionText.text = condition.text
         }
 
         override fun onCreateContextMenu(menu: ContextMenu?, v: View?, menuInfo: ContextMenu.ContextMenuInfo?) {
 
-            var schedule = itemView.getTag() as Condition
+            var condition = itemView.getTag() as Condition
 
-            Log.d("onCreateContextMenu", "schedule: " + schedule)
+            Log.d("onCreateContextMenu", "condition: " + condition)
 
-            menu!!.add(0, schedule.id, 0, "Edit")
+            menu!!.add(0, condition.id, 0, "Edit")
                 .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
-
-                    val _adapter = this.adapter
-                    val listener = object:
-                        ConditionSelectionListener {
-                        override fun onConditionSelected(schedule: Condition) {
-                            cropDroidAPI.updateCondition(schedule, object: Callback {
-                                override fun onFailure(call: Call, e: IOException) {
-                                    Log.d("ConditionListActivity.onFailure", "onFailure response: " + e!!.message)
-                                    return
-                                }
-                                override fun onResponse(call: Call, response: okhttp3.Response) {
-                                    val responseBody = response.body().string()
-                                    Log.d("ConditionListActivity.onResponse", responseBody)
-                                    activity.runOnUiThread(Runnable() {
-                                        _adapter.notifyDataSetChanged()
-                                    })
-                                }
-                            })
-                        }
-                    }
-
-                    var recurrenceOption = SCHEDULE_FREQUENCY_MAP[schedule.frequency]
-                    if(schedule.interval > 0) {
-                        recurrenceOption = SublimeRecurrencePicker.RecurrenceOption.CUSTOM
-                    }
-
-                    val options = SublimeOptions()
-                        .setCanPickDateRange(true)
-                        .setPickerToShow(SublimeOptions.Picker.REPEAT_OPTION_PICKER)
-                        .setAnimateLayoutChanges(true)
-                        .setDateParams(schedule.startDate)
-                        .setTimeParams(schedule.startDate.get(Calendar.HOUR_OF_DAY), schedule.startDate.get(Calendar.MINUTE), false)
-                        .setRecurrenceParams(recurrenceOption, createRecurrenceRule(schedule))
-
-                    /*
-                    if(schedule.startDate != null) {
-                        options.setDateRange(schedule.startDate.timeInMillis, Long.MAX_VALUE)
-                    }*/
-
-                    var bundle = Bundle()
-                    var sublimePickerDialogFragment = SublimePickerDialogFragment(listener, schedule, options)
-                    sublimePickerDialogFragment.arguments = bundle
-                    sublimePickerDialogFragment.isCancelable = true
-                    sublimePickerDialogFragment.show(activity.supportFragmentManager,null)
-
+                    activity.showConditionDialog(condition)
                     true
                 })
 
-            menu!!.add(0, schedule.id, 0, "Delete")
+            menu!!.add(0, condition.id, 0, "Delete")
                 .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
-                    val _adapter = this.adapter
-                    cropDroidAPI.deleteCondition(schedule, object : Callback {
-                        override fun onFailure(call: Call, e: IOException) {
-                            Log.d("ConditionListActivity.onFailure", "onFailure response: " + e!!.message)
-                            return
-                        }
-                        override fun onResponse(call: Call, response: okhttp3.Response) {
-                            val responseBody = response.body().string()
-                            Log.d("ConditionListActivity.onResponse", responseBody)
-                            activity.runOnUiThread(Runnable() {
-                                _adapter.recyclerItems.removeAt(adapterPosition)
-                                _adapter.notifyItemRemoved(adapterPosition)
-                                _adapter.notifyItemRangeChanged(adapterPosition, _adapter.recyclerItems.size)
-                            })
-                        }
-                    })
+                    activity.deleteCondition(ConditionConfig(condition.id))
                     true
                 })
-        }
-
-        fun createRecurrenceRule(schedule: Condition) : String {
-            if(schedule.frequency == SCHEDULE_TYPE_ONCE) {
-                return ""
-            }
-            if(schedule.interval <= 0) {
-                //schedule.frequency = //ConditionParser.frequencyToText(activity.resources, schedule)
-                return "" // interval only specified for CUSTOM frequency
-            }
-            var rule = StringBuffer()
-            rule.append("FREQ").append("=").append(SCHEDULE_FREQUENCY_MAP[schedule.frequency])
-            if(schedule.interval > 0) {
-                rule.append(";").append("INTERVAL").append("=").append(schedule.interval.toString())
-            }
-            if(schedule.count > 0) {
-                rule.append(";").append("COUNT").append("=").append(schedule.count.toString())
-            }
-            if(schedule.days.size > 0) {
-                rule.append(";").append("BYDAY").append("=").append(schedule.days.joinToString(","))
-            }
-
-            // UNTIL=20200505T203221Z
-
-            return rule.toString()
         }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ConditionListRecyclerAdapter.ViewHolder {
-        val v = LayoutInflater.from(parent.context).inflate(R.layout.microcontroller_schedule_cardview, parent, false)
-        return ViewHolder(this, activity, cropDroidAPI, v, timerDuration)
+        val v = LayoutInflater.from(parent.context).inflate(R.layout.microcontroller_condition_cardview, parent, false)
+        return ViewHolder(this, activity, cropDroidAPI, v)
     }
 
     override fun onBindViewHolder(holder: ConditionListRecyclerAdapter.ViewHolder, position: Int) {

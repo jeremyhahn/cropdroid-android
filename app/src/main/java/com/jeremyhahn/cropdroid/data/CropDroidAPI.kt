@@ -4,10 +4,7 @@ import android.util.Log
 import com.jeremyhahn.cropdroid.Constants
 import com.jeremyhahn.cropdroid.Constants.Companion.API_BASE
 import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
-import com.jeremyhahn.cropdroid.model.Channel
-import com.jeremyhahn.cropdroid.model.MasterController
-import com.jeremyhahn.cropdroid.model.Metric
-import com.jeremyhahn.cropdroid.model.Schedule
+import com.jeremyhahn.cropdroid.model.*
 import okhttp3.*
 import org.json.JSONArray
 import org.json.JSONObject
@@ -25,6 +22,7 @@ class CropDroidAPI(val controller: MasterController) {
     val DOSER_RESOURCE = "/".plus(ControllerType.Doser.name.toLowerCase())
     val EVENTS_RESOURCE = "/events"
     val CONFIG_RESOURCE = "/config"
+    val CONDITION_RESOURCE = "/conditions"
     val SCHEDULE_RESOURCE = "/schedule"
     val CHANNEL_RESOURCE = "/channels"
     val METRIC_RESOURCE = "/metrics"
@@ -46,38 +44,22 @@ class CropDroidAPI(val controller: MasterController) {
         doGet(EVENTS_RESOURCE, args, callback)
     }
 
-    fun roomStatus(callback: Callback) {
-        var args = ArrayList<String>(0)
-        doGet(ROOM_RESOURCE.plus("/view"), args, callback)
-    }
-/*
-    fun roomHistory(metric: String, callback: Callback) {
-        var args = ArrayList<String>(0)
-        args.add(metric)
-        doGet(ROOM_HISTORY_RESOURCE, args, callback)
-    }
-*/
-    fun reservoirStatus(callback: Callback) {
-        var args = ArrayList<String>(0)
-        doGet(RESERVOIR_RESOURCE.plus("/view"), args, callback)
-    }
-
-    fun metricHistory(controllerType: ControllerType, metric: String, callback: Callback) {
+    fun getMetricHistory(controllerType: ControllerType, metric: String, callback: Callback) {
         var args = ArrayList<String>(2)
         args.add("history")
         args.add(metric)
         doGet("/".plus(controllerType.name.toLowerCase()), args, callback)
     }
 
-    fun doserStatus(callback: Callback) {
+    fun getState(controllerType: ControllerType, callback: Callback) {
         var args = ArrayList<String>(0)
-        doGet(DOSER_RESOURCE.plus("/view"), args, callback)
+        doGet("/".plus(controllerType.name.toLowerCase()).plus("/view"), args, callback)
     }
 
-    fun dispense(controllerType: ControllerType, channelId: Int, seconds: Int, callback: Callback) {
+    fun timerSwitch(controllerType: ControllerType, channelId: Int, seconds: Int, callback: Callback) {
         val resource = controllerType.name.toLowerCase()
         var args = ArrayList<String>(4)
-        args.add("dispense")
+        args.add("timerSwitch")
         args.add(channelId.toString())
         args.add(seconds.toString())
         doGet(resource, args, callback)
@@ -99,6 +81,41 @@ class CropDroidAPI(val controller: MasterController) {
         args.add(key)
         args.add("?value="+URLEncoder.encode(value, "utf-8"))
         doGet(CONFIG_RESOURCE, args, callback)
+    }
+
+    fun getConditions(channelId: Int, callback: Callback) {
+        var args = ArrayList<String>(1)
+        args.add("channel")
+        args.add(channelId.toString())
+        doGet(CONDITION_RESOURCE, args, callback)
+    }
+
+    fun createCondition(condition: ConditionConfig, callback: Callback) {
+        Log.d("CropDropAPI.createCondition", "condition="+condition)
+        var json = JSONObject()
+        json.put("channelID", condition.channelId)
+        json.put("metricID", condition.metricId)
+        json.put("comparator", condition.comparator)
+        json.put("threshold", condition.threshold)
+        doPost(CONDITION_RESOURCE, json, callback)
+    }
+
+    fun updateCondition(condition: ConditionConfig, callback: Callback) {
+        Log.d("CropDropAPI.createCondition", "condition="+condition)
+        var json = JSONObject()
+        json.put("id", condition.id)
+        json.put("channelID", condition.channelId)
+        json.put("metricID", condition.metricId)
+        json.put("comparator", condition.comparator)
+        json.put("threshold", condition.threshold)
+        doPut(CONDITION_RESOURCE, json, callback)
+    }
+
+    fun deleteCondition(condition: ConditionConfig, callback: Callback) {
+        Log.d("CropDropAPI.deleteCondition", "condition="+condition)
+        val args = ArrayList<String>(1)
+        args.add(condition.id.toString())
+        doDelete(CONDITION_RESOURCE, args, callback)
     }
 
     fun getSchedule(channelId: Int, callback: Callback) {

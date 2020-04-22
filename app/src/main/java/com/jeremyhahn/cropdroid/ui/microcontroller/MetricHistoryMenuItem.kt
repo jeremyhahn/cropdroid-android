@@ -20,7 +20,7 @@ class MetricHistoryMenuItem(context: Context, menu: ContextMenu, metric: Metric,
         menu.add(0, metric.id, 0, "History")
             .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
 
-                cropDroidAPI.metricHistory(controllerType, metric.key, object: Callback {
+                cropDroidAPI.getMetricHistory(controllerType, metric.key, object: Callback {
                     override fun onFailure(call: Call, e: IOException) {
                         Log.d("onCreateContextMenu.History", "onFailure response: " + e!!.message)
                         return

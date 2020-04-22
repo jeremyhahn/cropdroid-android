@@ -23,8 +23,7 @@ import okhttp3.Callback
 import java.io.IOException
 import java.util.*
 
-class ScheduleListActivity : AppCompatActivity(),
-    ScheduleSelectionListener {
+class ScheduleListActivity : AppCompatActivity(), ScheduleSelectionListener {
 
     lateinit private var recyclerView: RecyclerView
     lateinit private var swipeContainer: SwipeRefreshLayout
@@ -46,6 +45,7 @@ class ScheduleListActivity : AppCompatActivity(),
 
         val preferences = Preferences(applicationContext)
         val id = preferences.currentControllerId()
+        val emptyText = findViewById(R.id.scheduleEmptyText) as TextView
 
         Log.d("ScheduleActivity.onCreateView", "channel_id=$channelId, controller.id=$id, controller.duration=$channelDuration")
 
@@ -80,8 +80,9 @@ class ScheduleListActivity : AppCompatActivity(),
             recyclerView.adapter!!.notifyDataSetChanged()
 
             if(recyclerItems.size <= 0) {
-                val emptyText = findViewById(R.id.scheduleEmptyText) as TextView
                 emptyText.visibility = View.VISIBLE
+            } else {
+                emptyText.visibility = View.GONE
             }
         })
         viewModel.getSchedule()
@@ -98,6 +99,20 @@ class ScheduleListActivity : AppCompatActivity(),
     override fun onScheduleSelected(schedule: Schedule) {
         schedule.channelId = channelId
         cropDroidAPI.createSchedule(schedule, object: Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.d("ConditionListActivity.onFailure", "onFailure response: " + e!!.message)
+                return
+            }
+            override fun onResponse(call: Call, response: okhttp3.Response) {
+                val responseBody = response.body().string()
+                Log.d("ConditionListActivity.onResponse", responseBody)
+                viewModel.getSchedule()
+            }
+        })
+    }
+
+    fun deleteSchedule(schedule: Schedule) {
+        cropDroidAPI.deleteSchedule(schedule, object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 Log.d("ConditionListActivity.onFailure", "onFailure response: " + e!!.message)
                 return

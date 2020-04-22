@@ -17,6 +17,7 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
         <activity android:name=".ui.schedule.ScheduleListActivity"></activity>
+        <activity android:name=".ui.condition.ConditionListActivity"></activity>
         <activity android:name=".ui.schedule.ScheduleActivity" />
         <activity
             android:name=".MainActivity"
@@ -67,6 +68,7 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+
     </application>
 
 </manifest>

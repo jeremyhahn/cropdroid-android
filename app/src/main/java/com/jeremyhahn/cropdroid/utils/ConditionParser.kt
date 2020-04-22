@@ -19,11 +19,15 @@ class ConditionParser {
                 Log.d("ConditionParser.parse", jsonCondition.toString())
 
                 val id = jsonCondition.getInt("id")
-                val channelId = jsonCondition.getInt("channelId")
+                val controllerType = jsonCondition.getString("controllerType")
+                //val metric = MetricParser.parse(jsonCondition.getJSONObject("metric"))
                 val metricId = jsonCondition.getInt("metricId")
+                val channelId = jsonCondition.getInt("channelId")
+                val metricName = jsonCondition.getString("metricName")
                 val comparator = jsonCondition.getString("comparator")
                 val threshold = jsonCondition.getDouble("threshold")
-                conditions.add(Condition(id, channelId, metricId, comparator, threshold))
+                val text = jsonCondition.getString("text")
+                conditions.add(Condition(id, controllerType, metricId, metricName, channelId, comparator, threshold, text))
             }
             return conditions
         }

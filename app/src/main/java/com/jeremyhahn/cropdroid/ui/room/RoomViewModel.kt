@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.jeremyhahn.cropdroid.Constants
+import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Channel
 import com.jeremyhahn.cropdroid.model.Metric
@@ -35,7 +36,7 @@ class RoomViewModel(cropDroidAPI: CropDroidAPI) : ViewModel() {
     }
 
     fun getRoomStatus() {
-        cropDroidAPI.roomStatus(object : Callback {
+        cropDroidAPI.getState(ControllerType.Room, object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 Log.d("RoomViewModel.getRoom()", "onFailure response: " + e!!.message)
                 return

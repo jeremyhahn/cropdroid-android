@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.jeremyhahn.cropdroid.Constants
+import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Channel
 import com.jeremyhahn.cropdroid.model.Metric
@@ -35,7 +36,7 @@ class ReservoirViewModel(cropDroidAPI: CropDroidAPI) : ViewModel() {
     }
 
     fun getReservoirStatus() {
-        cropDroidAPI.reservoirStatus(object : Callback {
+        cropDroidAPI.getState(ControllerType.Reservoir, object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 Log.d("ReservoirViewModel.getReservoirStatus()", "onFailure response: " + e!!.message)
                 return

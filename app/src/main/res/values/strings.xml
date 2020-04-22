@@ -8,6 +8,7 @@
     <string name="disabled">Disabled</string>
     <string name="minutes">Minutes</string>
 
+    <string name="empty_conditions">Add a new condition to switch on/off based on sensor data</string>
     <string name="empty_schedule">Add a new schedule that specifies when to switch on/off</string>
 
     <string name="title_activity_masters">Grow Spaces</string>

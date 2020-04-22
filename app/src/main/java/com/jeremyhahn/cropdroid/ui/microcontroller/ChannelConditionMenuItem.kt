@@ -3,6 +3,7 @@ package com.jeremyhahn.cropdroid.ui.microcontroller
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
+import android.content.Intent
 import android.util.Log
 import android.view.ContextMenu
 import android.view.LayoutInflater
@@ -17,6 +18,7 @@ import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Channel
 import com.jeremyhahn.cropdroid.model.Controller
 import com.jeremyhahn.cropdroid.model.Metric
+import com.jeremyhahn.cropdroid.ui.condition.ConditionListActivity
 import com.jeremyhahn.cropdroid.utils.ControllerParser
 import com.jeremyhahn.cropdroid.utils.MetricParser
 import kotlinx.android.synthetic.main.dialog_condition.view.*
@@ -32,6 +34,12 @@ class ChannelConditionMenuItem(activity: Activity, context: Context, menu: Conte
         menu!!.add(0, channel.id, 0, "Condition")
             .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
 
+                var intent = Intent(context, ConditionListActivity::class.java)
+                intent.putExtra("channel_id", channel.id)
+                intent.putExtra("channel_name", channel.name)
+                //intent.putExtra("channel_duration", channel.duration)
+                context.startActivity(intent)
+/*
                 val controllerMap = HashMap<Int, Controller>()
                 val metricMap = HashMap<Int, Metric>()
 
@@ -221,6 +229,7 @@ class ChannelConditionMenuItem(activity: Activity, context: Context, menu: Conte
 
                 }
                 d.create().show()
+ */
                 true
             })
     }

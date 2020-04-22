@@ -21,7 +21,7 @@ class ControllerParser {
                 Log.d("ControllerParser.parse", jsonController.toString())
 
                 val id = jsonController.getInt("id")
-                val orgId = jsonController.getInt("organizationId")
+                val orgId = jsonController.getInt("orgId")
                 val type = jsonController.getString("type")
                 val description = jsonController.getString("description")
                 val enable = jsonController.getBoolean("enable")

@@ -25,21 +25,21 @@ import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
 
-class ScheduleListRecyclerAdapter(val activity: Activity, val cropDroidAPI: CropDroidAPI,
+class ScheduleListRecyclerAdapter(val activity: ScheduleListActivity, val cropDroidAPI: CropDroidAPI,
            var recyclerItems: ArrayList<Schedule>, val timerDuration: Int) : RecyclerView.Adapter<ScheduleListRecyclerAdapter.ViewHolder>() {
 
-    class ViewHolder(adapter: ScheduleListRecyclerAdapter, activity: Activity, cropDroidAPI: CropDroidAPI,
+    class ViewHolder(adapter: ScheduleListRecyclerAdapter, activity: ScheduleListActivity, cropDroidAPI: CropDroidAPI,
                      itemView: View, timerDuration: Int) : RecyclerView.ViewHolder(itemView), View.OnCreateContextMenuListener {
 
         private val TAG = "ConditionListRecyclerAdapter"
         private val adapter: ScheduleListRecyclerAdapter
-        private val activity: AppCompatActivity
+        private val activity: ScheduleListActivity
         private val cropDroidAPI: CropDroidAPI
         private val timerDuration: Int
 
         init {
             this.adapter = adapter
-            this.activity = (activity as AppCompatActivity)
+            this.activity = activity
             this.cropDroidAPI = cropDroidAPI
             this.timerDuration = timerDuration
             itemView.setOnCreateContextMenuListener(this)
@@ -140,7 +140,7 @@ class ScheduleListRecyclerAdapter(val activity: Activity, val cropDroidAPI: Crop
                 .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
 
                     val _adapter = this.adapter
-                    val listener = object:
+                    val scheduleSelectedListener = object:
                         ScheduleSelectionListener {
                         override fun onScheduleSelected(schedule: Schedule) {
                             cropDroidAPI.updateSchedule(schedule, object: Callback {
@@ -178,7 +178,7 @@ class ScheduleListRecyclerAdapter(val activity: Activity, val cropDroidAPI: Crop
                     }*/
 
                     var bundle = Bundle()
-                    var sublimePickerDialogFragment = SublimePickerDialogFragment(listener, schedule, options)
+                    var sublimePickerDialogFragment = SublimePickerDialogFragment(scheduleSelectedListener, schedule, options)
                     sublimePickerDialogFragment.arguments = bundle
                     sublimePickerDialogFragment.isCancelable = true
                     sublimePickerDialogFragment.show(activity.supportFragmentManager,null)
@@ -188,22 +188,7 @@ class ScheduleListRecyclerAdapter(val activity: Activity, val cropDroidAPI: Crop
 
             menu!!.add(0, schedule.id, 0, "Delete")
                 .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
-                    val _adapter = this.adapter
-                    cropDroidAPI.deleteSchedule(schedule, object : Callback {
-                        override fun onFailure(call: Call, e: IOException) {
-                            Log.d("ConditionListActivity.onFailure", "onFailure response: " + e!!.message)
-                            return
-                        }
-                        override fun onResponse(call: Call, response: okhttp3.Response) {
-                            val responseBody = response.body().string()
-                            Log.d("ConditionListActivity.onResponse", responseBody)
-                            activity.runOnUiThread(Runnable() {
-                                _adapter.recyclerItems.removeAt(adapterPosition)
-                                _adapter.notifyItemRemoved(adapterPosition)
-                                _adapter.notifyItemRangeChanged(adapterPosition, _adapter.recyclerItems.size)
-                            })
-                        }
-                    })
+                    activity.deleteSchedule(schedule)
                     true
                 })
         }

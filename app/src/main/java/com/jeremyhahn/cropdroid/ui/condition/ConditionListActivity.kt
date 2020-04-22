@@ -15,16 +15,17 @@ import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.Condition
+import com.jeremyhahn.cropdroid.model.ConditionConfig
 import com.jeremyhahn.cropdroid.model.MasterController
 import com.jeremyhahn.cropdroid.utils.Preferences
 import kotlinx.android.synthetic.main.activity_masters.*
 import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
+import java.lang.reflect.Array.newInstance
 import java.util.*
 
-class ConditionListActivity : AppCompatActivity(),
-    ConditionSelectionListener {
+class ConditionListActivity : AppCompatActivity(), ConditionDialogHandler {
 
     lateinit private var recyclerView: RecyclerView
     lateinit private var swipeContainer: SwipeRefreshLayout
@@ -35,33 +36,35 @@ class ConditionListActivity : AppCompatActivity(),
     private var recyclerItems = ArrayList<Condition>()
     lateinit private var viewModel: ConditionViewModel
     lateinit private var cropDroidAPI: CropDroidAPI
+    private var conditionFragment: ConditionDialogFragment? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_schedule_list)
+        setContentView(R.layout.activity_condition_list)
 
         channelId = intent.getIntExtra("channel_id", 0)
         channelName = intent.getStringExtra("channel_name")
-        channelDuration = intent.getIntExtra("channel_duration", 0)
 
         val preferences = Preferences(applicationContext)
         val id = preferences.currentControllerId()
+        val emptyText = findViewById(R.id.conditionEmptyText) as TextView
 
-        Log.d("ConditionActivity.onCreateView", "channel_id=$channelId, controller.id=$id, controller.duration=$channelDuration")
+        Log.d("ConditionActivity.onCreateView", "channel_id=$channelId, controller.id=$id")
 
         setTitle(channelName + " Condition")
 
         controller = MasterControllerRepository(this).getController(id)
 
         cropDroidAPI = CropDroidAPI(controller)
+
         viewModel = ViewModelProviders.of(this, ConditionViewModelFactory(cropDroidAPI, channelId)).get(ConditionViewModel::class.java)
 
-        recyclerView = findViewById(R.id.scheduleRecyclerView) as RecyclerView
+        recyclerView = findViewById(R.id.conditionRecyclerView) as RecyclerView
         recyclerView.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
 
-        swipeContainer = findViewById(R.id.scheduleSwipeRefresh) as SwipeRefreshLayout
+        swipeContainer = findViewById(R.id.conditionSwipeRefresh) as SwipeRefreshLayout
         swipeContainer?.setOnRefreshListener(SwipeRefreshLayout.OnRefreshListener {
-            viewModel.getCondition()
+            viewModel.getConditions()
         })
         swipeContainer?.setColorSchemeResources(
             R.color.holo_blue_bright,
@@ -70,34 +73,46 @@ class ConditionListActivity : AppCompatActivity(),
             R.color.holo_red_light
         )
 
-        viewModel.schedules.observe(this@ConditionListActivity, Observer {
+        viewModel.conditions.observe(this@ConditionListActivity, Observer {
             swipeContainer.setRefreshing(false)
 
-            recyclerItems = viewModel.schedules.value!!
+            recyclerItems = viewModel.conditions.value!!
 
             recyclerView.itemAnimator = DefaultItemAnimator()
-            recyclerView.adapter = ConditionListRecyclerAdapter(this, cropDroidAPI, recyclerItems, channelDuration)
+            recyclerView.adapter = ConditionListRecyclerAdapter(this, cropDroidAPI, recyclerItems)
             recyclerView.adapter!!.notifyDataSetChanged()
 
             if(recyclerItems.size <= 0) {
-                val emptyText = findViewById(R.id.scheduleEmptyText) as TextView
                 emptyText.visibility = View.VISIBLE
+            } else {
+                emptyText.visibility = View.GONE
             }
         })
-        viewModel.getCondition()
+        viewModel.getConditions()
 
         fab.setOnClickListener { view ->
-            val fragmentManager = supportFragmentManager
-            var sublimePickerDialogFragment = SublimePickerDialogFragment(this, Condition(), null)
-            sublimePickerDialogFragment.arguments = Bundle()
-            sublimePickerDialogFragment.isCancelable = false
-            sublimePickerDialogFragment.show(fragmentManager,null)
+            showConditionDialog(Condition())
         }
     }
 
-    override fun onConditionSelected(schedule: Condition) {
-        schedule.channelId = channelId
-        cropDroidAPI.createCondition(schedule, object: Callback {
+    fun showConditionDialog(condition: Condition) {
+        val bundle = Bundle()
+        val conditionFragment = ConditionDialogFragment(cropDroidAPI, condition, channelId, this)
+        conditionFragment.arguments = bundle
+        conditionFragment.isCancelable = true
+        conditionFragment.show(supportFragmentManager,"ConditionDialogFragment")
+    }
+
+    override fun onConditionDialogApply(condition: ConditionConfig) {
+        if(condition.id == 0) {
+            createCondition(condition)
+        } else {
+            updateCondition(condition)
+        }
+    }
+
+    fun createCondition(condition: ConditionConfig) {
+        cropDroidAPI.createCondition(condition, object: Callback {
             override fun onFailure(call: Call, e: IOException) {
                 Log.d("ConditionListActivity.onFailure", "onFailure response: " + e!!.message)
                 return
@@ -105,7 +120,35 @@ class ConditionListActivity : AppCompatActivity(),
             override fun onResponse(call: Call, response: okhttp3.Response) {
                 val responseBody = response.body().string()
                 Log.d("ConditionListActivity.onResponse", responseBody)
-                viewModel.getCondition()
+                viewModel.getConditions()
+            }
+        })
+    }
+
+    fun updateCondition(condition: ConditionConfig) {
+        cropDroidAPI.updateCondition(condition, object: Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.d("ConditionListActivity.onFailure", "onFailure response: " + e!!.message)
+                return
+            }
+            override fun onResponse(call: Call, response: okhttp3.Response) {
+                val responseBody = response.body().string()
+                Log.d("ConditionListActivity.onResponse", responseBody)
+                viewModel.getConditions()
+            }
+        })
+    }
+
+    fun deleteCondition(condition: ConditionConfig) {
+        cropDroidAPI.deleteCondition(condition, object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.d("ConditionListActivity.onFailure", "onFailure response: " + e!!.message)
+                return
+            }
+            override fun onResponse(call: Call, response: okhttp3.Response) {
+                val responseBody = response.body().string()
+                Log.d("ConditionListActivity.onResponse", responseBody)
+                viewModel.getConditions()
             }
         })
     }
