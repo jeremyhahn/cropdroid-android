@@ -53,6 +53,24 @@
             app:title="@string/video_feed_url"
             app:dependency="room.enable"
             app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
+            android:key="room.hardwareVersion"
+            android:title="@string/pref_hardwareVersion"
+            android:enabled="false"
+            android:selectable="false"
+            android:shouldDisableView="false"
+            android:inputType="number"
+            app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
+            android:key="room.firmwareVersion"
+            android:title="@string/pref_firmwareVersion"
+            android:enabled="false"
+            android:selectable="false"
+            android:shouldDisableView="false"
+            android:inputType="number"
+            app:useSimpleSummaryProvider="true" />
 <!--
         <Preference
             app:key="room.metrics"
@@ -65,6 +83,7 @@
             app:title="@string/pref_channels"
             app:dependency="room.enable"
             app:summary="Enable / disable room controller channels"/>
+
 -->
     </PreferenceCategory>
 
@@ -89,6 +108,24 @@
             app:key="reservoir.gallons"
             app:title="@string/pref_gallons"
             app:dependency="reservoir.enable"
+            android:inputType="number"
+            app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
+            android:key="reservoir.hardwareVersion"
+            android:title="@string/pref_hardwareVersion"
+            android:enabled="false"
+            android:selectable="false"
+            android:shouldDisableView="false"
+            android:inputType="number"
+            app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
+            android:key="reservoir.firmwareVersion"
+            android:title="@string/pref_firmwareVersion"
+            android:enabled="false"
+            android:selectable="false"
+            android:shouldDisableView="false"
             android:inputType="number"
             app:useSimpleSummaryProvider="true" />
 
@@ -124,6 +161,25 @@
             app:title="@string/pref_address"
             app:dependency="doser.enable"
             app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
+            android:key="doser.hardwareVersion"
+            android:title="@string/pref_hardwareVersion"
+            android:enabled="false"
+            android:selectable="false"
+            android:shouldDisableView="false"
+            android:inputType="number"
+            app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
+            android:key="doser.firmwareVersion"
+            android:title="@string/pref_firmwareVersion"
+            android:enabled="false"
+            android:selectable="false"
+            android:shouldDisableView="false"
+            android:inputType="number"
+            app:useSimpleSummaryProvider="true" />
+
 <!--
         <Preference
             app:key="doser.channels"

@@ -104,6 +104,8 @@
     <string name="pref_metrics">Metrics</string>
     <string name="pref_channels">Channels</string>
     <string name="pref_gallons">Gallons</string>
+    <string name="pref_hardwareVersion">Hardware Version</string>
+    <string name="pref_firmwareVersion">Firmware Version</string>
 
     <!-- General Preferences -->
     <string name="interval_title">Interval</string>

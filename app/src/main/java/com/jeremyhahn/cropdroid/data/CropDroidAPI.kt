@@ -57,7 +57,7 @@ class CropDroidAPI(val controller: MasterController) {
     }
 
     fun timerSwitch(controllerType: ControllerType, channelId: Int, seconds: Int, callback: Callback) {
-        val resource = controllerType.name.toLowerCase()
+        val resource = "/".plus(controllerType.name.toLowerCase())
         var args = ArrayList<String>(4)
         args.add("timerSwitch")
         args.add(channelId.toString())

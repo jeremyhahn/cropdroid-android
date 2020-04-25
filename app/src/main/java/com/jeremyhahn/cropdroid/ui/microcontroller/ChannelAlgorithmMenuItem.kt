@@ -26,12 +26,15 @@ class ChannelAlgorithmMenuItem(activity: Activity, context: Context, menu: Conte
             .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
 
                 var algorithmMap = HashMap<Int, Algorithm>()
+                algorithmMap[0] = Algorithm(0, "None")
 
                 val inflater: LayoutInflater = LayoutInflater.from(context)
                 val dialogView: View = inflater.inflate(R.layout.dialog_algorithm, null)
 
                 // Populate algorithm spinner
                 val algorithmArray: MutableList<String> = ArrayList()
+                algorithmArray.add("None")
+
                 val algorithmSpinner = dialogView.findViewById<View>(R.id.algorithmSpinner) as Spinner
                 val algorithmAdapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, algorithmArray)
                 algorithmAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -45,12 +48,14 @@ class ChannelAlgorithmMenuItem(activity: Activity, context: Context, menu: Conte
                         val responseBody = response.body().string()
                         val algorithms = AlgorithmParser.parse(responseBody)
                         algorithmArray.clear()
+                        algorithmArray.add("None")
+                        algorithmMap[0] = Algorithm(0, "None")
                         for ((i, algorithm) in algorithms.withIndex()) {
                             algorithmArray.add(algorithm.name)
-                            algorithmMap[i] = algorithm
+                            algorithmMap[i+1] = algorithm
                             if (algorithm.id == channel.algorithmId) {
                                 activity.runOnUiThread {
-                                    algorithmSpinner.setSelection(i)
+                                    algorithmSpinner.setSelection(i+1)
                                 }
                             }
                         }
@@ -66,8 +71,7 @@ class ChannelAlgorithmMenuItem(activity: Activity, context: Context, menu: Conte
                 d.setView(dialogView)
                 d.setPositiveButton("Apply") { dialogInterface, i ->
                     Log.d("Algorithm", "onClick: " + it.itemId)
-                    val selectedAlgorithm =
-                        algorithmMap.get(algorithmSpinner.selectedItemPosition)
+                    val selectedAlgorithm = algorithmMap.get(algorithmSpinner.selectedItemPosition)
                     channel.algorithmId = selectedAlgorithm!!.id
                     cropDroidAPI.setChannelConfig(channel, object : Callback {
                         override fun onFailure(call: Call, e: IOException) {

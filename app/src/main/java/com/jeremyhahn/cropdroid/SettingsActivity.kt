@@ -103,5 +103,3 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 }
-
-//LEAVING OFF ON figuring out why configs arent updating (ConfigurationService.SetValue)
