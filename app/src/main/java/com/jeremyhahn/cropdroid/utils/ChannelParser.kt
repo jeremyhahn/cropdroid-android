@@ -31,13 +31,12 @@ class ChannelParser {
             val name = jsonChannel.getString("name")
             val enable = jsonChannel.getBoolean("enable")
             val notify = jsonChannel.getBoolean("notify")
-            val condition = jsonChannel.getString("condition")
             val duration = jsonChannel.getInt("duration")
             val debounce = jsonChannel.getInt("debounce")
             val backoff = jsonChannel.getInt("backoff")
             val algorithmId = jsonChannel.getInt("algorithmId")
             val value = jsonChannel.getInt("value")
-            return Channel(id, controllerId, channelId, name, enable, notify, condition, duration, debounce, backoff, algorithmId, value)
+            return Channel(id, controllerId, channelId, name, enable, notify, duration, debounce, backoff, algorithmId, value)
         }
     }
 }

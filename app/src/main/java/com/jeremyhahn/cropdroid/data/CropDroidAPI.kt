@@ -205,7 +205,6 @@ class CropDroidAPI(val controller: MasterController) {
         json.put("name", channel.name)
         json.put("enable", channel.enable)
         json.put("notify", channel.notify)
-        json.put("condition", channel.condition)
         //json.put("schedule", channel.schedule)
         json.put("duration", channel.duration)
         json.put("debounce", channel.debounce)
