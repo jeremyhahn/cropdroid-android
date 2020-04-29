@@ -15,6 +15,7 @@ import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ROOM_VIDEO_KEY
 import com.jeremyhahn.cropdroid.MasterControllerListActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.SettingsActivity
+import com.jeremyhahn.cropdroid.StoreActivity
 import com.jeremyhahn.cropdroid.TabAdapter
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.MasterController
@@ -59,11 +60,7 @@ class MicroControllerActivity: AppCompatActivity() {
 
         tabLayout!!.tabGravity = TabLayout.GRAVITY_FILL
 
-        val adapter = TabAdapter(
-            this,
-            supportFragmentManager,
-            tabLayout!!.tabCount
-        )
+        val adapter = TabAdapter(this, supportFragmentManager, tabLayout!!.tabCount)
         viewPager!!.adapter = adapter
 
         viewPager!!.addOnPageChangeListener(TabLayout.TabLayoutOnPageChangeListener(tabLayout))
@@ -99,6 +96,10 @@ class MicroControllerActivity: AppCompatActivity() {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
+            R.id.action_store -> {
+                startActivity(Intent(this, StoreActivity::class.java))
+                true
+            }
             R.id.action_settings -> {
                 startActivity(Intent(this, SettingsActivity::class.java))
                 true
@@ -134,4 +135,27 @@ class MicroControllerActivity: AppCompatActivity() {
         }
     }
 
+/*
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == 1001) {
+            int responseCode = data.getIntExtra("RESPONSE_CODE", 0);
+            String purchaseData = data.getStringExtra("INAPP_PURCHASE_DATA");
+            String dataSignature = data.getStringExtra("INAPP_DATA_SIGNATURE");//this is the signature which you want
+
+            if (resultCode == RESULT_OK) {
+                try {
+                    JSONObject jo = new JSONObject(purchaseData);//this is the JSONObject which you have included in Your Question right now
+                    String sku = jo.getString("productId");
+                    alert("You have bought the " + sku + ". Excellent choice,
+                            adventurer!");
+                }
+                catch (JSONException e) {
+                    alert("Failed to parse purchase data.");
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+*/
 }

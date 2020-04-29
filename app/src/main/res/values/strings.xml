@@ -41,6 +41,7 @@
     <string name="action_yes">Yes</string>
     <string name="action_video">Video</string>
     <string name="action_confirm_switch">Are you sure you want to switch </string>
+    <string name="action_store">Store</string>
 
     <string name="welcome">Welcome</string>
     <string name="invalid_username">Not a valid username</string>

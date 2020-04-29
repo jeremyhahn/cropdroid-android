@@ -17,9 +17,6 @@ import kotlin.collections.ArrayList
 class CropDroidAPI(val controller: MasterController) {
 
     val REST_ENDPOINT: String
-    val ROOM_RESOURCE = "/".plus(ControllerType.Room.name.toLowerCase())
-    val RESERVOIR_RESOURCE = "/".plus(ControllerType.Reservoir.name.toLowerCase())
-    val DOSER_RESOURCE = "/".plus(ControllerType.Doser.name.toLowerCase())
     val EVENTS_RESOURCE = "/events"
     val CONFIG_RESOURCE = "/config"
     val CONDITION_RESOURCE = "/conditions"
@@ -28,8 +25,6 @@ class CropDroidAPI(val controller: MasterController) {
     val METRIC_RESOURCE = "/metrics"
     val VIRTUAL_RESOURCE = "/virtual"
     val ALGORITHMS_RESOURCE = "/algorithms"
-    val ROOM_HISTORY_RESOURCE = ROOM_RESOURCE.plus("/history")
-    val RESERVOIR_HISTORY_RESOURCE = RESERVOIR_RESOURCE.plus("/history")
     val CONTROLLER_RESOURCE = "/controllers"
 
     init {

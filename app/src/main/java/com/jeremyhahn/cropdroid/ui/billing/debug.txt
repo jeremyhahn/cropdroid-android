@@ -1,0 +1,64 @@
+I/System.out: BILLING | startConnection | RESULT OK
+
+D/StoreActivity: [Purchase. Json:
+{"orderId":"GPA.3347-7712-8167-51401",
+"packageName":"com.jeremyhahn.cropdroid",
+"productId":"server_v0.1a",
+"purchaseTime":1587965155417,
+"purchaseState":4,
+"purchaseToken":"cgkngjcjpglohilnnacafpfh.AO-J1OwIVGrQ4Kz1hLO6fZfFQYvt_wNiUpHpgrGOep7A3W2uZm0KXSM7moZr6V2-TxwlBnsmbMx7bYQo78M5ol6zYjYbM1k_1JUkGo1MHK5sQzp3d44eJJO-rxopz9SdTax-6V6cJZEB",
+"acknowledged":false}]
+
+I/System.out: querySkuDetailsAsync, responseCode: 0, skuList:
+
+[SkuDetails: {
+  "skuDetailsToken":"AEuhp4KsPfJKrxDe8BBmdKB6qgxWS58I8hSWLzVgNoa1KWMNDCrEDjfjvbAqTYxm7XI=",
+  "productId":"doser_v0.5a",
+  "type":"inapp",
+  "price":"$199.99",
+  "price_amount_micros":199990000,
+  "price_currency_code":"USD",
+  "title":"Dosing Controller (CropDroid)",
+  "description":"Precise programmable smart switches for dosing pumps and I\/O expansion."
+ }, SkuDetails: {
+   "skuDetailsToken":"AEuhp4LVn8T-m71VB1hQ2rspkBLZmnFiwdCZqNGW177INA4ItcWoBGdLosYEVS6YHqQ=",
+   "productId":"reservoir_v0.6a",
+   "type":"inapp",
+   "price":"$399.99",
+   "price_amount_micros":399990000,
+   "price_currency_code":"USD",
+   "title":"Reservoir Controller (CropDroid)",
+   "description":"Sensors and programmable smart switches to manage a soil or hydroponic \nreservoir"
+ }, SkuDetails: {
+   "skuDetailsToken":"AEuhp4J9On7dw7sQTCVcWwGT0DBgvQYq4uPZKwSjmFKx8zSGMCx9522ujGDPLcjvTmw=",
+   "productId":"room_v0.6a",
+   "type":"inapp",
+   "price":"$399.99",
+   "price_amount_micros":399990000,
+   "price_currency_code":"USD",
+   "title":"Room Controller (CropDroid)",
+   "description":"Sensors and programmable smart switches to manage a grow environment"
+ }, SkuDetails: {
+   "skuDetailsToken":"AEuhp4K9q1EPtPBD-l-b2iu9LC4pq4MlwVooIzV9WAnd2tlHq1CPQ6YR9INjkeAqgOQ=",
+   "productId":"server_v0.1a",
+   "type":"inapp",
+   "price":"$99.99",
+   "price_amount_micros":99990000,
+   "price_currency_code":"USD",
+   "title":"CropDroid Server (CropDroid)",
+   "description":"Centralized controller hub, API gateway and push notification server."
+ }, SkuDetails: {
+   "skuDetailsToken":"AEuhp4JuHZy6kOBMGdC01wh6dRkS5BEwA58SvazSroI5ENz9tkpzZnT2ddi99EUhrHY=",
+   "productId":"test",
+   "type":"inapp",
+   "price":"$19.99",
+   "price_amount_micros":19990000,
+   "price_currency_code":"USD",
+   "title":"Test Product (CropDroid)",
+   "description":"This is a test product used for testing the Google Play Billing integration."
+ }]
+
+
+I/System.out: AllowMultiplePurchases success, responseCode: 0
+
+I/System.out: onPurchasesUpdated: 0
