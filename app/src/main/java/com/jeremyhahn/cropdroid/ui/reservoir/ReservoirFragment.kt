@@ -24,6 +24,7 @@ import com.jeremyhahn.cropdroid.utils.Preferences
 
 class ReservoirFragment : Fragment() {
 
+    private val TAG = "ReservoirFragment"
     lateinit private var recyclerView: RecyclerView
     lateinit private var swipeContainer: SwipeRefreshLayout
     lateinit private var controller : MasterController
@@ -42,7 +43,7 @@ class ReservoirFragment : Fragment() {
         val mode = controllerPreferences.getString(Constants.CONFIG_MODE_KEY, "virtual")
         val enabled = controllerPreferences.getBoolean(Constants.CONFIG_RESERVOIR_ENABLE_KEY, false)
 
-        Log.d("RoomFragment.onCreateView", "controller.id=$id, mode=$mode, doser.enabled=$enabled")
+        Log.d("RoomFragment.onCreateView", "controller.id=$id, mode=$mode, enabled=$enabled")
 
         if(!enabled) {
             val emptyView = fragmentView.findViewById(R.id.reservoirDisabledText) as TextView

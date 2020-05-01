@@ -1,0 +1,89 @@
+package com.jeremyhahn.cropdroid.ui.edgecontroller
+
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.jeremyhahn.cropdroid.MainActivity
+import com.jeremyhahn.cropdroid.R
+import com.jeremyhahn.cropdroid.db.MasterControllerRepository
+import com.jeremyhahn.cropdroid.model.MasterController
+import com.jeremyhahn.cropdroid.ui.edgecontroller.EdgeControllerRecyclerAdapter.OnMasterListener
+import com.jeremyhahn.cropdroid.ui.room.EdgeControllerViewModel
+import com.jeremyhahn.cropdroid.utils.Preferences
+import kotlinx.android.synthetic.main.fragment_edge_controller_list.view.*
+
+
+class EdgeControllerListFragment : Fragment(), OnMasterListener {
+
+    private var controllers = ArrayList<MasterController>()
+    private lateinit var adapter: EdgeControllerRecyclerAdapter
+    private var swipeContainer: SwipeRefreshLayout? = null
+    lateinit private var viewModel: EdgeControllerViewModel
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        super.onCreateView(inflater, container, savedInstanceState)
+
+        var fragmentView = inflater.inflate(R.layout.fragment_edge_controller_list, container, false)
+
+        fragmentView.fab.setOnClickListener { view ->
+            (activity as MainActivity).navigateToNewEdgeController()
+        }
+
+        val repository = MasterControllerRepository(activity!!.applicationContext)
+        viewModel = ViewModelProviders.of(this, EdgeControllerViewModelFactory(repository)).get(EdgeControllerViewModel::class.java)
+
+        adapter = EdgeControllerRecyclerAdapter(controllers, this, activity!!, repository, viewModel)
+
+        var recyclerView = fragmentView.findViewById(R.id.mastersRecyclerView) as RecyclerView
+        recyclerView.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
+        recyclerView.adapter = adapter
+
+        swipeContainer = fragmentView.findViewById(R.id.mastersSwipeRefresh) as SwipeRefreshLayout
+        swipeContainer?.setOnRefreshListener(SwipeRefreshLayout.OnRefreshListener {
+            viewModel.getMasterControllers()
+        })
+        swipeContainer?.setColorSchemeResources(
+            R.color.holo_blue_bright,
+            R.color.holo_green_light,
+            R.color.holo_orange_light,
+            R.color.holo_red_light
+        )
+
+        viewModel.controllers.observe(this@EdgeControllerListFragment, Observer {
+            swipeContainer!!.setRefreshing(false)
+            val _adapter = recyclerView.adapter!! as EdgeControllerRecyclerAdapter
+            val controllers = viewModel.controllers.value!!
+            _adapter.setControllers(controllers)
+            recyclerView.adapter!!.notifyDataSetChanged()
+
+            if(controllers.size <= 0) {
+                fragmentView.edgeListEmptyText.visibility = View.VISIBLE
+            } else {
+                fragmentView.edgeListEmptyText.visibility = View.GONE
+            }
+        })
+
+        viewModel.getMasterControllers()
+
+        return fragmentView
+    }
+
+    override fun onMasterClick(position: Int) {
+        // buggy ui when users move fast after a delete
+        /*
+        if(controllers.get(position) == null) {
+            getMasterControllers()
+            return
+        }*/
+        val selected = controllers.get(position)
+        Preferences(activity!!.applicationContext).setController(selected, null)
+        (activity as MainActivity).navigateToLogin(selected)
+    }
+}

@@ -18,7 +18,7 @@ class ChannelParser {
             var channels = ArrayList<Channel>(jsonChannels.length())
             for (i in 0..jsonChannels.length() - 1) {
                 val jsonChannel = jsonChannels.getJSONObject(i)
-                Log.d("ChannelParser.parse", jsonChannel.toString())
+                //Log.d("ChannelParser.parse", jsonChannel.toString())
                 channels.add(parse(jsonChannel))
             }
             return channels

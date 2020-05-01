@@ -1,22 +1,32 @@
 package com.jeremyhahn.cropdroid
 
+import android.app.AlertDialog
+import android.app.Dialog
+import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuItem
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import androidx.work.*
-import com.jeremyhahn.cropdroid.Constants.Companion.ACTION_QUIT
+import androidx.appcompat.widget.Toolbar
+import androidx.drawerlayout.widget.DrawerLayout
+import androidx.navigation.NavController
+import androidx.navigation.findNavController
+import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.navigateUp
+import androidx.navigation.ui.setupActionBarWithNavController
+import androidx.navigation.ui.setupWithNavController
+import androidx.work.Constraints
+import androidx.work.NetworkType
+import com.google.android.material.navigation.NavigationView
+import com.jeremyhahn.cropdroid.model.MasterController
 import com.jeremyhahn.cropdroid.service.NotificationService
-import com.jeremyhahn.cropdroid.worker.SyncWorker
-import kotlinx.android.synthetic.main.activity_main.*
-import java.util.concurrent.TimeUnit
 
-// https://androidwave.com/scheduling-recurring-task-in-android-workmanager/
 class MainActivity : AppCompatActivity() {
 
-    var workRequest: PeriodicWorkRequest? = null
-    public var MESSAGE_STATUS: String = "Test Message"
+    private lateinit var appBarConfiguration: AppBarConfiguration
+    private lateinit var navController: NavController
+    private lateinit var drawer: DrawerLayout
+    private lateinit var toolbar: Toolbar
 
     fun createConstraints() = Constraints.Builder()
         .setRequiredNetworkType(NetworkType.CONNECTED) // other values(NOT_REQUIRED, UNMETERED (if connected to wifi), NOT_ROAMING, METERED)
@@ -24,74 +34,87 @@ class MainActivity : AppCompatActivity() {
         //.setRequiresStorageNotLow(true)
         .build()
 
-    fun createWorkRequest(data: Data) = PeriodicWorkRequest.Builder(SyncWorker::class.java, 1, TimeUnit.MINUTES)
-        .setInputData(data)
-        .setConstraints(createConstraints())
-        .setBackoffCriteria(BackoffPolicy.LINEAR, PeriodicWorkRequest.MIN_BACKOFF_MILLIS, TimeUnit.MILLISECONDS)
-        .build()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        createConstraints()
+
+        val toolbar: Toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
 
-        //var repo = MasterControllerRepository(this); repo.drop(); return
+        drawer = findViewById(R.id.drawer_layout)
 
-        /*
-        fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                .setAction("Action", null).show()
-        }
-        */
-
-/*
-        val mWorkManager = WorkManager.getInstance()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            workRequest = PeriodicWorkRequest.Builder(SyncWorker::class.java, 1, TimeUnit.MINUTES).build()
-            mWorkManager.enqueueUniquePeriodicWork("", ExistingPeriodicWorkPolicy.KEEP, workRequest!!);
-        }
-
-        WorkManager.getInstance().getStatusByIdLiveData(requestBuilder.id).observe(this@DataActivity, android.arch.lifecycle.Observer { workerStatus ->
-            if (workerStatus != null && workerStatus.state.isFinished) {
-                Toast.makeText(this@DataActivity, workerStatus.outputData.getString(
-                    SyncStateContract.Constants.EXTRA_OUTPUT_MESSAGE), Toast.LENGTH_SHORT).show()
-            }
-
-        })
-        WorkManager.getInstance().cancelWorkById(workRequest.getId());
-*/
-
-        if(intent.getBooleanExtra(ACTION_QUIT, false)) {
-            finish();
-            return
-        }
+        val navView: NavigationView = findViewById(R.id.nav_view)
+        navController = findNavController(R.id.nav_host_fragment)
+        // Passing each menu ID as a set of Ids because each
+        // menu should be considered as top level destinations.
+        appBarConfiguration = AppBarConfiguration(
+            setOf(
+                R.id.nav_home, R.id.nav_store, R.id.nav_quit
+            ), drawer
+        )
+        setupActionBarWithNavController(navController, appBarConfiguration)
+        navView.setupWithNavController(navController)
 
         var intent = Intent(this, NotificationService::class.java)
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        //startService(intent)
+        startService(intent)
         startForegroundService(intent)
-
-        startActivity(Intent(this, MasterControllerListActivity::class.java))
     }
 
-    fun logout() {
+    fun navigateToLogin(controller: MasterController) {
+        val bundle = Bundle()
+        bundle.putInt("controller_id", controller.id)
+        bundle.putString("controller_name", controller.name)
+        bundle.putString("controller_hostname", controller.hostname)
 
+        navController.navigate(R.id.nav_login, bundle)
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        menuInflater.inflate(R.menu.menu_main, menu)
-        return true
+    fun navigateToMicrocontroller() {
+        navController.popBackStack()
+        navController.navigate(R.id.nav_microcontroller_tabs)
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        return when (item.itemId) {
-            R.id.action_settings -> true
-            else -> super.onOptionsItemSelected(item)
-        }
+    fun navigateToHome() {
+        navController.navigate(R.id.nav_home)
+    }
+
+    fun navigateToNewEdgeController() {
+        navController.navigate(R.id.nav_new_edge_controller)
+    }
+
+    fun navigateToMicroControllerSettings() {
+        navController.navigate(R.id.nav_microcontroller_settings)
+        //supportFragmentManager.beginTransaction().add(R.id.nav_microcontroller_settings, SettingsFragment()).addToBackStack("fragBack").commit()
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
+    }
+
+    fun showQuitDialog(): Dialog {
+        return let {
+            val builder = AlertDialog.Builder(it)
+            builder.setMessage(R.string.action_quit_dialog).setPositiveButton(R.string.action_yes,
+                DialogInterface.OnClickListener { dialog, id ->
+                    // Stop notification service
+                    var intent = Intent(this, NotificationService::class.java)
+                    intent.action = Constants.ACTION_STOP_SERVICE
+                    startService(intent)
+
+                    // Exit the app
+                    finish()
+                })
+                .setNegativeButton(R.string.action_cancel,
+                    DialogInterface.OnClickListener { dialog, id ->
+                        Log.d("createQuitDialog", "cancel pressed")
+                        navigateToHome()
+                    })
+            builder.create()
+            builder.show()
+        } ?: throw IllegalStateException("Activity cannot be null")
     }
 
 }

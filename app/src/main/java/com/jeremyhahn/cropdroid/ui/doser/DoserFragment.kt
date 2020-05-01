@@ -57,14 +57,7 @@ class DoserFragment : Fragment() {
 
         recyclerView = fragmentView.findViewById(R.id.doserRecyclerView) as RecyclerView
         recyclerView!!.layoutManager = LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
-        recyclerView!!.adapter =
-            MicroControllerRecyclerAdapter(
-                activity!!,
-                CropDroidAPI(controller!!),
-                recyclerItems,
-                ControllerType.Doser,
-                mode
-            )
+        recyclerView!!.adapter = MicroControllerRecyclerAdapter(activity!!, cropDroidAPI, recyclerItems, ControllerType.Doser, mode)
 
         swipeContainer = fragmentView.findViewById(R.id.doserSwipeRefresh) as SwipeRefreshLayout
         swipeContainer?.setOnRefreshListener(SwipeRefreshLayout.OnRefreshListener {

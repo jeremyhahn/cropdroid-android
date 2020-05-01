@@ -156,7 +156,7 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
     val allControllers: ArrayList<MasterController>
         get() {
             var controllerList: ArrayList<MasterController> = ArrayList<MasterController>()
-            val selectQuery = "SELECT  * FROM $TABLE_MASTER_CONTROLLERS"
+            val selectQuery = "SELECT  * FROM $TABLE_MASTER_CONTROLLERS ORDER BY $KEY_NAME"
             val db: SQLiteDatabase = this.getWritableDatabase()
             val cursor: Cursor = db.rawQuery(selectQuery, null)
             if (cursor.moveToFirst()) {

@@ -14,7 +14,8 @@ import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import com.jeremyhahn.cropdroid.Constants
 import com.jeremyhahn.cropdroid.Constants.Companion.API_BASE
-import com.jeremyhahn.cropdroid.MasterControllerListActivity
+import com.jeremyhahn.cropdroid.MainActivity
+import com.jeremyhahn.cropdroid.ui.edgecontroller.EdgeControllerListFragment
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.MasterController
@@ -50,7 +51,7 @@ class NotificationService : Service() {
 
         var contentText = "Monitoring and listening for notifications"
         val pendingIntent: PendingIntent =
-            Intent(this, MasterControllerListActivity::class.java).let { notificationIntent ->
+            Intent(this, MainActivity::class.java).let { notificationIntent ->
                 PendingIntent.getActivity(this, 0, notificationIntent, 0)
             }
 
@@ -77,7 +78,8 @@ class NotificationService : Service() {
 
         if (intent!!.action != null && intent!!.action.equals(Constants.ACTION_STOP_SERVICE)) {
             Log.i("NotificationService.onStartCommand", "Stopping service");
-            stopService()
+            stopForeground(true)
+            stopSelf()
             return START_NOT_STICKY
         }
 

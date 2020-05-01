@@ -18,7 +18,7 @@ import com.jeremyhahn.cropdroid.model.Condition
 import com.jeremyhahn.cropdroid.model.ConditionConfig
 import com.jeremyhahn.cropdroid.model.MasterController
 import com.jeremyhahn.cropdroid.utils.Preferences
-import kotlinx.android.synthetic.main.activity_masters.*
+import kotlinx.android.synthetic.main.activity_condition_list.*
 import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException

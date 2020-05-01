@@ -17,7 +17,7 @@ import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.MasterController
 import com.jeremyhahn.cropdroid.model.Schedule
 import com.jeremyhahn.cropdroid.utils.Preferences
-import kotlinx.android.synthetic.main.activity_masters.*
+import kotlinx.android.synthetic.main.activity_schedule_list.*
 import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException

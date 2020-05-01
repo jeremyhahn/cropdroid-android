@@ -1,6 +1,7 @@
 package com.jeremyhahn.cropdroid.data
 
 import android.util.Log
+import com.android.billingclient.api.Purchase
 import com.jeremyhahn.cropdroid.Constants
 import com.jeremyhahn.cropdroid.Constants.Companion.API_BASE
 import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
@@ -11,8 +12,6 @@ import org.json.JSONObject
 import java.io.IOException
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
-import java.util.*
-import kotlin.collections.ArrayList
 
 class CropDroidAPI(val controller: MasterController) {
 
@@ -26,11 +25,22 @@ class CropDroidAPI(val controller: MasterController) {
     val VIRTUAL_RESOURCE = "/virtual"
     val ALGORITHMS_RESOURCE = "/algorithms"
     val CONTROLLER_RESOURCE = "/controllers"
+    val IAP_RESOURCE = "/iap"
 
     init {
         REST_ENDPOINT = if(controller.secure == 1)
             "https://".plus(controller.hostname).plus(API_BASE)
         else "http://".plus(controller.hostname).plus(API_BASE)
+    }
+
+    fun verifyPurchase(purchase: Purchase, callback: Callback) {
+        Log.d("CropDropAPI.verifyPurchase", "purchase="+purchase)
+        var json = JSONObject()
+        json.put("orderId", purchase.orderId)
+        json.put("productId", purchase.sku)
+        json.put("purchaseToken", purchase.purchaseToken)
+        json.put("purchaseTime", purchase.purchaseTime)
+        doPost(IAP_RESOURCE.plus("/verify"), json, callback)
     }
 
     fun eventsList(page: String, callback: Callback) {

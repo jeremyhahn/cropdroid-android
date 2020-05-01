@@ -6,4 +6,6 @@
 
     <dimen name="activity_margin_content">24dp</dimen>
     <dimen name="activity_margin_half">8dp</dimen>
+    <dimen name="nav_header_vertical_spacing">8dp</dimen>
+    <dimen name="nav_header_height">176dp</dimen>
 </resources>

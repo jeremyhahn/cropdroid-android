@@ -16,6 +16,7 @@ import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Channel
 import com.jeremyhahn.cropdroid.model.Metric
 import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
+import com.jeremyhahn.cropdroid.ui.microcontroller.menu.*
 import kotlinx.android.synthetic.main.doser_switch_cardview.view.btnDispense
 import kotlinx.android.synthetic.main.microcontroller_channel_cardview.view.channelName
 import kotlinx.android.synthetic.main.microcontroller_channel_cardview.view.channelValue
@@ -148,21 +149,69 @@ class SwitchTypeViewHolder(adapter: MicroControllerRecyclerAdapter, itemView: Vi
 
         Log.d("onCreateContextMenu", "channel: " + channel)
 
-        ChannelEnableMenuItem(menu!!, channel, cropDroidAPI, adapter)
+        ChannelEnableMenuItem(
+            menu!!,
+            channel,
+            cropDroidAPI,
+            adapter
+        )
 
         //if(!channel.isEnabled()) return
 
-        ChannelNotifyMenuItem(menu, channel, cropDroidAPI, adapter)
-        ChannelRenameMenuItem(v!!.context, menu, channel, cropDroidAPI, adapter)
-        ChannelConditionMenuItem(activity, v.context, menu, channel, metrics, cropDroidAPI, adapter)
-        ChannelScheduleMenuItem(v.context, menu, channel)
-        ChannelTimerMenuItem(v.context, menu, channel, cropDroidAPI)
-        ChannelDebounceMenuItem(v.context, menu, channel, cropDroidAPI)
-        ChannelTimerMenuItem(v.context, menu, channel, cropDroidAPI)
-        ChannelBackoffMenuItem(v.context, menu, channel, cropDroidAPI)
+        ChannelNotifyMenuItem(
+            menu,
+            channel,
+            cropDroidAPI,
+            adapter
+        )
+        ChannelRenameMenuItem(
+            v!!.context,
+            menu,
+            channel,
+            cropDroidAPI,
+            adapter
+        )
+        ChannelConditionMenuItem(
+            activity,
+            v.context,
+            menu,
+            channel,
+            metrics,
+            cropDroidAPI,
+            adapter
+        )
+        ChannelScheduleMenuItem(
+            v.context,
+            menu,
+            channel
+        )
+        ChannelTimerMenuItem(
+            v.context,
+            menu,
+            channel,
+            cropDroidAPI
+        )
+        ChannelDebounceMenuItem(
+            v.context,
+            menu,
+            channel,
+            cropDroidAPI
+        )
+        ChannelBackoffMenuItem(
+            v.context,
+            menu,
+            channel,
+            cropDroidAPI
+        )
 
         if(adapter.controllerType.equals(Constants.Companion.ControllerType.Doser)) {
-            ChannelAlgorithmMenuItem(activity, v.context, menu, channel, cropDroidAPI)
+            ChannelAlgorithmMenuItem(
+                activity,
+                v.context,
+                menu,
+                channel,
+                cropDroidAPI
+            )
         }
     }
 }

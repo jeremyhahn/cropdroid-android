@@ -11,17 +11,13 @@ class MetricParser {
         fun parse(json: String): ArrayList<Metric> {
             return parse(JSONArray(json))
         }
-/*
-        fun parse(jsonMetrics : JSONObject) : ArrayList<Metric> {
-            return parse(jsonMetrics.getJSONObject("metrics"))
-        }
-*/
+
         fun parse(jsonMetrics : JSONArray) : ArrayList<Metric> {
             var metrics = ArrayList<Metric>(jsonMetrics.length())
             for (i in 0..jsonMetrics.length() - 1) {
                 val jsonMetric = jsonMetrics.getJSONObject(i)
 
-                Log.d("MetricParser.parse", jsonMetric.toString())
+                //Log.d("MetricParser.parse", jsonMetric.toString())
 
                 metrics.add(MetricParser.parse(jsonMetric))
             }
