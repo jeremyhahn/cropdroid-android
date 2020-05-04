@@ -2,13 +2,11 @@ package com.jeremyhahn.cropdroid.utils
 
 import android.content.SharedPreferences
 import android.util.Log
-import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ENABLE_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FIRMWARE_VERSION_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_HARDWARE_VERSION_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_INTERVAL_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_MODE_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_NAME_KEY
-import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_NOTIFY_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_ENABLE_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_HOST_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_PASSWORD_KEY
@@ -16,11 +14,8 @@ import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_PORT_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_RECIPIENT_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_USERNAME_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_TIMEZONE_KEY
-import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_URI_KEY
-import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_VIDEO_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_CONTROLLER_ID
 import com.jeremyhahn.cropdroid.model.Config
-import com.jeremyhahn.cropdroid.model.Controller
 
 class ConfigManager(val sharedPreferences: SharedPreferences, val config: Config) {
 
@@ -30,7 +25,9 @@ class ConfigManager(val sharedPreferences: SharedPreferences, val config: Config
         Log.d("ConfigManager.sync", "Running sync. controller_id=" + getInt(PREF_KEY_CONTROLLER_ID))
         syncGlobal()
         syncSmtp()
-        syncControllers()
+        for(farm in config.farms) {
+            syncControllers(farm.id)
+        }
         editor.commit()
     }
 
@@ -97,32 +94,25 @@ class ConfigManager(val sharedPreferences: SharedPreferences, val config: Config
         }
     }
 
-    private fun syncControllers() {
+    private fun syncControllers(farmID: Int) {
 
-        editor.putInt("controller_count", config.controllers.size)
+        // val countKey = farmID.toString().plus("_controller_count")
+        editor.putInt("controller_count", config.farms[farmID].controllers.size)
 
-        for(controller in config.controllers) {
+        for(controller in config.farms[farmID].controllers) {
 
+            // val typeKey := farmID.toString().plus("_controller_" + controller.type)
             editor.putInt("controller_" + controller.type, controller.id)
 
-            val enable = getBoolean(controller.type + "." + CONFIG_ENABLE_KEY)
-            val notify = getBoolean(controller.type + "." + CONFIG_NOTIFY_KEY)
-            val uri = getString(controller.type + "." + CONFIG_URI_KEY)
-            val video = getString(controller.type + "." + CONFIG_VIDEO_KEY)
+            for ((k, v) in controller.configs) {
+                editor.putString(k, v)
+            }
+
             val hardwareVersion = getString(controller.type + "." + CONFIG_HARDWARE_VERSION_KEY)
-            val firmwareVersion = getString(controller.type + "." + CONFIG_FIRMWARE_VERSION_KEY)
-            if(enable != controller.enabled) {
-                setEditorValue(controller.type + "." + CONFIG_ENABLE_KEY, controller.enabled)
-            }
-            if(notify != controller.notify) {
-                setEditorValue(controller.type + "." + CONFIG_NOTIFY_KEY, controller.notify)
-            }
-            if(uri != controller.uri) {
-                setEditorValue(controller.type + "." + CONFIG_URI_KEY, controller.uri)
-            }
             if(hardwareVersion != controller.hardwareVersion) {
                 setEditorValue(controller.type + "." + CONFIG_HARDWARE_VERSION_KEY, controller.hardwareVersion)
             }
+            val firmwareVersion = getString(controller.type + "." + CONFIG_FIRMWARE_VERSION_KEY)
             if(firmwareVersion != controller.firmwareVersion) {
                 setEditorValue(controller.type + "." + CONFIG_FIRMWARE_VERSION_KEY, controller.firmwareVersion)
             }

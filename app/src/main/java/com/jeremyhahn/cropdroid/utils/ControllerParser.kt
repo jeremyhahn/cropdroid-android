@@ -5,6 +5,7 @@ import com.jeremyhahn.cropdroid.model.Channel
 import com.jeremyhahn.cropdroid.model.Controller
 import com.jeremyhahn.cropdroid.model.Metric
 import org.json.JSONArray
+import org.json.JSONObject
 
 class ControllerParser {
 
@@ -24,10 +25,22 @@ class ControllerParser {
                 val orgId = jsonController.getInt("orgId")
                 val type = jsonController.getString("type")
                 val description = jsonController.getString("description")
-                val enable = jsonController.getBoolean("enable")
-                val notify = jsonController.getBoolean("notify")
-                val uri = jsonController.getString("uri")
+                //val enable = jsonController.getBoolean("enable")
+                //val notify = jsonController.getBoolean("notify")
+                //val uri = jsonController.getString("uri")
+
                 //val configs = jsonController.getJSONObject("configs")
+
+                val jsonConfigs = jsonController.getJSONArray("configs")
+                val configs = HashMap<String, String>(jsonConfigs.length())
+                for (i in 0 until jsonConfigs.length()) {
+                    val jsonObj: JSONObject = jsonConfigs.getJSONObject(i)
+                    val k = jsonObj.keys().next()
+                    val v = jsonObj.getString(k)
+                    configs.put(k, v)
+                    Log.i("ControllerParser.parseConfigs", "Putting config -- Key: " + k + ", value: " + v)
+                }
+
                 val hardwareVersion = jsonController.getString("hardwareVersion")
                 val firmwareVersion = jsonController.getString("firmwareVersion")
 
@@ -42,14 +55,10 @@ class ControllerParser {
                     parsedChannels = ChannelParser.parse(channels)
                 }
 
-                controllers.add(Controller(id, orgId, type, description, enable, notify, uri, hardwareVersion, firmwareVersion, parsedMetrics, parsedChannels))
+                //controllers.add(Controller(id, orgId, type, description, enable, notify, uri, hardwareVersion, firmwareVersion, parsedMetrics, parsedChannels))
+                controllers.add(Controller(id, orgId, type, description, hardwareVersion, firmwareVersion, configs, parsedMetrics, parsedChannels))
             }
             return controllers
         }
     }
 }
-
-
-data class Controller(val id: Int, val orgId: Int, val type: String, val description: String, val enabled: Boolean,
-                      val notify: Boolean, val uri: String, val hardwareVersion: String, val firmwareVersion: String,
-                      val metrics: List<Metric>, val channels: List<Channel>)

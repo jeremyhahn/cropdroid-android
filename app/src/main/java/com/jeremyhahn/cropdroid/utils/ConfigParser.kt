@@ -2,13 +2,14 @@ package com.jeremyhahn.cropdroid.utils
 
 import android.util.Log
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_CONTROLLERS_KEY
+import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARMS_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_INTERVAL_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_MODE_KEY
-import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_NAME_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_TIMEZONE_KEY
 import com.jeremyhahn.cropdroid.model.Config
 import com.jeremyhahn.cropdroid.model.Controller
+import com.jeremyhahn.cropdroid.model.Farm
 import com.jeremyhahn.cropdroid.model.SmtpConfig
 import org.json.JSONArray
 import org.json.JSONObject
@@ -22,18 +23,14 @@ class ConfigParser {
 
         fun parse(config: JSONObject): Config {
             return Config(
-                config.getString(CONFIG_NAME_KEY),
+                //config.getString(CONFIG_NAME_KEY),
+                "",
                 config.getString(CONFIG_INTERVAL_KEY),
                 config.getString(CONFIG_TIMEZONE_KEY),
                 config.getString(CONFIG_MODE_KEY),
                 parseSmtp(config.getJSONObject(CONFIG_SMTP_KEY)),
-                parseControllers(config.getJSONArray(CONFIG_CONTROLLERS_KEY))
+                parseFarms(config.getJSONArray(CONFIG_FARMS_KEY))
             )
-            /*
-                parseRoom(config.getJSONObject(CONFIG_ROOM_KEY)),
-                parseReservoir(config.getJSONObject(CONFIG_RESERVOIR_KEY)),
-                parseDoser(config.getJSONObject(CONFIG_DOSER_KEY)))
-                */
         }
 
         fun parseSmtp(smtp: JSONObject): SmtpConfig {
@@ -48,39 +45,6 @@ class ConfigParser {
             )
         }
 /*
-        fun parseRoom(room : JSONObject) : RoomConfig {
-            Log.d("parseRoom", room.toString())
-            return RoomConfig(
-                room.getString("enable"),
-                room.getString("notify"),
-                room.getString("uri"),
-                room.getString("video"),
-                MetricParser.parse(room.getJSONArray("metrics")),
-                ChannelParser.parse(room.getJSONArray("channels")))
-        }
-
-        fun parseReservoir(room : JSONObject) : ReservoirConfig {
-            Log.d("ConfigParser.parseReservoir", room.toString())
-            return ReservoirConfig(
-                room.getString("enable"),
-                room.getString("notify"),
-                room.getString("uri"),
-                room.getString("gallons"),
-                room.getString("targetTemp"),
-                parseWaterChangeConfig(room.getJSONObject("waterchange")),
-                MetricParser.parse(room.getJSONArray("metrics")),
-                ChannelParser.parse(room.getJSONArray("channels")))
-        }
-
-        fun parseDoser(doser : JSONObject) : DoserConfig {
-            Log.d("parseDoser", doser.toString())
-            return DoserConfig(
-                doser.getString("enable"),
-                doser.getString("notify"),
-                doser.getString("uri"),
-                ChannelParser.parse(doser.getJSONArray("channels")))
-        }
-
         fun parseWaterChangeConfig(waterChange: JSONObject) : WaterChangeConfig {
             return WaterChangeConfig(
                 waterChange.getBoolean("enable"),
@@ -88,6 +52,28 @@ class ConfigParser {
                 waterChange.getString("subscribes"))
         }
 */
+
+        fun parseFarms(jsonFarms: JSONArray): ArrayList<Farm> {
+
+            Log.d("parseFarms", jsonFarms.toString())
+
+            var farms = ArrayList<Farm>(jsonFarms.length())
+            for (i in 0..jsonFarms.length() - 1) {
+
+                val jsonFarm = jsonFarms.getJSONObject(i)
+
+                Log.d("ConfigParser.parseFarms", jsonFarm.toString())
+
+                val id = jsonFarm.getInt("id")
+                val orgId = jsonFarm.getInt("orgId")
+                val mode = jsonFarm.getString("mode")
+                val name = jsonFarm.getString("name")
+                val interval = jsonFarm.getInt("interval")
+                val controllers = parseControllers(jsonFarm.getJSONArray(CONFIG_CONTROLLERS_KEY))
+                farms.add(Farm(id, orgId, mode, name, interval, controllers))
+            }
+            return farms
+        }
 
         fun parseControllers(jsonControllers: JSONArray): ArrayList<Controller> {
             Log.d("parseControllers", jsonControllers.toString())
@@ -99,18 +85,27 @@ class ConfigParser {
 
                 Log.d("ConfigParser.parseControllers", jsonChannel.toString())
 
+                val jsonConfigs = jsonChannel.getJSONObject("configs")
+                val configs = HashMap<String, String>(jsonConfigs.length())
+                for (i in 0 until jsonConfigs.length()) {
+                    val k = jsonConfigs.keys().next()
+                    val v = jsonConfigs.getString(k)
+                    configs.put(k, v)
+                    Log.i("ConfigParser.parseControllers", "Putting config -- Key: " + k + ", value: " + v)
+                }
                 val id = jsonChannel.getInt("id")
                 val orgId = jsonChannel.getInt("orgId")
                 val type = jsonChannel.getString("type")
                 val description = jsonChannel.getString("description")
-                val enabled = jsonChannel.getBoolean("enable")
-                val notify = jsonChannel.getBoolean("notify")
-                val uri = jsonChannel.getString("uri")
+                //val enabled = jsonChannel.getBoolean("enable")
+                //val notify = jsonChannel.getBoolean("notify")
+                //val uri = jsonChannel.getString("uri")
                 val hardwareVersion = jsonChannel.getString("hardwareVersion")
                 val firmwareVersion = jsonChannel.getString("firmwareVersion")
                 val metrics = MetricParser.parse(jsonChannel.getJSONArray("metrics"))
                 val channels = ChannelParser.parse(jsonChannel.getJSONArray("channels"))
-                controllers.add(Controller(id, orgId, type, description, enabled, notify, uri, hardwareVersion, firmwareVersion, metrics, channels))
+                //controllers.add(Controller(id, orgId, type, description, enabled, notify, uri, hardwareVersion, firmwareVersion, metrics, channels))
+                controllers.add(Controller(id, orgId, type, description, hardwareVersion, firmwareVersion, configs, metrics, channels))
             }
             return controllers
         }

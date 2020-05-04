@@ -12,6 +12,7 @@ import androidx.annotation.StringRes
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import com.jeremyhahn.cropdroid.Error
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
@@ -219,10 +220,26 @@ class LoginFragment() : Fragment() {
     }
 
     private fun updateUiWithUser(user: User, controller: MasterController = this.controller!!) {
-        var haveConfig = false
+
+        /*
+        val progress = ProgressDialog(activity)
+        progress.setTitle("Configuration")
+        progress.setMessage("Loading...")
+        progress.setCancelable(false)
+        progress.show()
+         */
+
         CropDroidAPI(controller!!).getConfig(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                Log.d(":LoginActivity.getConfig.onFailure", "onFailure response: " + e!!.message)
+                Log.d(":LoginActivity.getConfig.onFailure", "onFailure response: " + e.message)
+                //progress.dismiss()
+                activity!!.runOnUiThread(Runnable {
+                    if(e.message == null) {
+                        Error(activity!!.applicationContext).dialog(e.localizedMessage)
+                    } else {
+                        Error(activity!!.applicationContext).dialog(e.message!!)
+                    }
+                })
             }
             override fun onResponse(call: Call, response: okhttp3.Response) {
 
@@ -237,26 +254,13 @@ class LoginFragment() : Fragment() {
                 //notificationServiceIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 //startForegroundService(notificationServiceIntent)
 
-                haveConfig = true
-                /*
+                //progress.dismiss()
+
                 activity!!.runOnUiThread(Runnable {
                     (activity as MainActivity).navigateToMicrocontroller()
-                })*/
+                })
             }
         })
-        val progress = ProgressDialog(activity)
-        progress.setTitle("Configuration")
-        progress.setMessage("Loading...")
-        progress.setCancelable(false)
-        progress.show()
-
-        while(haveConfig == false) {
-            sleep(200)
-            Log.d("LoginFragment", "Waiting 200ms for response from web server...")
-        }
-
-        progress.dismiss()
-        (activity as MainActivity).navigateToMicrocontroller()
     }
 
     private fun showLoginFailed(@StringRes errorString: Int) {

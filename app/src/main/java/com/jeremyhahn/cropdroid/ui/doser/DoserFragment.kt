@@ -40,7 +40,7 @@ class DoserFragment : Fragment() {
 
         val id = preferences.currentControllerId()
         val mode = controllerPreferences.getString(Constants.CONFIG_MODE_KEY, "virtual")
-        val enabled = controllerPreferences.getBoolean(Constants.CONFIG_DOSER_ENABLE_KEY, false)
+        val enabled = controllerPreferences.getString(Constants.CONFIG_DOSER_ENABLE_KEY, "false").toBoolean()
 
         Log.d("DoserFragment.onCreateView", "controller.id=$id, mode=$mode, doser.enabled=$enabled")
 

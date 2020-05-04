@@ -46,7 +46,7 @@ class RoomFragment : Fragment() {
 
         val id = preferences.currentControllerId()
         val mode = controllerPreferences.getString(Constants.CONFIG_MODE_KEY, "virtual")
-        val enabled = controllerPreferences.getBoolean(Constants.CONFIG_ROOM_ENABLE_KEY, false)
+        val enabled = controllerPreferences.getString(Constants.CONFIG_ROOM_ENABLE_KEY, "false").toBoolean()
 
         Log.d("RoomFragment.onCreateView", "controller.id=$id, mode=$mode, enabled=$enabled")
 

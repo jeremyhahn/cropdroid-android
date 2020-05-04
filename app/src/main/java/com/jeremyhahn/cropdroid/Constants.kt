@@ -54,13 +54,14 @@ class Constants {
         const val CONFIG_SMTP_PASSWORD_KEY = "smtp.password"
         const val CONFIG_SMTP_RECIPIENT_KEY = "smtp.recipient"
 
+        const val CONFIG_FARMS_KEY = "farms"
         const val CONFIG_CONTROLLERS_KEY = "controllers"
         const val CONFIG_TYPE_KEY = "type"
         const val CONFIG_DESCRIPTION_KEY = "description"
-        const val CONFIG_ENABLE_KEY = "enable"
-        const val CONFIG_NOTIFY_KEY = "notify"
-        const val CONFIG_URI_KEY = "uri"
-        const val CONFIG_VIDEO_KEY = "video"
+        //const val CONFIG_ENABLE_KEY = "enable"
+        //const val CONFIG_NOTIFY_KEY = "notify"
+        //const val CONFIG_URI_KEY = "uri"
+        //const val CONFIG_VIDEO_KEY = "video"
         const val CONFIG_HARDWARE_VERSION_KEY = "hardwareVersion"
         const val CONFIG_FIRMWARE_VERSION_KEY = "firmwareVersion"
 
