@@ -6,6 +6,7 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.drawerlayout.widget.DrawerLayout
@@ -68,8 +69,13 @@ class MainActivity : AppCompatActivity() {
         bundle.putInt("controller_id", controller.id)
         bundle.putString("controller_name", controller.name)
         bundle.putString("controller_hostname", controller.hostname)
-
         navController.navigate(R.id.nav_login, bundle)
+    }
+
+    fun navigateToOrganizations() {
+        Toast.makeText(applicationContext, "Organizations not yet implemented!", Toast.LENGTH_LONG)
+        //navController.popBackStack()
+        //navController.navigate(R.id.nav_organizations)
     }
 
     fun navigateToMicrocontroller() {
@@ -91,7 +97,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onSupportNavigateUp(): Boolean {
-        return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
+        return navController.navigateUp(appBarConfiguration)// || super.onSupportNavigateUp()
     }
 
     fun showQuitDialog(): Dialog {

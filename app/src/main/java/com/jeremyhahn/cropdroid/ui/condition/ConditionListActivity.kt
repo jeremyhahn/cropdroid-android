@@ -46,7 +46,9 @@ class ConditionListActivity : AppCompatActivity(), ConditionDialogHandler {
         channelName = intent.getStringExtra("channel_name")
 
         val preferences = Preferences(applicationContext)
+        val controllerSharedPrefs = preferences.getControllerPreferences()
         val id = preferences.currentControllerId()
+        val farmId = preferences.currentFarmId()
         val emptyText = findViewById(R.id.conditionEmptyText) as TextView
 
         Log.d("ConditionActivity.onCreateView", "channel_id=$channelId, controller.id=$id")
@@ -55,7 +57,7 @@ class ConditionListActivity : AppCompatActivity(), ConditionDialogHandler {
 
         controller = MasterControllerRepository(this).getController(id)
 
-        cropDroidAPI = CropDroidAPI(controller)
+        cropDroidAPI = CropDroidAPI(controller, controllerSharedPrefs)
 
         viewModel = ViewModelProviders.of(this, ConditionViewModelFactory(cropDroidAPI, channelId)).get(ConditionViewModel::class.java)
 

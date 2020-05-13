@@ -41,12 +41,13 @@ class RoomFragment : Fragment() {
 
         fragmentView = inflater.inflate(R.layout.fragment_room, container, false)
 
-        val preferences = Preferences(activity!!.applicationContext)
+        val ctx = requireActivity().applicationContext
+        val preferences = Preferences(ctx)
         val controllerPreferences = preferences.getControllerPreferences()
 
         val id = preferences.currentControllerId()
         val mode = controllerPreferences.getString(Constants.CONFIG_MODE_KEY, "virtual")
-        val enabled = controllerPreferences.getString(Constants.CONFIG_ROOM_ENABLE_KEY, "false").toBoolean()
+        val enabled = controllerPreferences.getBoolean(Constants.CONFIG_ROOM_ENABLE_KEY, false)
 
         Log.d("RoomFragment.onCreateView", "controller.id=$id, mode=$mode, enabled=$enabled")
 
@@ -57,15 +58,15 @@ class RoomFragment : Fragment() {
             return fragmentView
         }
 
-        controller = MasterControllerRepository(context!!).getController(id)
-        cropDroidAPI = CropDroidAPI(controller!!)
+        controller = MasterControllerRepository(ctx).getController(id)
+        cropDroidAPI = CropDroidAPI(controller, controllerPreferences)
 
         viewModel = ViewModelProviders.of(this, RoomViewModelFactory(cropDroidAPI)).get(RoomViewModel::class.java)
 
         recyclerView = fragmentView.findViewById(R.id.recyclerView) as RecyclerView
         recyclerView.layoutManager = LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
         recyclerView.itemAnimator = DefaultItemAnimator()
-        recyclerView.adapter = MicroControllerRecyclerAdapter(activity!!, cropDroidAPI, recyclerItems, ControllerType.Room, mode)
+        recyclerView.adapter = MicroControllerRecyclerAdapter(requireActivity(), cropDroidAPI, recyclerItems, ControllerType.Room, mode)
 
         swipeContainer = fragmentView.findViewById(R.id.roomSwipeRefresh) as SwipeRefreshLayout
         swipeContainer?.setOnRefreshListener(OnRefreshListener {
@@ -89,58 +90,4 @@ class RoomFragment : Fragment() {
         return fragmentView
     }
 
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        Log.d(TAG, "onAttach fired")
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        Log.d(TAG, "onCreate fired")
-    }
-
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        Log.d(TAG, "onActivity fired")
-    }
-
-    override fun onStart() {
-        super.onStart()
-        Log.d(TAG, "onStart fired")
-    }
-
-    override fun onPause() {
-        super.onPause()
-        Log.d(TAG, "onPause fired")
-    }
-
-    override fun onStop() {
-        super.onStop()
-        Log.d(TAG, "onStop fired")
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        Log.d(TAG, "onDestroyView fired")
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        Log.d(TAG, "onDestroy fired")
-    }
-
-    override fun onDetach() {
-        super.onDetach()
-        Log.d(TAG, "onDetach fired")
-    }
-
-    override fun onResume() {
-        super.onResume()
-        Log.d(TAG, "onResume fired")
-    }
-
-    override fun onContextItemSelected(item: MenuItem) : Boolean {
-        Log.d("onContextItemSelected", "ID: " + item.itemId)
-        return true
-    }
 }

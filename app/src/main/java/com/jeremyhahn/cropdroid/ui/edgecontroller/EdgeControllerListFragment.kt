@@ -1,5 +1,6 @@
 package com.jeremyhahn.cropdroid.ui.edgecontroller
 
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,6 +11,8 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARM_ID_KEY
+import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ORG_ID_KEY
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
@@ -82,8 +85,17 @@ class EdgeControllerListFragment : Fragment(), OnMasterListener {
             getMasterControllers()
             return
         }*/
+
+        val fragmentActivity = requireActivity()
+        val prefs = Preferences(fragmentActivity)
+
+        val orgId = prefs.currentOrgId()
+        val farmId = prefs.currentFarmId()
+
         val selected = controllers.get(position)
-        Preferences(activity!!.applicationContext).setController(selected, null)
+
+        prefs.set(selected, null, orgId, farmId)
+
         (activity as MainActivity).navigateToLogin(selected)
     }
 }

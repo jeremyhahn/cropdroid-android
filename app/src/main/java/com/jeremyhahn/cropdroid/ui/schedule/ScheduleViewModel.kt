@@ -24,12 +24,12 @@ class ScheduleViewModel(cropDroidAPI: CropDroidAPI, channelId: Int) : ViewModel(
     fun getSchedule() {
         cropDroidAPI.getSchedule(channelId, object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                Log.d("ConditionViewModel.getSchedule()", "onFailure response: " + e!!.message)
+                Log.d("ScheduleViewModel.getSchedule()", "onFailure response: " + e!!.message)
                 return
             }
             override fun onResponse(call: Call, response: okhttp3.Response) {
                 var responseBody = response.body().string()
-                Log.d("ConditionViewModel.getSchedule()", "responseBody: " + responseBody)
+                Log.d("ScheduleViewModel.getSchedule()", "responseBody: " + responseBody)
                 if (response.code() != 200) {
                     return
                 }

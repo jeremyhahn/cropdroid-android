@@ -24,6 +24,7 @@ import com.jeremyhahn.cropdroid.utils.Preferences
 
 class DoserFragment : Fragment() {
 
+    private val TAG = "DoserFragment"
     lateinit private var recyclerView: RecyclerView
     lateinit private var swipeContainer: SwipeRefreshLayout
     lateinit private var controller : MasterController
@@ -39,8 +40,9 @@ class DoserFragment : Fragment() {
         val controllerPreferences = preferences.getControllerPreferences()
 
         val id = preferences.currentControllerId()
+        val farmId = preferences.currentFarmId()
         val mode = controllerPreferences.getString(Constants.CONFIG_MODE_KEY, "virtual")
-        val enabled = controllerPreferences.getString(Constants.CONFIG_DOSER_ENABLE_KEY, "false").toBoolean()
+        val enabled = controllerPreferences.getBoolean(Constants.CONFIG_DOSER_ENABLE_KEY, false)
 
         Log.d("DoserFragment.onCreateView", "controller.id=$id, mode=$mode, doser.enabled=$enabled")
 
@@ -51,7 +53,7 @@ class DoserFragment : Fragment() {
         }
 
         controller = MasterControllerRepository(context!!).getController(id)
-        cropDroidAPI = CropDroidAPI(controller!!)
+        cropDroidAPI = CropDroidAPI(controller, controllerPreferences)
 
         viewModel = ViewModelProviders.of(this, DoserViewModelFactory(cropDroidAPI)).get(DoserViewModel::class.java)
 

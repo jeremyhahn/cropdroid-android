@@ -54,6 +54,7 @@
             app:dependency="room.enable"
             app:useSimpleSummaryProvider="true" />
 
+
         <EditTextPreference
             android:key="room.hardwareVersion"
             android:title="@string/pref_hardwareVersion"

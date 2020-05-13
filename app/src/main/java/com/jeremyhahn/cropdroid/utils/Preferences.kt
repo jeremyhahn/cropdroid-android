@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import androidx.preference.PreferenceManager
+import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARM_ID_KEY
+import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ORG_ID_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_CONTROLLER_HOSTNAME
 import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_CONTROLLER_ID
 import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_CONTROLLER_NAME
@@ -28,11 +30,19 @@ class Preferences(context: Context) {
         return getDefaultPreferences().getInt(PREF_KEY_CONTROLLER_ID, 0)
     }
 
+    fun currentOrgId() : Int {
+        return getDefaultPreferences().getInt(CONFIG_ORG_ID_KEY, 0)
+    }
+
+    fun currentFarmId() : Int {
+        return getDefaultPreferences().getInt(CONFIG_FARM_ID_KEY, 0)
+    }
+
     fun getDefaultPreferences() : SharedPreferences {
         return PreferenceManager.getDefaultSharedPreferences(context)
     }
 
-    fun setController(controller: MasterController, user: User?) {
+    fun set(controller: MasterController, user: User?, orgId: Int, farmId: Int) {
         val prefs = getDefaultPreferences()
         val editor = prefs.edit()
         editor.putInt(PREF_KEY_CONTROLLER_ID, controller.id)
@@ -43,6 +53,8 @@ class Preferences(context: Context) {
             editor.putString(PREF_KEY_USER_ID, user.id)
             editor.putString(PREF_KEY_JWT, user.token)
         }
+        editor.putInt(CONFIG_ORG_ID_KEY, orgId)
+        editor.putInt(CONFIG_FARM_ID_KEY, farmId)
         if(!editor.commit()) {
             val message = "Error committing controller to DefaultSharedPreferences"
             Log.e(TAG, message)

@@ -3,10 +3,8 @@ package com.jeremyhahn.cropdroid.ui.settings
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
-import android.view.MenuItem
 import androidx.preference.PreferenceFragmentCompat
 import com.jeremyhahn.cropdroid.Constants
-import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
@@ -25,14 +23,17 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         //super.onCreatePreferences(savedInstanceState)
 
-        val preferences = Preferences(activity!!.applicationContext)
+        val ctx = requireActivity().applicationContext
+
+        val preferences = Preferences(ctx)
         val id = preferences.currentControllerId()
+        val farmId = preferences.currentFarmId()
 
         sharedPreferences = preferences.getControllerPreferences()
         sharedPreferences.registerOnSharedPreferenceChangeListener(this)
 
-        controller = MasterControllerRepository(context!!).getController(id)
-        cropdroid = CropDroidAPI(controller!!)
+        controller = MasterControllerRepository(ctx).getController(id)
+        cropdroid = CropDroidAPI(controller, sharedPreferences)
 
         Log.d("SettingsActivity.onCreate", "controller=" + controller.toString())
 
@@ -60,10 +61,10 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
                 value = sharedPreferences!!.getBoolean(key, false).toString()
             }
         }
-        Log.d("SettingsActivity.onSharedPreferenceChanged", "key=" + key + ", value="+ value + ", controller=" + controller!!.toString())
-        cropdroid!!.setConfig(controllerId, key!!, value, object : Callback {
+        Log.d("SettingsActivity.onSharedPreferenceChanged", "key=" + key + ", value="+ value + ", controller=" + controller.toString())
+        cropdroid.setConfig(controllerId, key, value, object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                Log.d("SettingsActivity.onPreferenceClick()", "onFailure response: " + e!!.message)
+                Log.d("SettingsActivity.onPreferenceClick()", "onFailure response: " + e.message)
             }
             override fun onResponse(call: Call, response: okhttp3.Response) {
                 var responseBody = response.body().string()

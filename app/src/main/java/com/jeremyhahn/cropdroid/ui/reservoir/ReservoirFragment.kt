@@ -36,12 +36,12 @@ class ReservoirFragment : Fragment() {
 
         var fragmentView = inflater.inflate(R.layout.fragment_reservoir, container, false)
 
-        val preferences = Preferences(activity!!.applicationContext)
+        val preferences = Preferences(requireActivity().applicationContext)
         val controllerPreferences = preferences.getControllerPreferences()
 
         val id = preferences.currentControllerId()
         val mode = controllerPreferences.getString(Constants.CONFIG_MODE_KEY, "virtual")
-        val enabled = controllerPreferences.getString(Constants.CONFIG_RESERVOIR_ENABLE_KEY, "false").toBoolean()
+        val enabled = controllerPreferences.getBoolean(Constants.CONFIG_RESERVOIR_ENABLE_KEY, false)
 
         Log.d("RoomFragment.onCreateView", "controller.id=$id, mode=$mode, enabled=$enabled")
 
@@ -51,8 +51,8 @@ class ReservoirFragment : Fragment() {
             return fragmentView
         }
 
-        controller = MasterControllerRepository(context!!).getController(id)
-        cropDroidAPI = CropDroidAPI(controller!!)
+        controller = MasterControllerRepository(requireContext()).getController(id)
+        cropDroidAPI = CropDroidAPI(controller, controllerPreferences)
 
         viewModel = ViewModelProviders.of(this, ReservoirViewModelFactory(cropDroidAPI)).get(ReservoirViewModel::class.java)
 
@@ -60,8 +60,8 @@ class ReservoirFragment : Fragment() {
         recyclerView!!.layoutManager = LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
         recyclerView!!.adapter =
             MicroControllerRecyclerAdapter(
-                activity!!,
-                CropDroidAPI(controller!!),
+                requireActivity(),
+                CropDroidAPI(controller, controllerPreferences),
                 recyclerItems,
                 ControllerType.Reservoir,
                 mode

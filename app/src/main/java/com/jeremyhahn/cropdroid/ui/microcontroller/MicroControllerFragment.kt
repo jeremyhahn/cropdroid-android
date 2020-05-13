@@ -9,7 +9,7 @@ import android.view.*
 import androidx.fragment.app.Fragment
 import androidx.viewpager.widget.ViewPager
 import com.google.android.material.tabs.TabLayout
-import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_NAME_KEY
+import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARM_NAME_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ROOM_VIDEO_KEY
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
@@ -36,20 +36,19 @@ class MicroControllerFragment: Fragment() {
         super.onCreateView(inflater, container, savedInstanceState)
         setHasOptionsMenu(true)
 
-        Log.d(TAG, "Loading tab layout")
+        val fragmentActivity = requireActivity()
+        val ctx = fragmentActivity.applicationContext
 
         fragmentView = inflater.inflate(R.layout.fragment_microcontroller_tabs, container, false)
 
-        preferences = Preferences(activity!!.applicationContext)
-        defaultPreferences = preferences.getDefaultPreferences()
+        preferences = Preferences(ctx)
         controllerPreferences = preferences.getControllerPreferences()
 
         videoUrl = controllerPreferences.getString(CONFIG_ROOM_VIDEO_KEY, "")
 
-        controller = MasterControllerRepository(activity!!.applicationContext)
-            .getController(preferences.currentControllerId())
+        controller = MasterControllerRepository(ctx).getController(preferences.currentControllerId())
 
-        activity!!.toolbar.setTitle(controllerPreferences.getString(CONFIG_NAME_KEY, controller!!.name))
+        fragmentActivity.toolbar.title = controllerPreferences.getString(CONFIG_FARM_NAME_KEY, "undefined (microcontroller fragment)")
 
         val tabs = ArrayList<String>(4)
         tabs.add(0, resources.getString(R.string.room_fragment))
@@ -57,29 +56,11 @@ class MicroControllerFragment: Fragment() {
         tabs.add(2, resources.getString(R.string.doser_fragment))
         tabs.add(3, resources.getString(R.string.events_fragment))
 
+        viewPager = fragmentView!!.findViewById(R.id.viewPager) as ViewPager
+        viewPager!!.adapter = TabAdapter(childFragmentManager, tabs)
+
         tabLayout = fragmentView!!.findViewById(R.id.tabLayout)
-        viewPager = fragmentView!!.findViewById(R.id.viewPager)
-        //viewPager!!.offscreenPageLimit = tabs.size - 1 // sets the number of cached tabs
-
-        for (tab in tabs) {
-            tabLayout!!.addTab(tabLayout!!.newTab().setText(tab))
-        }
-
-        //tabLayout!!.tabGravity = TabLayout.GRAVITY_FILL
-
-        tabAdapter = TabAdapter(fragmentManager!!, tabLayout!!.tabCount)
-        viewPager!!.adapter = tabAdapter
-
-        viewPager!!.addOnPageChangeListener(TabLayout.TabLayoutOnPageChangeListener(tabLayout))
-        tabLayout!!.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-            override fun onTabSelected(tab: TabLayout.Tab) {
-                viewPager!!.currentItem = tab.position
-            }
-            override fun onTabUnselected(tab: TabLayout.Tab) {
-            }
-            override fun onTabReselected(tab: TabLayout.Tab) {
-            }
-        })
+        tabLayout!!.setupWithViewPager(viewPager)
 
         return fragmentView
     }
@@ -112,7 +93,7 @@ class MicroControllerFragment: Fragment() {
                 Log.d("MainActivity.OnOptionsItemSelected", "action_logout caught")
 
                 controller!!.token = ""
-                val repo = MasterControllerRepository(activity!!.applicationContext)
+                val repo = MasterControllerRepository(requireActivity().applicationContext)
                 repo.updateController(controller!!)
 
                 val editor = preferences.getControllerPreferences().edit()
@@ -132,16 +113,9 @@ class MicroControllerFragment: Fragment() {
     }
 
     override fun onResume() {
-        super.onResume()
         Log.d(TAG, "onResume called!")
-    }
-
-    override fun onDestroyView() {
-        for(fragment in tabAdapter.fragments) {
-            fragmentManager!!.beginTransaction().remove(fragment).commit()
-        }
-        super.onDestroyView()
-        Log.d(TAG, "onDestroyView called!")
+        requireActivity().toolbar.title = controllerPreferences.getString(CONFIG_FARM_NAME_KEY, "undefined farm name")
+        super.onResume()
     }
 
     override fun onDestroy() {

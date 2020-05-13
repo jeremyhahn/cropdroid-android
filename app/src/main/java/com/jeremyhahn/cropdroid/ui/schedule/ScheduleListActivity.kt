@@ -44,6 +44,7 @@ class ScheduleListActivity : AppCompatActivity(), ScheduleSelectionListener {
         channelDuration = intent.getIntExtra("channel_duration", 0)
 
         val preferences = Preferences(applicationContext)
+        val controllerPreferences = preferences.getControllerPreferences()
         val id = preferences.currentControllerId()
         val emptyText = findViewById(R.id.scheduleEmptyText) as TextView
 
@@ -53,7 +54,7 @@ class ScheduleListActivity : AppCompatActivity(), ScheduleSelectionListener {
 
         controller = MasterControllerRepository(this).getController(id)
 
-        cropDroidAPI = CropDroidAPI(controller)
+        cropDroidAPI = CropDroidAPI(controller, controllerPreferences)
         viewModel = ViewModelProviders.of(this, ScheduleViewModelFactory(cropDroidAPI, channelId)).get(ScheduleViewModel::class.java)
 
         recyclerView = findViewById(R.id.scheduleRecyclerView) as RecyclerView

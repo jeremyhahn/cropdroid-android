@@ -1,5 +1,6 @@
 package com.jeremyhahn.cropdroid.ui.events
 
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -33,6 +34,8 @@ class EventListFragment : Fragment() {
     var swipeContainer: SwipeRefreshLayout? = null
     var rv: RecyclerView? = null
     var progressBar: ProgressBar? = null
+    
+    private lateinit var sharedPrefs: SharedPreferences
 
     private val PAGE_START = 0
     private var isLoading = false
@@ -42,20 +45,23 @@ class EventListFragment : Fragment() {
     private var controller : MasterController? = null
 
      override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+         
+         val fragmentActivity = requireActivity()
+         val ctx = fragmentActivity.applicationContext
+         
+        val preferences = Preferences(ctx)
 
-        val preferences = Preferences(activity!!.applicationContext)
+         sharedPrefs = preferences.getControllerPreferences()
+
         val id = preferences.currentControllerId()
         Log.d("EventListFragment.onCreate", "controller_id: " + id.toString())
-        controller = MasterControllerRepository(context!!).getController(id)
+        controller = MasterControllerRepository(ctx).getController(id)
 
         var fragmentView = inflater.inflate(R.layout.fragment_events, container, false)
 
         progressBar = fragmentView.findViewById<View>(R.id.eventsProgress) as ProgressBar
-        adapter =
-            EventListPaginationRecyclerAdapter(
-                context!!
-            )
-        linearLayoutManager = LinearLayoutManager(context!!, LinearLayoutManager.VERTICAL, false)
+        adapter = EventListPaginationRecyclerAdapter(ctx)
+        linearLayoutManager = LinearLayoutManager(ctx, LinearLayoutManager.VERTICAL, false)
 
         rv = fragmentView.findViewById<View>(R.id.eventsRecycler) as RecyclerView
         rv!!.setHasFixedSize(true)
@@ -110,7 +116,7 @@ class EventListFragment : Fragment() {
 
     fun getEventsPage(page : Int) {
 
-        CropDroidAPI(controller!!).eventsList(page.toString(), object : Callback {
+        CropDroidAPI(controller!!, sharedPrefs).eventsList(page.toString(), object : Callback {
 
             override fun onFailure(call: Call, e: IOException) {
                 Log.d("EventListFragment.getEventsPage()", "onFailure response: " + e!!.message)

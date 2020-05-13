@@ -1,5 +1,6 @@
 package com.jeremyhahn.cropdroid.ui.iap
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -25,6 +26,8 @@ class StoreFragment : Fragment(), PurchasesUpdatedListener {
     lateinit private var billingClient: BillingClient
     lateinit private var recyclerView: RecyclerView
     lateinit private var cropDroidAPI: CropDroidAPI
+    lateinit private var ctx: Context
+
     private val skuList = listOf("server_v0.1a", "doser_v0.5a", "reservoir_v0.6a", "room_v0.6a", "test")
 
     companion object {
@@ -34,18 +37,20 @@ class StoreFragment : Fragment(), PurchasesUpdatedListener {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle? ): View? {
         super.onCreateView(inflater, container, savedInstanceState)
 
+        ctx = requireActivity().applicationContext
+        
         val fragmentView = inflater.inflate(R.layout.activity_store, container, false)
 
-        val preferences = Preferences(activity!!.applicationContext)
-        val controller = MasterControllerRepository(activity!!.applicationContext).getController(preferences.currentControllerId())
-        cropDroidAPI = CropDroidAPI(controller)
+        val preferences = Preferences(ctx)
+        val controller = MasterControllerRepository(ctx).getController(preferences.currentControllerId())
+        cropDroidAPI = CropDroidAPI(controller, preferences.getDefaultPreferences())
 
         recyclerView =  fragmentView.findViewById(R.id.products) as RecyclerView
-        recyclerView.layoutManager = LinearLayoutManager(activity!!.applicationContext, RecyclerView.VERTICAL, false)
+        recyclerView.layoutManager = LinearLayoutManager(ctx, RecyclerView.VERTICAL, false)
         recyclerView.itemAnimator = DefaultItemAnimator()
 
         billingClient = BillingClient
-            .newBuilder(activity!!.applicationContext)
+            .newBuilder(ctx)
             .setListener(this)
             .enablePendingPurchases()
             .build()
@@ -58,7 +63,7 @@ class StoreFragment : Fragment(), PurchasesUpdatedListener {
                     loadProducts()
                 } else {
                     println("BILLING | startConnection | RESULT: ${billingResult.responseCode}")
-                    Error(activity!!.applicationContext)
+                    Error(ctx)
                         .dialog("${billingResult.responseCode}: ${billingResult.debugMessage}")
                 }
             }
@@ -80,18 +85,18 @@ class StoreFragment : Fragment(), PurchasesUpdatedListener {
                     initProductAdapter(skuDetailsList)
                 } else {
                     Log.e("StoreActivity", "Can't querySkuDetailsAsync, responseCode: ${response.responseCode}, debugMessage: ${response.debugMessage}")
-                    Error(activity!!.applicationContext)
+                    Error(ctx)
                         .dialog("${response.responseCode}: ${response.debugMessage}")
                 }
             }
         }
         else {
-            Error(activity!!.applicationContext).dialog("onLoadProductsClicked() Billing client not ready!")
+            Error(ctx).dialog("onLoadProductsClicked() Billing client not ready!")
         }
     }
 
     fun initProductAdapter(skuDetailsList: List<SkuDetails>) {
-        val productsAdapter = ProductsAdapter(activity!!.applicationContext, skuDetailsList) {
+        val productsAdapter = ProductsAdapter(ctx, skuDetailsList) {
             val billingFlowParams = BillingFlowParams
                 .newBuilder()
                 .setSkuDetails(it)
@@ -125,7 +130,7 @@ class StoreFragment : Fragment(), PurchasesUpdatedListener {
                     if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchaseToken != null) {
                         println("AllowMultiplePurchases success, responseCode: ${billingResult.responseCode}")
 
-                        //Error(activity!!.applicationContext).show("${billingResult.responseCode}: ${billingResult.debugMessage}")
+                        //Error(ctx).show("${billingResult.responseCode}: ${billingResult.debugMessage}")
 
                         cropDroidAPI.verifyPurchase(purchase, object : Callback {
                             override fun onFailure(call: Call, e: IOException) {
@@ -145,13 +150,13 @@ class StoreFragment : Fragment(), PurchasesUpdatedListener {
                                 if (responseBody.toBoolean()) {
                                     activity!!.runOnUiThread(Runnable {
                                         Toast.makeText(
-                                            activity!!.applicationContext,
+                                            ctx,
                                             "Purchase successful!",
                                             Toast.LENGTH_SHORT
                                         )
                                     })
                                 } else {
-                                    Error(activity!!.applicationContext)
+                                    Error(ctx)
                                         .alert(
                                             "Unable to verify purchase. Please contact support for further assistance",
                                             null,
@@ -164,7 +169,7 @@ class StoreFragment : Fragment(), PurchasesUpdatedListener {
 
                     } else {
                         println("Can't allowMultiplePurchases, responseCode: ${billingResult.responseCode}")
-                        Error(activity!!.applicationContext)
+                        Error(ctx)
                             .dialog("${billingResult.responseCode}: ${billingResult.debugMessage}")
                     }
                 }

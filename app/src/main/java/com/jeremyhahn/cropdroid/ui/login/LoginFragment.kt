@@ -1,6 +1,6 @@
 package com.jeremyhahn.cropdroid.ui.login
 
-import android.app.ProgressDialog
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -12,6 +12,9 @@ import androidx.annotation.StringRes
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import com.jeremyhahn.cropdroid.Constants
+import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARM_ID_KEY
+import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ORG_ID_KEY
 import com.jeremyhahn.cropdroid.Error
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
@@ -28,30 +31,38 @@ import kotlinx.android.synthetic.main.activity_login.*
 import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
-import java.lang.Thread.sleep
-
 
 class LoginFragment() : Fragment() {
 
     private lateinit var repository: MasterControllerRepository
     private lateinit var preferences: Preferences
+    private lateinit var sharedPrefs: SharedPreferences
     private lateinit var loginViewModel: LoginViewModel
     private lateinit var controller: MasterController
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         super.onCreateView(inflater, container, savedInstanceState)
 
-        repository = MasterControllerRepository(activity!!.applicationContext)
+        val fragmentActivity = requireActivity()
+
+        repository = MasterControllerRepository(fragmentActivity.applicationContext)
 
         var fragmentView = inflater.inflate(R.layout.fragment_login, container, false)
 
-        preferences = Preferences(activity!!.applicationContext)
+        val registerButton = fragmentView.findViewById(R.id.register) as Button
+        registerButton.setOnClickListener(View.OnClickListener {
+            onRegister(it)
+        })
 
+        preferences = Preferences(fragmentActivity.applicationContext)
+        sharedPrefs = preferences.getDefaultPreferences()
+
+        val args = requireArguments()
         controller = MasterController(
-            arguments!!.getInt("controller_id", 0),
+            args.getInt("controller_id", 0),
             0,
-            arguments!!.getString("controller_name"),
-            arguments!!.getString("controller_hostname"),
+            args.getString("controller_name")!!,
+            args.getString("controller_hostname")!!,
             0,
             0,
             "")
@@ -62,24 +73,31 @@ class LoginFragment() : Fragment() {
         val login = fragmentView.findViewById<Button>(R.id.login)
         val loading = fragmentView.findViewById<ProgressBar>(R.id.loading)
 
-        Log.d("LoginActivity.onCreate", "controller: " + controller!!.toString())
+        Log.d("LoginActivity.onCreate", "controller: " + controller.toString())
 
         try {
-            val selectedController = repository.getController(controller!!.id)
+            val selectedController = repository.getController(controller.id)
 
             Log.d("LoginActivity.onCreate", "selectedController: " + selectedController.name)
 
             if(selectedController != null && !selectedController.token.isEmpty()) {
-                var userid = JsonWebToken(activity!!.applicationContext).parse(selectedController.token).body.get("id").toString()
-                var user = User(
-                    userid,
-                    username.text.toString(),
-                    password.text.toString(),
-                    selectedController.token,
-                    "",
-                    ""
-                )
-                updateUiWithUser(user, selectedController)
+/*
+                var jwt = JsonWebToken(requireActivity().applicationContext, selectedController.token)
+                Log.d("cached jws", jwt.claims.toString())
+
+                val userId = jwt.uid().toString()
+                var user = User(userId, username.text.toString(), password.text.toString(), selectedController.token, "0", "admin")
+                val organizations = jwt.organizations()
+
+                Log.d("sid", jwt.sid().toString())
+                Log.d("uid", jwt.uid().toString())
+                Log.d("email", jwt.email())
+                Log.d("organizations", organizations.toString())
+
+                preferences.set(selectedController, user, 0, 0)
+*/
+                doLogin(selectedController)
+
                 return fragmentView
             }
         }
@@ -120,7 +138,7 @@ class LoginFragment() : Fragment() {
             }
             if(loginResult.registered) {
                 loginViewModel.login(
-                    CropDroidAPI(controller!!),
+                    CropDroidAPI(controller, sharedPrefs),
                     username.text.toString(),
                     password.text.toString())
             }
@@ -131,31 +149,37 @@ class LoginFragment() : Fragment() {
 
                 Log.d("LoginActivity token:", user.token)
 
-                var jws = JsonWebToken(activity!!.applicationContext).parse(user.token)
-                Log.d("jws", jws.toString())
+                var jws = JsonWebToken(requireActivity().applicationContext, user.token)
+                Log.d("jws", jws.claims.toString())
 
-                user.id = jws.body.get("id").toString()
-                user.orgId = jws.body.get("organizationId").toString()
+                val organizations = jws.organizations()
 
-                controller!!.serverId = Integer.parseInt(jws.body.get("controllerId").toString())
-                controller!!.secure = if(useSSL.isChecked) 1 else 0
-                controller!!.userid = Integer.parseInt(user.id)
-                controller!!.token = user.token
+                Log.d("sid", jws.sid().toString())
+                Log.d("uid", jws.uid().toString())
+                Log.d("email", jws.email())
+                Log.d("organizations", organizations.toString())
 
-                var rowsUpdated = repository.updateController(controller!!)
-                if (rowsUpdated != 1) {
-                    Log.e(
-                        "LoginActivity.loginResult.token",
-                        "Unexpected number of rows effected: " + rowsUpdated.toString()
-                    )
-                    return@Observer
+                if(organizations.size == 1 && organizations[0].id == 0) {
+
+                    user.id = jws.uid().toString()
+                    user.orgId = "0"
+
+                    controller.serverId = jws.sid()
+                    controller.secure = if (useSSL.isChecked) 1 else 0
+                    controller.userid = Integer.parseInt(user.id)
+                    controller.token = user.token
+
+                    var rowsUpdated = repository.updateController(controller)
+                    if (rowsUpdated != 1) {
+                        Log.e("LoginActivity.loginResult.token", "Unexpected number of rows effected: " + rowsUpdated.toString())
+                        return@Observer
+                    }
+                    Log.i("LoginActivity.loginResult.token", "Controller successfully authenticated")
+
+                    preferences.set(controller, user, 0, 0)
+
+                    doLogin()
                 }
-                Log.i("LoginActivity.loginResult.token","Controller successfully authenticated")
-
-                preferences.setController(controller!!, user)
-
-                updateUiWithUser(user)
-                //finish()
             }
         })
 /*
@@ -180,7 +204,7 @@ class LoginFragment() : Fragment() {
                 when (actionId) {
                     EditorInfo.IME_ACTION_DONE ->
                         loginViewModel.login(
-                            CropDroidAPI(controller!!),
+                            CropDroidAPI(controller, sharedPrefs),
                             username.text.toString(),
                             password.text.toString()
                         )
@@ -192,7 +216,7 @@ class LoginFragment() : Fragment() {
                 loading.visibility = View.VISIBLE
                 checkSslFlag()
                 loginViewModel.login(
-                    CropDroidAPI(controller!!),
+                    CropDroidAPI(controller, sharedPrefs),
                     username.text.toString(),
                     password.text.toString()
                 )
@@ -205,7 +229,7 @@ class LoginFragment() : Fragment() {
     fun onRegister(v: View) {
         checkSslFlag()
         loginViewModel.register(
-            CropDroidAPI(controller!!),
+            CropDroidAPI(controller, sharedPrefs),
             username.text.toString(),
             password.text.toString()
         )
@@ -219,7 +243,7 @@ class LoginFragment() : Fragment() {
         }
     }
 
-    private fun updateUiWithUser(user: User, controller: MasterController = this.controller!!) {
+    private fun doLogin(controller: MasterController = this.controller) {
 
         /*
         val progress = ProgressDialog(activity)
@@ -229,7 +253,7 @@ class LoginFragment() : Fragment() {
         progress.show()
          */
 
-        CropDroidAPI(controller!!).getConfig(object : Callback {
+        CropDroidAPI(controller, sharedPrefs).getConfig(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 Log.d(":LoginActivity.getConfig.onFailure", "onFailure response: " + e.message)
                 //progress.dismiss()
@@ -257,18 +281,25 @@ class LoginFragment() : Fragment() {
                 //progress.dismiss()
 
                 activity!!.runOnUiThread(Runnable {
-                    (activity as MainActivity).navigateToMicrocontroller()
+                    val orgId = sharedPrefs.getInt(CONFIG_ORG_ID_KEY, 0)
+                    val farmId = sharedPrefs.getInt(CONFIG_FARM_ID_KEY, 0)
+                    if(orgId == 0 && farmId == 0) {
+                        (activity as MainActivity).navigateToMicrocontroller()
+                    } else {
+                        (activity as MainActivity).navigateToOrganizations()
+                    }
+
                 })
             }
         })
     }
 
     private fun showLoginFailed(@StringRes errorString: Int) {
-        Toast.makeText(activity!!.applicationContext, errorString, Toast.LENGTH_SHORT).show()
+        Toast.makeText(requireActivity().applicationContext, errorString, Toast.LENGTH_SHORT).show()
     }
 
     private fun showLoginFailed(errorString: String) {
-        Toast.makeText(activity!!.applicationContext, errorString, Toast.LENGTH_SHORT).show()
+        Toast.makeText(requireActivity().applicationContext, errorString, Toast.LENGTH_SHORT).show()
     }
 
 }

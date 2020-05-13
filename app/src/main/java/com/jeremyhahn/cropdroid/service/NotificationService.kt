@@ -15,7 +15,6 @@ import androidx.core.app.NotificationCompat
 import com.jeremyhahn.cropdroid.Constants
 import com.jeremyhahn.cropdroid.Constants.Companion.API_BASE
 import com.jeremyhahn.cropdroid.MainActivity
-import com.jeremyhahn.cropdroid.ui.edgecontroller.EdgeControllerListFragment
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.MasterController
@@ -141,7 +140,7 @@ class NotificationService : Service() {
             val client = OkHttpClient()
             val protocol = if (controller.secure == 1) "wss://" else "ws://"
             val request = Request.Builder()
-                .url(protocol.plus(controller.hostname).plus(API_BASE).plus("/notification"))
+                .url(protocol.plus(controller.hostname).plus(API_BASE).plus("/organizations/0/farms/0/notifications"))
                 .addHeader("Authorization", "Bearer " + controller.token)
                 .build()
             val listener = NotificationWebSocketListener()

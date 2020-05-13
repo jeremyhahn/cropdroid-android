@@ -19,7 +19,7 @@
         tools:layout="@layout/fragment_new_edge_controller">
     </fragment>
 
-    <fragment
+     <fragment
         android:id="@+id/nav_login"
         android:name="com.jeremyhahn.cropdroid.ui.login.LoginFragment"
         android:label="@string/title_activity_login"
@@ -36,7 +36,8 @@
         android:id="@+id/nav_store"
         android:name="com.jeremyhahn.cropdroid.ui.iap.StoreFragment"
         android:label="@string/menu_store"
-        tools:layout="@layout/activity_store" />
+        tools:layout="@layout/activity_store">
+    </fragment>
 
     <fragment
         android:id="@+id/nav_microcontroller_settings"

@@ -32,13 +32,19 @@ class ControllerParser {
                 //val configs = jsonController.getJSONObject("configs")
 
                 val jsonConfigs = jsonController.getJSONArray("configs")
-                val configs = HashMap<String, String>(jsonConfigs.length())
+                val configs = HashMap<String, Any>(jsonConfigs.length())
+
                 for (i in 0 until jsonConfigs.length()) {
                     val jsonObj: JSONObject = jsonConfigs.getJSONObject(i)
-                    val k = jsonObj.keys().next()
-                    val v = jsonObj.getString(k)
-                    configs.put(k, v)
-                    Log.i("ControllerParser.parseConfigs", "Putting config -- Key: " + k + ", value: " + v)
+                    for ((i, k) in jsonObj.keys().withIndex()) {
+                        val v = jsonObj.getString(k)
+                        if (v.toLowerCase().equals("true") || v.toLowerCase().equals("false")) {
+                            configs.put(k, v.toBoolean())
+                        } else {
+                            configs.put(k, v)
+                        }
+                        Log.i("ControllerParser.parse", "Putting config -- Key: " + k + ", value: " + v)
+                    }
                 }
 
                 val hardwareVersion = jsonController.getString("hardwareVersion")
@@ -56,7 +62,11 @@ class ControllerParser {
                 }
 
                 //controllers.add(Controller(id, orgId, type, description, enable, notify, uri, hardwareVersion, firmwareVersion, parsedMetrics, parsedChannels))
-                controllers.add(Controller(id, orgId, type, description, hardwareVersion, firmwareVersion, configs, parsedMetrics, parsedChannels))
+                val controller = Controller(id, orgId, type, description, hardwareVersion, firmwareVersion, configs, parsedMetrics, parsedChannels)
+
+                Log.d("RETURNING (controllerparser)", controller.toString())
+
+                controllers.add(controller)
             }
             return controllers
         }

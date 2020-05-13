@@ -36,10 +36,19 @@ class Constants {
         const val DOSING_CONTROLLER_ID = 2
         const val MICROCONTROLLER_REFRESH = 30000L // 30 seconds
 
-        const val CONFIG_NAME_KEY = "name"
+        const val CONFIG_ID_KEY = "id"
         const val CONFIG_INTERVAL_KEY = "interval"
         const val CONFIG_TIMEZONE_KEY = "timezone"
         const val CONFIG_MODE_KEY = "mode"
+        const val CONFIG_LICENSE_KEY = "license"
+
+        const val CONFIG_ORG_ID_KEY = "org.id"
+        const val CONFIG_ORG_NAME_KEY = "org.name"
+
+        const val CONFIG_FARM_ID_KEY = "farm.id"
+        const val CONFIG_FARM_NAME_KEY = "farm.name"
+        const val CONFIG_FARM_MODE_KEY = "farm.mode"
+        const val CONFIG_FARM_INTERVAL_KEY = "farm.interval"
 
         const val CONFIG_MODE_VIRTUAL = "virtual"
         const val CONFIG_MODE_SERVER = "server"
@@ -54,7 +63,9 @@ class Constants {
         const val CONFIG_SMTP_PASSWORD_KEY = "smtp.password"
         const val CONFIG_SMTP_RECIPIENT_KEY = "smtp.recipient"
 
+        const val CONFIG_ORGS_KEY = "organizations"
         const val CONFIG_FARMS_KEY = "farms"
+        const val CONFIG_ROLES_KEY = "roles"
         const val CONFIG_CONTROLLERS_KEY = "controllers"
         const val CONFIG_TYPE_KEY = "type"
         const val CONFIG_DESCRIPTION_KEY = "description"
