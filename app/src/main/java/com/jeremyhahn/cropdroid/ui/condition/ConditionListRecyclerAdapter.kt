@@ -8,9 +8,6 @@ import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Condition
 import com.jeremyhahn.cropdroid.model.ConditionConfig
 import kotlinx.android.synthetic.main.microcontroller_condition_cardview.view.*
-import okhttp3.Call
-import okhttp3.Callback
-import java.io.IOException
 import java.util.*
 
 class ConditionListRecyclerAdapter(val activity: ConditionListActivity, val cropDroidAPI: CropDroidAPI, var recyclerItems: ArrayList<Condition>) :

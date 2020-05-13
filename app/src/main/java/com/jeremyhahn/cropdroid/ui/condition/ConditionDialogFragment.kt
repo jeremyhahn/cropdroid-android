@@ -91,7 +91,7 @@ class ConditionDialogFragment(cropDroidAPI: CropDroidAPI, condition: Condition, 
                             Log.d("condition", "comparing: metric.key=" + metric.key + ", condition.metricName=" + condition.metricName)
 
                             if(metric.id == condition.metricId) {
-                                val spinnerPosition: Int = metricAdapter.getPosition(metric.name)
+                                val spinnerPosition: Int = metricAdapter.getPosition(condition.metricName)
                                 Log.d("condition", "metric and condition metric ids match! " + metric.id.toString() + ", name=" + metric.name + ", position=" + spinnerPosition)
                                 activity!!.runOnUiThread{
                                     metricSpinner.setSelection(spinnerPosition)

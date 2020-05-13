@@ -31,20 +31,17 @@ class ControllerParser {
 
                 //val configs = jsonController.getJSONObject("configs")
 
-                val jsonConfigs = jsonController.getJSONArray("configs")
+                val jsonConfigs = jsonController.getJSONObject("configs")
                 val configs = HashMap<String, Any>(jsonConfigs.length())
 
-                for (i in 0 until jsonConfigs.length()) {
-                    val jsonObj: JSONObject = jsonConfigs.getJSONObject(i)
-                    for ((i, k) in jsonObj.keys().withIndex()) {
-                        val v = jsonObj.getString(k)
-                        if (v.toLowerCase().equals("true") || v.toLowerCase().equals("false")) {
-                            configs.put(k, v.toBoolean())
-                        } else {
-                            configs.put(k, v)
-                        }
-                        Log.i("ControllerParser.parse", "Putting config -- Key: " + k + ", value: " + v)
+                for ((i, k) in jsonConfigs.keys().withIndex()) {
+                    val v = jsonConfigs.getString(k)
+                    if (v.toLowerCase().equals("true") || v.toLowerCase().equals("false")) {
+                        configs.put(k, v.toBoolean())
+                    } else {
+                        configs.put(k, v)
                     }
+                    Log.i("ControllerParser.parse", "Putting config -- Key: " + k + ", value: " + v)
                 }
 
                 val hardwareVersion = jsonController.getString("hardwareVersion")
