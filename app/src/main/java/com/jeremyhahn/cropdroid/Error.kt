@@ -17,7 +17,7 @@ class Error(context: Context) {
         this.context = context
     }
 
-    fun dialog(message: String) {
+    fun toast(message: String) {
         toast.setText(message)
         toast.setGravity(Gravity.CENTER, 0, 0)
         //other setters

@@ -20,7 +20,7 @@ class FarmParser {
 
                 Log.d("FarmParser.parse", jsonFarm.toString())
 
-                val id = jsonFarm.getInt("id")
+                val id = jsonFarm.getLong("id")
                 val name = jsonFarm.getString("name")
                 val interval = jsonFarm.getInt("interval")
                 val mode = jsonFarm.getString("mode")

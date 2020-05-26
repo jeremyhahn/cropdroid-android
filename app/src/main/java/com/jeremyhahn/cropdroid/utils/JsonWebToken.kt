@@ -35,8 +35,8 @@ class JsonWebToken(context: Context, token: String) {
         return claims.get("sid", Integer::class.java).toInt()
     }
 
-    fun uid(): Int {
-        return claims.get("uid", Integer::class.java).toInt()
+    fun uid(): Long {
+        return claims.get("uid", java.lang.Long::class.java).toLong()
     }
 
     fun email(): String {

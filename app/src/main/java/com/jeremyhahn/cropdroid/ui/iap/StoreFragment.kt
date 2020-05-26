@@ -63,8 +63,7 @@ class StoreFragment : Fragment(), PurchasesUpdatedListener {
                     loadProducts()
                 } else {
                     println("BILLING | startConnection | RESULT: ${billingResult.responseCode}")
-                    Error(ctx)
-                        .dialog("${billingResult.responseCode}: ${billingResult.debugMessage}")
+                    Error(ctx).toast("${billingResult.responseCode}: ${billingResult.debugMessage}")
                 }
             }
             override fun onBillingServiceDisconnected() {
@@ -85,13 +84,12 @@ class StoreFragment : Fragment(), PurchasesUpdatedListener {
                     initProductAdapter(skuDetailsList)
                 } else {
                     Log.e("StoreActivity", "Can't querySkuDetailsAsync, responseCode: ${response.responseCode}, debugMessage: ${response.debugMessage}")
-                    Error(ctx)
-                        .dialog("${response.responseCode}: ${response.debugMessage}")
+                    Error(ctx).toast("${response.responseCode}: ${response.debugMessage}")
                 }
             }
         }
         else {
-            Error(ctx).dialog("onLoadProductsClicked() Billing client not ready!")
+            Error(ctx).toast("onLoadProductsClicked() Billing client not ready!")
         }
     }
 
@@ -169,8 +167,7 @@ class StoreFragment : Fragment(), PurchasesUpdatedListener {
 
                     } else {
                         println("Can't allowMultiplePurchases, responseCode: ${billingResult.responseCode}")
-                        Error(ctx)
-                            .dialog("${billingResult.responseCode}: ${billingResult.debugMessage}")
+                        Error(ctx).toast("${billingResult.responseCode}: ${billingResult.debugMessage}")
                     }
                 }
             })

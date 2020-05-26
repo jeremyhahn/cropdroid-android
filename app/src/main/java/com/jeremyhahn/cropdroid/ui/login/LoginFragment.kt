@@ -21,6 +21,7 @@ import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.MasterController
+import com.jeremyhahn.cropdroid.model.ServerConfig
 import com.jeremyhahn.cropdroid.model.User
 import com.jeremyhahn.cropdroid.utils.ConfigManager
 import com.jeremyhahn.cropdroid.utils.ConfigParser
@@ -48,16 +49,17 @@ class LoginFragment() : Fragment() {
         repository = MasterControllerRepository(fragmentActivity.applicationContext)
 
         var fragmentView = inflater.inflate(R.layout.fragment_login, container, false)
-
+        val args = requireArguments()
+        val username = fragmentView.findViewById<EditText>(R.id.username)
+        val password = fragmentView.findViewById<EditText>(R.id.password)
+        val useSSL = fragmentView.findViewById<CheckBox>(R.id.useSSL)
+        val login = fragmentView.findViewById<Button>(R.id.login)
+        val loading = fragmentView.findViewById<ProgressBar>(R.id.loading)
         val registerButton = fragmentView.findViewById(R.id.register) as Button
-        registerButton.setOnClickListener(View.OnClickListener {
-            onRegister(it)
-        })
 
         preferences = Preferences(fragmentActivity.applicationContext)
         sharedPrefs = preferences.getDefaultPreferences()
 
-        val args = requireArguments()
         controller = MasterController(
             args.getInt("controller_id", 0),
             0,
@@ -67,13 +69,18 @@ class LoginFragment() : Fragment() {
             0,
             "")
 
-        val username = fragmentView.findViewById<EditText>(R.id.username)
-        val password = fragmentView.findViewById<EditText>(R.id.password)
-        val useSSL = fragmentView.findViewById<CheckBox>(R.id.useSSL)
-        val login = fragmentView.findViewById<Button>(R.id.login)
-        val loading = fragmentView.findViewById<ProgressBar>(R.id.loading)
-
         Log.d("LoginActivity.onCreate", "controller: " + controller.toString())
+
+        loginViewModel = ViewModelProviders.of(this, LoginViewModelFactory()).get(LoginViewModel::class.java)
+        login.setOnClickListener {
+            loading.visibility = View.VISIBLE
+            checkSslFlag()
+            loginViewModel.login(
+                CropDroidAPI(controller, sharedPrefs),
+                username.text.toString(),
+                password.text.toString()
+            )
+        }
 
         try {
             val selectedController = repository.getController(controller.id)
@@ -81,23 +88,7 @@ class LoginFragment() : Fragment() {
             Log.d("LoginActivity.onCreate", "selectedController: " + selectedController.name)
 
             if(selectedController != null && !selectedController.token.isEmpty()) {
-/*
-                var jwt = JsonWebToken(requireActivity().applicationContext, selectedController.token)
-                Log.d("cached jws", jwt.claims.toString())
-
-                val userId = jwt.uid().toString()
-                var user = User(userId, username.text.toString(), password.text.toString(), selectedController.token, "0", "admin")
-                val organizations = jwt.organizations()
-
-                Log.d("sid", jwt.sid().toString())
-                Log.d("uid", jwt.uid().toString())
-                Log.d("email", jwt.email())
-                Log.d("organizations", organizations.toString())
-
-                preferences.set(selectedController, user, 0, 0)
-*/
                 doLogin(selectedController)
-
                 return fragmentView
             }
         }
@@ -110,8 +101,6 @@ class LoginFragment() : Fragment() {
         for(controller in repository.allControllers) {
             Log.d("LoginActivity.onCreate", "registered controller: " + controller!!.toString())
         }
-
-        loginViewModel = ViewModelProviders.of(this, LoginViewModelFactory()).get(LoginViewModel::class.java)
 
         loginViewModel.loginFormState.observe(this@LoginFragment, Observer {
             val loginState = it ?: return@Observer
@@ -161,12 +150,14 @@ class LoginFragment() : Fragment() {
 
                 if(organizations.size == 1 && organizations[0].id == 0) {
 
+                    val farmId = organizations[0].farms[0].id
+
                     user.id = jws.uid().toString()
                     user.orgId = "0"
 
                     controller.serverId = jws.sid()
+                    controller.userid = jws.uid()
                     controller.secure = if (useSSL.isChecked) 1 else 0
-                    controller.userid = Integer.parseInt(user.id)
                     controller.token = user.token
 
                     var rowsUpdated = repository.updateController(controller)
@@ -176,11 +167,15 @@ class LoginFragment() : Fragment() {
                     }
                     Log.i("LoginActivity.loginResult.token", "Controller successfully authenticated")
 
-                    preferences.set(controller, user, 0, 0)
+                    preferences.set(controller, user, 0, farmId)
 
                     doLogin()
                 }
             }
+
+            registerButton.setOnClickListener(View.OnClickListener {
+                onRegister(it)
+            })
         })
 /*
         username.afterTextChanged {
@@ -210,16 +205,6 @@ class LoginFragment() : Fragment() {
                         )
                 }
                 false
-            }
-
-            login.setOnClickListener {
-                loading.visibility = View.VISIBLE
-                checkSslFlag()
-                loginViewModel.login(
-                    CropDroidAPI(controller, sharedPrefs),
-                    username.text.toString(),
-                    password.text.toString()
-                )
             }
         }
 
@@ -253,15 +238,35 @@ class LoginFragment() : Fragment() {
         progress.show()
          */
 
-        CropDroidAPI(controller, sharedPrefs).getConfig(object : Callback {
+        val cropDroidAPI = CropDroidAPI(controller, sharedPrefs)
+
+        val orgId = sharedPrefs.getInt(CONFIG_ORG_ID_KEY, 0)
+        val farmId = sharedPrefs.getLong(CONFIG_FARM_ID_KEY, 0)
+
+        (activity as MainActivity).configManager = ConfigManager(preferences.getControllerPreferences(), ServerConfig())
+
+        (activity as MainActivity).configManager.sync()
+
+        (activity as MainActivity).configManager.listen(requireActivity(), cropDroidAPI, farmId)
+
+        requireActivity().runOnUiThread(Runnable {
+            if(orgId == 0) {
+                (activity as MainActivity).navigateToMicrocontroller()
+            } else {
+                (activity as MainActivity).navigateToOrganizations()
+            }
+        })
+
+/*
+        cropDroidAPI.getConfig(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 Log.d(":LoginActivity.getConfig.onFailure", "onFailure response: " + e.message)
                 //progress.dismiss()
                 activity!!.runOnUiThread(Runnable {
                     if(e.message == null) {
-                        Error(activity!!.applicationContext).dialog(e.localizedMessage)
+                        Error(activity!!.applicationContext).toast(e.localizedMessage)
                     } else {
-                        Error(activity!!.applicationContext).dialog(e.message!!)
+                        Error(activity!!.applicationContext).toast(e.message!!)
                     }
                 })
             }
@@ -270,9 +275,12 @@ class LoginFragment() : Fragment() {
                 var responseBody = response.body().string()
                 Log.d("LoginActivity.getConfig.onResponse", "responseBody: " + responseBody)
 
-                ConfigManager(
-                    preferences.getControllerPreferences(),
-                    ConfigParser.parse(responseBody)).sync()
+                val orgId = sharedPrefs.getInt(CONFIG_ORG_ID_KEY, 0)
+                val farmId = sharedPrefs.getInt(CONFIG_FARM_ID_KEY, 0)
+
+                (activity as MainActivity).configManager = ConfigManager(preferences.getControllerPreferences(), ConfigParser.parse(responseBody))
+                //(activity as MainActivity).configManager.sync()
+                (activity as MainActivity).configManager.listen(activity!!.applicationContext, cropDroidAPI, farmId)
 
                 //val notificationServiceIntent = Intent(this, NotificationService::class.java)
                 //notificationServiceIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -281,8 +289,6 @@ class LoginFragment() : Fragment() {
                 //progress.dismiss()
 
                 activity!!.runOnUiThread(Runnable {
-                    val orgId = sharedPrefs.getInt(CONFIG_ORG_ID_KEY, 0)
-                    val farmId = sharedPrefs.getInt(CONFIG_FARM_ID_KEY, 0)
                     if(orgId == 0 && farmId == 0) {
                         (activity as MainActivity).navigateToMicrocontroller()
                     } else {
@@ -292,6 +298,7 @@ class LoginFragment() : Fragment() {
                 })
             }
         })
+        */
     }
 
     private fun showLoginFailed(@StringRes errorString: Int) {

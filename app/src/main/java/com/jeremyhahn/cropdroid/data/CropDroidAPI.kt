@@ -1,5 +1,6 @@
 package com.jeremyhahn.cropdroid.data
 
+import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import com.android.billingclient.api.Purchase
@@ -19,7 +20,7 @@ import java.text.SimpleDateFormat
 class CropDroidAPI(val controller: MasterController, preferences: SharedPreferences) {
 
     val orgId: Int
-    val farmId: Int
+    val farmId: Long
 
     val REST_ENDPOINT: String
     val VERSIONED_ENDPOINT: String
@@ -36,9 +37,11 @@ class CropDroidAPI(val controller: MasterController, preferences: SharedPreferen
     val FARM_ENDPOINT: String
     val IAP_ENDPOINT: String
 
+    var websockets : HashMap<MasterController, HashMap<String, WebSocket>> = HashMap()
+
     init {
         orgId = preferences.getInt(CONFIG_ORG_ID_KEY, 0)
-        farmId = preferences.getInt(CONFIG_FARM_ID_KEY, 0)
+        farmId = preferences.getLong(CONFIG_FARM_ID_KEY, 0)
 
         REST_ENDPOINT = if(controller.secure == 1)
             "https://".plus(controller.hostname)
@@ -47,8 +50,8 @@ class CropDroidAPI(val controller: MasterController, preferences: SharedPreferen
         VERSIONED_ENDPOINT = REST_ENDPOINT.plus(API_BASE)
         ORGANIZATION_ENDPOINT = VERSIONED_ENDPOINT.plus("/organizations/").plus(orgId)
 
-        FARM_ENDPOINT = ORGANIZATION_ENDPOINT.plus("/farms/").plus(farmId)
-        //FARM_ENDPOINT = VERSIONED_ENDPOINT.plus("/farms/").plus(farmId)
+        //FARM_ENDPOINT = ORGANIZATION_ENDPOINT.plus("/farms/").plus(farmId)
+        FARM_ENDPOINT = VERSIONED_ENDPOINT.plus("/farms/").plus(farmId)
 
         EVENTS_ENDPOINT = FARM_ENDPOINT.plus("/events")
         CONFIG_ENDPOINT = FARM_ENDPOINT.plus("/config")
@@ -109,9 +112,9 @@ class CropDroidAPI(val controller: MasterController, preferences: SharedPreferen
         doGet(resource, args, callback)
     }
 
-    fun setConfig(controllerId: Int, key: String, value: String, callback: Callback) {
+    fun setConfig(controllerId: String, key: String, value: String, callback: Callback) {
         var args = ArrayList<String>(3)
-        args.add(controllerId.toString())
+        args.add(controllerId)
         args.add(key)
         args.add("?value="+URLEncoder.encode(value, "utf-8"))
         doGet(CONFIG_ENDPOINT, args, callback)
@@ -428,6 +431,43 @@ class CropDroidAPI(val controller: MasterController, preferences: SharedPreferen
         }
     }
 
+    fun createWebsocket(context: Context, resource: String, listener: WebSocketListener): WebSocket? {
+        Log.d("CropDroidAPI.createWebSocket", "resource: " + resource)
+        val key = StringBuffer(controller.name).append(resource.replace("/", "_")).toString()
+        try {
+            val client = OkHttpClient()
+            val protocol = if (controller.secure == 1) "wss://" else "ws://"
+            var url = protocol.plus(controller.hostname).plus(API_BASE).plus(resource)
+            Log.d("CropDroidAPI.createWebSocket.URL", url)
+            val request = Request.Builder()
+                .url(url)
+                .addHeader("Authorization", "Bearer " + controller.token)
+                .build()
+
+            val websocket = client.newWebSocket(request, listener)
+            //websockets[controller] = HashMap()
+            //websockets[controller]!!.put(key, websocket)
+            client.dispatcher().executorService().shutdown()
+            client.retryOnConnectionFailure()
+            return websocket
+        }
+        catch(e: java.lang.IllegalArgumentException) {
+            com.jeremyhahn.cropdroid.Error(context).toast(e.message!!)
+        }
+        Log.d("CropDroidAPI.createWebsocket", "Created WebSocket: " + key)
+        return null
+    }
+
+/*
+    fun getController(webSocket: WebSocket) : MasterController? {
+        for((k, v) in websockets) {
+            if(v.equals(webSocket)) {
+                return k
+            }
+        }
+        return null
+    }
+*/
     /*
     fun doFormPost(resource: String, args: Map<String, String>, callback: Callback) {
         val client = OkHttpClient()

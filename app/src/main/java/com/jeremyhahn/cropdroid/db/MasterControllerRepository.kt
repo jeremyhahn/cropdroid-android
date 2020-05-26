@@ -109,7 +109,7 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
             cursor.getString(2),
             cursor.getString(3),
             cursor.getInt(4),
-            cursor.getInt(5),
+            cursor.getLong(5),
             cursor.getString(6)
         )
         db.close()
@@ -145,7 +145,7 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
                 cursor.getString(2),
                 cursor.getString(3),
                 cursor.getInt(4),
-                cursor.getInt(5),
+                cursor.getLong(5),
                 cursor.getString(6)
             )
         }
@@ -167,7 +167,7 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
                         cursor.getString(2),
                         cursor.getString(3),
                         cursor.getInt(4),
-                        cursor.getInt(5),
+                        cursor.getLong(5),
                         cursor.getString(6)
                     ))
                 } while (cursor.moveToNext())

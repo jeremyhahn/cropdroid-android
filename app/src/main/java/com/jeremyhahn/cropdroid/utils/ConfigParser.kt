@@ -6,8 +6,6 @@ import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARMS_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_INTERVAL_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_MODE_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ORGS_KEY
-import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ROLES_KEY
-import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_TIMEZONE_KEY
 import com.jeremyhahn.cropdroid.model.*
 import org.json.JSONArray
@@ -27,8 +25,10 @@ class ConfigParser {
                 config.getString(CONFIG_INTERVAL_KEY),
                 config.getString(CONFIG_TIMEZONE_KEY),
                 config.getString(CONFIG_MODE_KEY),
-                parseSmtp(config.getJSONObject(CONFIG_SMTP_KEY)),
-                parseOrganizations(config.getJSONArray(CONFIG_ORGS_KEY))
+                //parseSmtp(config.getJSONObject(CONFIG_SMTP_KEY)),
+                SmtpConfig("false", "localhost", "25", "", "", "nobody@blackhole.com"),
+                parseOrganizations(config.getJSONArray(CONFIG_ORGS_KEY)),
+                parseFarms(config.getJSONArray(CONFIG_FARMS_KEY))
             )
         }
 
@@ -81,7 +81,7 @@ class ConfigParser {
 
                 Log.d("ConfigParser.parseFarms", jsonFarm.toString())
 
-                val id = jsonFarm.getInt("id")
+                val id = jsonFarm.getLong("id")
                 val orgId = jsonFarm.getInt("orgId")
                 val mode = jsonFarm.getString("mode")
                 val name = jsonFarm.getString("name")
@@ -120,7 +120,7 @@ class ConfigParser {
                     Log.i("ConfigParser.parseControllers", "Putting config -- Key: " + k + ", value: " + v)
                 }
                 val id = jsonChannel.getInt("id")
-                val orgId = jsonChannel.getInt("orgId")
+               // val orgId = jsonChannel.getInt("orgId")
                 val type = jsonChannel.getString("type")
                 val description = jsonChannel.getString("description")
                 //val enabled = jsonChannel.getBoolean("enable")
@@ -133,7 +133,7 @@ class ConfigParser {
                 //controllers.add(Controller(id, orgId, type, description, enabled, notify, uri, hardwareVersion, firmwareVersion, metrics, channels))
                 //controllers.add(Controller(id, orgId, type, description, hardwareVersion, firmwareVersion, configs, metrics, channels))
 
-                val controller = Controller(id, orgId, type, description, "", "", configs, metrics, channels)
+                val controller = Controller(id, type, description, "", "", configs, metrics, channels)
 
                 Log.d("RETURNING", controller.toString())
 

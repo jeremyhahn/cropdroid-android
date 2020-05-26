@@ -140,7 +140,7 @@ class NotificationService : Service() {
             val client = OkHttpClient()
             val protocol = if (controller.secure == 1) "wss://" else "ws://"
             val request = Request.Builder()
-                .url(protocol.plus(controller.hostname).plus(API_BASE).plus("/organizations/0/farms/0/notifications"))
+                .url(protocol.plus(controller.hostname).plus(API_BASE).plus("/farms/557387252778762241/notifications"))
                 .addHeader("Authorization", "Bearer " + controller.token)
                 .build()
             val listener = NotificationWebSocketListener()

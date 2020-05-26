@@ -59,7 +59,7 @@ class ControllerParser {
                 }
 
                 //controllers.add(Controller(id, orgId, type, description, enable, notify, uri, hardwareVersion, firmwareVersion, parsedMetrics, parsedChannels))
-                val controller = Controller(id, orgId, type, description, hardwareVersion, firmwareVersion, configs, parsedMetrics, parsedChannels)
+                val controller = Controller(id, type, description, hardwareVersion, firmwareVersion, configs, parsedMetrics, parsedChannels)
 
                 Log.d("RETURNING (controllerparser)", controller.toString())
 

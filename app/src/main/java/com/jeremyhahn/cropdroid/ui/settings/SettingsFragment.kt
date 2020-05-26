@@ -19,15 +19,18 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
     lateinit private var controller : MasterController
     lateinit private var cropdroid: CropDroidAPI
     lateinit var sharedPreferences: SharedPreferences
+    lateinit var preferences: Preferences
+    private var farmId: Long = 0
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         //super.onCreatePreferences(savedInstanceState)
 
         val ctx = requireActivity().applicationContext
 
-        val preferences = Preferences(ctx)
+        preferences = Preferences(ctx)
+
         val id = preferences.currentControllerId()
-        val farmId = preferences.currentFarmId()
+        farmId = preferences.currentFarmId()
 
         sharedPreferences = preferences.getControllerPreferences()
         sharedPreferences.registerOnSharedPreferenceChangeListener(this)
@@ -83,13 +86,13 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
         return true
     }*/
 
-    private fun parseControllerId(key: String) : Int{
+    private fun parseControllerId(key: String) : String {
         val pieces = key.split(".")
         if(pieces.size == 1) {
-            return 1 // cropdroid server id
+            return farmId.toString()
         }
         val controller_key = Constants.CONFIG_CONTROLLER_PREFIX_KEY.plus(pieces[0]) // ex: controller_room
         Log.d("SettingsActivity", "Looking for controller key: " + controller_key)
-        return sharedPreferences!!.getInt(controller_key, 1)
+        return sharedPreferences!!.getInt(controller_key, 1).toString()
     }
 }

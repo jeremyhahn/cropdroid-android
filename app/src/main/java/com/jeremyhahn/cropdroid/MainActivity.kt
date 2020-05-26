@@ -21,8 +21,11 @@ import androidx.work.NetworkType
 import com.google.android.material.navigation.NavigationView
 import com.jeremyhahn.cropdroid.model.MasterController
 import com.jeremyhahn.cropdroid.service.NotificationService
+import com.jeremyhahn.cropdroid.utils.ConfigManager
 
 class MainActivity : AppCompatActivity() {
+
+    public lateinit var configManager: ConfigManager
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var navController: NavController
