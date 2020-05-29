@@ -22,7 +22,7 @@ import java.io.IOException
 class ChannelAlgorithmMenuItem(activity: Activity, context: Context, menu: ContextMenu, channel: Channel, cropDroidAPI: CropDroidAPI) {
 
     init {
-        menu!!.add(0, channel.id, 0, "Algorithm")
+        menu!!.add(0, channel.id.toInt(), 0, "Algorithm")
             .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
 
                 var algorithmMap = HashMap<Int, Algorithm>()

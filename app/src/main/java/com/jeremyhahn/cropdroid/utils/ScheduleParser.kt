@@ -33,7 +33,7 @@ class ScheduleParser {
 
                 Log.d("ScheduleParser.parse", jsonSchedule.toString())
 
-                val id = jsonSchedule.getInt("id")
+                val id = jsonSchedule.getLong("id")
                 val channelId = jsonSchedule.getInt("channelId")
                 val startDate = jsonSchedule.getString("startDate")
                 val endDate = jsonSchedule.getString("endDate")

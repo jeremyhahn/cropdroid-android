@@ -6,6 +6,8 @@ import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARMS_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_INTERVAL_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_MODE_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ORGS_KEY
+import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ROLES_KEY
+import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_TIMEZONE_KEY
 import com.jeremyhahn.cropdroid.model.*
 import org.json.JSONArray
@@ -14,6 +16,7 @@ import org.json.JSONObject
 class ConfigParser {
 
     companion object {
+
         fun parse(json: String): ServerConfig {
             return parse(JSONObject(json))
         }
@@ -27,8 +30,7 @@ class ConfigParser {
                 config.getString(CONFIG_MODE_KEY),
                 //parseSmtp(config.getJSONObject(CONFIG_SMTP_KEY)),
                 SmtpConfig("false", "localhost", "25", "", "", "nobody@blackhole.com"),
-                parseOrganizations(config.getJSONArray(CONFIG_ORGS_KEY)),
-                parseFarms(config.getJSONArray(CONFIG_FARMS_KEY))
+                parseOrganizations(config.getJSONArray(CONFIG_ORGS_KEY))
             )
         }
 
@@ -40,34 +42,23 @@ class ConfigParser {
 
                 val jsonOrg = jsonOrgs.getJSONObject(i)
 
+                /*
                 Log.d("ConfigParser.parseOrganizations", jsonOrg.toString())
 
-                val id = jsonOrg.getInt("id")
+                val id = jsonOrg.getLong("id")
                 val name = jsonOrg.getString("name")
-
                 val farms = parseFarms(jsonOrg.getJSONArray(CONFIG_FARMS_KEY))
-
-                //val roles = RoleParser.parse(jsonOrg.getJSONArray(CONFIG_ROLES_KEY))
-                val roles = ArrayList<String>(0)
-                roles.add("admin")
+                val roles = RoleParser.parse(jsonOrg.getJSONArray(CONFIG_ROLES_KEY))
+                //val roles = ArrayList<String>(0)
+                //roles.add("admin")
 
                 var license = jsonOrg.getString("license")
 
                 orgs.add(Organization(id, name, farms, license, roles))
+                 */
+                orgs.add(OrganizationParser.parse(jsonOrg, true))
             }
             return orgs
-        }
-
-        fun parseSmtp(smtp: JSONObject): SmtpConfig {
-            Log.d("parseSmtp", smtp.toString())
-            return SmtpConfig(
-                smtp.getString("enable"),
-                smtp.getString("host"),
-                smtp.getString("port"),
-                smtp.getString("username"),
-                smtp.getString("password"),
-                smtp.getString("recipient")
-            )
         }
 
         fun parseFarms(jsonFarms: JSONArray): ArrayList<Farm> {
@@ -82,18 +73,21 @@ class ConfigParser {
                 Log.d("ConfigParser.parseFarms", jsonFarm.toString())
 
                 val id = jsonFarm.getLong("id")
-                val orgId = jsonFarm.getInt("orgId")
+                val orgId = jsonFarm.getLong("orgId")
                 val mode = jsonFarm.getString("mode")
                 val name = jsonFarm.getString("name")
                 val interval = jsonFarm.getInt("interval")
                 val controllers = parseControllers(jsonFarm.getJSONArray(CONFIG_CONTROLLERS_KEY))
+                val timezone = jsonFarm.getString("timezone")
+
+                val smtp = SmtpParser.parse(jsonFarm.getJSONObject(CONFIG_SMTP_KEY))
 
                 //var jsonRoles = jsonFarm.getJSONArray(CONFIG_ROLES_KEY)
                 //val roles = RoleParser.parse(jsonRoles)
                 val roles = ArrayList<String>(0)
                 roles.add("admin")
 
-                farms.add(Farm(id, orgId, mode, name, interval, controllers, roles))
+                farms.add(Farm(id, orgId, mode, name, interval, timezone, smtp, controllers, roles))
             }
             return farms
         }
@@ -119,7 +113,7 @@ class ConfigParser {
                     }
                     Log.i("ConfigParser.parseControllers", "Putting config -- Key: " + k + ", value: " + v)
                 }
-                val id = jsonChannel.getInt("id")
+                val id = jsonChannel.getLong("id")
                // val orgId = jsonChannel.getInt("orgId")
                 val type = jsonChannel.getString("type")
                 val description = jsonChannel.getString("description")
@@ -132,12 +126,7 @@ class ConfigParser {
                 val channels = ChannelParser.parse(jsonChannel.getJSONArray("channels"))
                 //controllers.add(Controller(id, orgId, type, description, enabled, notify, uri, hardwareVersion, firmwareVersion, metrics, channels))
                 //controllers.add(Controller(id, orgId, type, description, hardwareVersion, firmwareVersion, configs, metrics, channels))
-
-                val controller = Controller(id, type, description, "", "", configs, metrics, channels)
-
-                Log.d("RETURNING", controller.toString())
-
-                controllers.add(controller)
+                controllers.add(Controller(id, type, description, "", "", configs, metrics, channels))
             }
             return controllers
         }

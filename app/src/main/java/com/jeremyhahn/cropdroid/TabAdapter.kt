@@ -25,28 +25,7 @@ class TabAdapter(manager: FragmentManager, tabs:  ArrayList<String>) : FragmentP
     }
 
     override fun getItem(position: Int): Fragment {
-        when (position) {
-            0 -> {
-                return fragments[0]
-                //return RoomFragment()
-            }
-            1 -> {
-                return fragments[1]
-                //return ReservoirFragment()
-            }
-            2 -> {
-                return fragments[2]
-                //return DoserFragment()
-            }
-            3 -> {
-                return fragments[3]
-                //return EventListFragment()
-            }
-            else -> {
-                return fragments[0]
-                //return RoomFragment()
-            }
-        }
+        return fragments[position]
     }
 
     override fun getPageTitle(position: Int): CharSequence? {

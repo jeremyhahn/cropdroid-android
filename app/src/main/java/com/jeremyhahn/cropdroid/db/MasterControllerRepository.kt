@@ -6,16 +6,13 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import com.jeremyhahn.cropdroid.Constants.Companion.DATABASE_NAME
-import com.jeremyhahn.cropdroid.model.MasterController
+import com.jeremyhahn.cropdroid.model.Server
+import com.jeremyhahn.cropdroid.utils.JsonWebToken
 
-private const val DATABASE_VERSION = 6
-private const val TABLE_MASTER_CONTROLLERS = "master_controllers"
-private const val KEY_ID = "id"
-private const val KEY_SERVER_ID = "server_id" // controller id on the server
-private const val KEY_NAME = "name"
+private const val DATABASE_VERSION = 1
+private const val TABLE_SERVERS = "servers"
 private const val KEY_HOSTNAME = "hostname"
 private const val KEY_SECURE = "secure"
-private const val KEY_USERID = "userid"
 private const val KEY_TOKEN = "token"
 
 class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
@@ -28,19 +25,15 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
 
     override fun onCreate(db: SQLiteDatabase) {
         val createMasterControllerTableSql =
-            ("CREATE TABLE " + TABLE_MASTER_CONTROLLERS + "("
-                    + KEY_ID + " INTEGER PRIMARY KEY,"
-                    + KEY_SERVER_ID + " INTEGER,"
-                    + KEY_NAME + " TEXT,"
-                    + KEY_HOSTNAME + " TEXT" + ","
+            ("CREATE TABLE " + TABLE_SERVERS + "("
+                    + KEY_HOSTNAME + " VARCHAR(255) PRIMARY KEY" + ","
                     + KEY_SECURE + " INT" + ","
-                    + KEY_USERID + " INT" + ","
                     + KEY_TOKEN + " TEXT)")
         db.execSQL(createMasterControllerTableSql)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        db.execSQL("DROP TABLE IF EXISTS $TABLE_MASTER_CONTROLLERS")
+        db.execSQL("DROP TABLE IF EXISTS $TABLE_SERVERS")
         onCreate(db)
     }
 
@@ -49,7 +42,7 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
     }
 
     fun getCount() : Int {
-        val countQuery = "SELECT  * FROM $TABLE_MASTER_CONTROLLERS"
+        val countQuery = "SELECT  * FROM $TABLE_SERVERS"
         val db: SQLiteDatabase = this.getReadableDatabase()
         val cursor: Cursor = db.rawQuery(countQuery, null)
         cursor.close()
@@ -67,67 +60,56 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
         return id
     }
 
-    fun addController(controller: MasterController) : MasterController {
+    fun create(controller: Server) : Server {
         val db: SQLiteDatabase = this.getWritableDatabase()
         val values = ContentValues()
-        values.put(KEY_NAME, controller.name)
-        values.put(KEY_SERVER_ID, controller.serverId)
         values.put(KEY_HOSTNAME, controller.hostname)
         values.put(KEY_SECURE, controller.secure)
-        values.put(KEY_USERID, controller.userid)
         values.put(KEY_TOKEN, controller.token)
-        db.insert(TABLE_MASTER_CONTROLLERS, null, values)
-        controller.id = getLastInsertedId(db)
+        db.insert(TABLE_SERVERS, null, values)
+        //controller.id = getLastInsertedId(db)
         db.close()
+        controller.jwt = JsonWebToken(context!!, controller.token)
         return controller
     }
 
-    fun getController(id: Int): MasterController {
+    fun get(hostname: String): Server {
         val db: SQLiteDatabase = this.getReadableDatabase()
         val cursor: Cursor = db.query(
-            TABLE_MASTER_CONTROLLERS,
+            TABLE_SERVERS,
             arrayOf(
-                KEY_ID,
-                KEY_SERVER_ID,
-                KEY_NAME,
                 KEY_HOSTNAME,
                 KEY_SECURE,
-                KEY_USERID,
                 KEY_TOKEN
             ),
-            "$KEY_ID=?",
-            arrayOf(id.toString()),
+            "$KEY_HOSTNAME=?",
+            arrayOf(hostname),
             null,
             null,
             null,
             null
         )
         cursor.moveToFirst()
-        var controller  = MasterController(
-            cursor.getString(0).toInt(),
+        var controller  = Server(
+            cursor.getString(0),
             cursor.getString(1).toInt(),
             cursor.getString(2),
-            cursor.getString(3),
-            cursor.getInt(4),
-            cursor.getLong(5),
-            cursor.getString(6)
-        )
+            null)
         db.close()
+        if(controller.token != "") {
+            controller.jwt = JsonWebToken(context!!, controller.token)
+        }
         return controller
     }
 
-    fun getControllerByHostname(hostname: String): MasterController? {
-        var controller : MasterController? = null
+    fun getByHostname(hostname: String): Server? {
+        var controller : Server? = null
         val db: SQLiteDatabase = this.getReadableDatabase()
         val cursor: Cursor = db.query(
-            TABLE_MASTER_CONTROLLERS,
+            TABLE_SERVERS,
             arrayOf(
-                KEY_ID,
-                KEY_SERVER_ID,
-                KEY_NAME,
                 KEY_HOSTNAME,
                 KEY_SECURE,
-                KEY_USERID,
                 KEY_TOKEN
             ),
             "$KEY_HOSTNAME=?",
@@ -139,68 +121,64 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
         )
         cursor.moveToFirst()
         if(cursor.count > 0) {
-            controller = MasterController(
-                cursor.getString(0).toInt(),
+            controller = Server(
+                cursor.getString(0),
                 cursor.getString(1).toInt(),
                 cursor.getString(2),
-                cursor.getString(3),
-                cursor.getInt(4),
-                cursor.getLong(5),
-                cursor.getString(6)
-            )
+                null)
+            if(controller.token != "") {
+                controller.jwt = JsonWebToken(context!!, controller.token)
+            }
         }
         db.close()
         return controller
     }
 
-    val allControllers: ArrayList<MasterController>
+    val allControllers: ArrayList<Server>
         get() {
-            var controllerList: ArrayList<MasterController> = ArrayList<MasterController>()
-            val selectQuery = "SELECT  * FROM $TABLE_MASTER_CONTROLLERS ORDER BY $KEY_NAME"
+            var controllerList: ArrayList<Server> = ArrayList<Server>()
+            val selectQuery = "SELECT  * FROM $TABLE_SERVERS ORDER BY $KEY_HOSTNAME"
             val db: SQLiteDatabase = this.getWritableDatabase()
             val cursor: Cursor = db.rawQuery(selectQuery, null)
             if (cursor.moveToFirst()) {
                 do {
-                    controllerList.add(MasterController(
-                        cursor.getString(0).toInt(),
+                    val controller = Server(
+                        cursor.getString(0),
                         cursor.getString(1).toInt(),
                         cursor.getString(2),
-                        cursor.getString(3),
-                        cursor.getInt(4),
-                        cursor.getLong(5),
-                        cursor.getString(6)
-                    ))
+                        null)
+                    if(controller.token != "") {
+                        controller.jwt = JsonWebToken(context!!, controller.token)
+                    }
+                    controllerList.add(controller)
                 } while (cursor.moveToNext())
             }
             db.close()
             return controllerList
         }
 
-    fun updateController(controller: MasterController): Int {
+    fun updateController(controller: Server): Int {
         val db: SQLiteDatabase = this.getWritableDatabase()
         val values = ContentValues()
-        values.put(KEY_SERVER_ID, controller.serverId)
-        values.put(KEY_NAME, controller.name)
         values.put(KEY_HOSTNAME, controller.hostname)
         values.put(KEY_SECURE, controller.secure)
-        values.put(KEY_USERID, controller.userid)
         values.put(KEY_TOKEN, controller.token)
         var response = db.update(
-            TABLE_MASTER_CONTROLLERS,
+            TABLE_SERVERS,
             values,
-            "$KEY_ID = ?",
-            arrayOf<String>(java.lang.String.valueOf(controller.id))
+            "$KEY_HOSTNAME = ?",
+            arrayOf<String>(java.lang.String.valueOf(controller.hostname))
         )
         db.close()
         return response
     }
 
-    fun deleteController(controller: MasterController) {
+    fun delete(controller: Server) {
         val db: SQLiteDatabase = this.getWritableDatabase()
         db.delete(
-            TABLE_MASTER_CONTROLLERS,
-            "$KEY_ID = ?",
-            arrayOf<String>(java.lang.String.valueOf(controller.id))
+            TABLE_SERVERS,
+            "$KEY_HOSTNAME = ?",
+            arrayOf<String>(java.lang.String.valueOf(controller.hostname))
         )
         db.close()
     }

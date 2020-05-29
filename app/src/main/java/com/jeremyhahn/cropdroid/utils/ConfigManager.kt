@@ -3,10 +3,12 @@ package com.jeremyhahn.cropdroid.utils
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import androidx.appcompat.widget.Toolbar
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARM_ID_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARM_INTERVAL_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARM_MODE_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARM_NAME_KEY
+import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARM_ORG_ID_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FIRMWARE_VERSION_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_HARDWARE_VERSION_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ORG_ID_KEY
@@ -17,7 +19,8 @@ import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_PASSWORD_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_PORT_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_RECIPIENT_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_USERNAME_KEY
-import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_CONTROLLER_ID
+import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_TIMEZONE_KEY
+import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.*
 import okhttp3.Response
@@ -25,29 +28,32 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import okio.ByteString
 import org.json.JSONObject
+import java.lang.Integer.parseInt
 import java.lang.Thread.sleep
 
-class ConfigManager(val sharedPreferences: SharedPreferences, val config: ServerConfig) : WebSocketListener() {
+class ConfigManager(val mainActivity: MainActivity, val sharedPreferences: SharedPreferences, val config: ServerConfig) : WebSocketListener() {
 
     val editor: SharedPreferences.Editor = sharedPreferences.edit()
-    var websockets : HashMap<WebSocket, MasterController> = HashMap()
+    var websockets : HashMap<WebSocket, Server> = HashMap()
+    private val TAG = "ConfigManager"
 
     companion object {
         private const val NORMAL_CLOSURE_STATUS = 1000
         private const val CONNECTION_FAILED_DELAY = 60000L
     }
-
+/*
     fun sync() {
-        Log.d("ConfigManager.sync", "Running sync. controller_id=" + getInt(PREF_KEY_CONTROLLER_ID))
+        Log.d(TAG, "Running sync. controller_id=" + getInt(PREF_KEY_CONTROLLER_HOSTNAME))
         for(org in config.organizations) {
             syncOrganization(org)
         }
         syncSmtp()
         editor.commit()
     }
-
+*/
     fun listen(context: Context, cropDroidAPI: CropDroidAPI, farmId: Long) {
-        val websocket = cropDroidAPI.createWebsocket(context, "/farms/$farmId/config/changefeed", this)
+        //val websocket = cropDroidAPI.createWebsocket(context, "/farms/$farmId/config/changefeed", this)
+    val websocket = cropDroidAPI.createWebsocket(context, "/changefeed/$farmId", this)
         if(websocket != null) {
             websockets[websocket] = cropDroidAPI.controller
         }
@@ -70,7 +76,7 @@ class ConfigManager(val sharedPreferences: SharedPreferences, val config: Server
     }
 
     private fun syncOrganization(org: Organization) {
-        val id = getInt(CONFIG_ORG_ID_KEY)
+        val id = getLong(CONFIG_ORG_ID_KEY)
         val name = getString(CONFIG_ORG_NAME_KEY)
         if(id != org.id) {
             setEditorValue(CONFIG_ORG_ID_KEY, org.id)
@@ -84,13 +90,25 @@ class ConfigManager(val sharedPreferences: SharedPreferences, val config: Server
     }
 
     private fun syncFarm(farm: Farm) {
+        Log.d(TAG, "syncFarm: " + farm.toString())
+
+        // sync controllers first to overwrite farm level settings
+        // with correct data types (controller settings are always strings)
+        for(controller in farm.controllers) {
+            syncControllers(farm.controllers)
+        }
+
         val id = getLong(CONFIG_FARM_ID_KEY)
+        val orgId = getLong(CONFIG_FARM_ORG_ID_KEY)
         val name = getString(CONFIG_FARM_NAME_KEY)
         val mode = getString(CONFIG_FARM_MODE_KEY)
-        val interval = getInt(CONFIG_FARM_INTERVAL_KEY)
-        //val timezone = getString(CONFIG_TIMEZONE_KEY)
+        val interval = getString(CONFIG_FARM_INTERVAL_KEY)
+        val timezone = getString(CONFIG_TIMEZONE_KEY)
         if(id != farm.id) {
             setEditorValue(CONFIG_FARM_ID_KEY, farm.id)
+        }
+        if(orgId != farm.orgId) {
+            setEditorValue(CONFIG_FARM_ORG_ID_KEY, farm.orgId)
         }
         if(name != farm.name) {
             setEditorValue(CONFIG_FARM_NAME_KEY, farm.name)
@@ -98,19 +116,18 @@ class ConfigManager(val sharedPreferences: SharedPreferences, val config: Server
         if(mode != farm.mode) {
             setEditorValue(CONFIG_FARM_MODE_KEY, farm.mode)
         }
-        if(interval != farm.interval) {
+        if(parseInt(interval) != farm.interval) {
+
             setEditorValue(CONFIG_FARM_INTERVAL_KEY, farm.interval)
+            //editor.putInt(CONFIG_FARM_INTERVAL_KEY, farm.interval)
         }
-        /*
         if(timezone != config.timezone) {
-            setEditorValue(CONFIG_TIMEZONE_KEY, config.timezone)
-        }*/
-        for(controller in farm.controllers) {
-            syncControllers(farm.controllers)
+            setEditorValue(CONFIG_TIMEZONE_KEY, farm.timezone)
         }
+        syncSmtp(farm.smtp)
     }
 
-    private fun syncSmtp() {
+    private fun syncSmtp(smtpConfig: SmtpConfig) {
         val enable = getBoolean(CONFIG_SMTP_ENABLE_KEY)
         val host = getString(CONFIG_SMTP_HOST_KEY)
         val port = getString(CONFIG_SMTP_PORT_KEY)
@@ -118,27 +135,27 @@ class ConfigManager(val sharedPreferences: SharedPreferences, val config: Server
         val password = getString(CONFIG_SMTP_PASSWORD_KEY)
         val to = getString(CONFIG_SMTP_RECIPIENT_KEY)
 
-        val bEnable = config.smtp.enable.toBoolean()
+        val bEnable = smtpConfig.enable.toBoolean()
 
         Log.d("syncSmtp", "bEnable=" + bEnable + ", enable="+ enable)
 
         if(enable != bEnable) {
             setEditorValue(CONFIG_SMTP_ENABLE_KEY, bEnable)
         }
-        if(host != config.smtp.host) {
-            setEditorValue(CONFIG_SMTP_HOST_KEY, config.smtp.host)
+        if(host != smtpConfig.host) {
+            setEditorValue(CONFIG_SMTP_HOST_KEY, smtpConfig.host)
         }
-        if(port != config.smtp.port) {
-            setEditorValue(CONFIG_SMTP_PORT_KEY, config.smtp.port)
+        if(port != smtpConfig.port) {
+            setEditorValue(CONFIG_SMTP_PORT_KEY, smtpConfig.port)
         }
-        if(username != config.smtp.username) {
-            setEditorValue(CONFIG_SMTP_USERNAME_KEY, config.smtp.username)
+        if(username != smtpConfig.username) {
+            setEditorValue(CONFIG_SMTP_USERNAME_KEY, smtpConfig.username)
         }
-        if(password != config.smtp.password) {
-            setEditorValue(CONFIG_SMTP_PASSWORD_KEY, config.smtp.password)
+        if(password != smtpConfig.password) {
+            setEditorValue(CONFIG_SMTP_PASSWORD_KEY, smtpConfig.password)
         }
-        if(to != config.smtp.to) {
-            setEditorValue(CONFIG_SMTP_RECIPIENT_KEY, config.smtp.to)
+        if(to != smtpConfig.to) {
+            setEditorValue(CONFIG_SMTP_RECIPIENT_KEY, smtpConfig.to)
         }
     }
 
@@ -150,11 +167,19 @@ class ConfigManager(val sharedPreferences: SharedPreferences, val config: Server
         for(controller in controllers) {
 
             // val typeKey := farmID.toString().plus("_controller_" + controller.type)
-            editor.putInt("controller_" + controller.type, controller.id)
+            editor.putLong("controller_" + controller.type, controller.id)
 
             for ((k, v) in controller.configs) {
+
+                /*
+                if(controller.type.equals("server") && k.equals("interval")) {
+                    editor.putInt(k, v)
+                    continue
+                }*/
+
                 when(v) {
                     is Boolean -> editor.putBoolean(k, v)
+                    //is Integer -> editor.putInt(k, v.toInt())
                     else -> editor.putString(k, v.toString())
                 }
             }
@@ -189,30 +214,20 @@ class ConfigManager(val sharedPreferences: SharedPreferences, val config: Server
     override fun onOpen(webSocket: WebSocket, response: Response) {
         val controller =  websockets[webSocket]
         if(controller != null) {
-            var payload = "{\"id\":" + controller.userid.toString() + "}"
-            Log.d("ConfigManager.WebSocket.onOpen", "controller="  + controller.name + ", payload=" + payload)
+            var payload = "{\"id\":" + controller.jwt!!.uid().toString() + "}"
+            Log.d("ConfigManager.WebSocket.onOpen", "controller="  + controller.hostname + ", payload=" + payload)
             webSocket.send(payload)
-            /*
-            createNotification(Notification(controller.name,
-                Constants.NOTIFICATION_PRIORITY_LOW,
-                "Notification Service",
-                "Listening for new notifications",
-                ZonedDateTime.now().toString()))
-            */
             return
         }
-        //webSocket.send(ByteString.decodeHex("deadbeef"))
-        //webSocket.close(Companion.NORMAL_CLOSURE_STATUS, "Goodbye !")
+        //webSocket.send(ByteString.decodeHex("test"))
+        //webSocket.close(Companion.NORMAL_CLOSURE_STATUS, "Peace out!")
     }
 
     override fun onMessage(webSocket: WebSocket, text: String) {
         Log.d("ConfigManager.onMessage(text)", text)
-        val config = ConfigParser.parse(text)
-        for(org in config.organizations) {
-            syncOrganization(org)
-        }
-        syncSmtp()
+        syncFarm(FarmParser.parse(JSONObject(text), 0L, false))
         editor.commit()
+        mainActivity.setToolbarTitle(sharedPreferences.getString(CONFIG_FARM_NAME_KEY, "undefined"))
     }
 
     override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
@@ -249,7 +264,7 @@ class ConfigManager(val sharedPreferences: SharedPreferences, val config: Server
 
         var controller = websockets[webSocket]
         if(controller != null) {
-            Log.d("COnfigManager.onFailure", "Restarting connection for " + controller.name)
+            Log.d("COnfigManager.onFailure", "Restarting connection for " + controller.hostname)
 
             /*
             createNotification(Notification(controller.name,

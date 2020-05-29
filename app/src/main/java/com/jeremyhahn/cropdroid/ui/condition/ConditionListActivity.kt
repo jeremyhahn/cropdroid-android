@@ -16,20 +16,19 @@ import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.Condition
 import com.jeremyhahn.cropdroid.model.ConditionConfig
-import com.jeremyhahn.cropdroid.model.MasterController
+import com.jeremyhahn.cropdroid.model.Server
 import com.jeremyhahn.cropdroid.utils.Preferences
 import kotlinx.android.synthetic.main.activity_condition_list.*
 import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
-import java.lang.reflect.Array.newInstance
 import java.util.*
 
 class ConditionListActivity : AppCompatActivity(), ConditionDialogHandler {
 
     lateinit private var recyclerView: RecyclerView
     lateinit private var swipeContainer: SwipeRefreshLayout
-    lateinit private var controller : MasterController
+    lateinit private var controller : Server
     private var channelId = 0
     private var channelName = ""
     private var channelDuration = 0
@@ -47,15 +46,14 @@ class ConditionListActivity : AppCompatActivity(), ConditionDialogHandler {
 
         val preferences = Preferences(applicationContext)
         val controllerSharedPrefs = preferences.getControllerPreferences()
-        val id = preferences.currentControllerId()
-        val farmId = preferences.currentFarmId()
+        val hostname = preferences.currentController()
         val emptyText = findViewById(R.id.conditionEmptyText) as TextView
 
-        Log.d("ConditionActivity.onCreateView", "channel_id=$channelId, controller.id=$id")
+        Log.d("ConditionActivity.onCreateView", "channel_id=$channelId, controller.hostname=$hostname")
 
         setTitle(channelName + " Condition")
 
-        controller = MasterControllerRepository(this).getController(id)
+        controller = MasterControllerRepository(this).get(hostname)
 
         cropDroidAPI = CropDroidAPI(controller, controllerSharedPrefs)
 

@@ -18,7 +18,7 @@ import java.io.IOException
 class ChannelDebounceMenuItem(context: Context, menu: ContextMenu, channel: Channel, cropDroidAPI: CropDroidAPI) {
 
     init {
-        menu!!.add(0, channel.id, 0, "Debounce")
+        menu!!.add(0, channel.id.toInt(), 0, "Debounce")
             .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
                 val inflater: LayoutInflater = LayoutInflater.from(context)
 

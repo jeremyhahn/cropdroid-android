@@ -13,7 +13,7 @@ import java.io.IOException
 class ChannelNotifyMenuItem(menu: ContextMenu, channel: Channel, cropDroidAPI: CropDroidAPI, adapter: MicroControllerRecyclerAdapter) {
 
     init {
-        menu!!.add(0, channel.id, 0, "Notify")
+        menu!!.add(0, channel.id.toInt(), 0, "Notify")
             .setCheckable(true)
             .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
                 channel.notify = if(it.isChecked) false else true

@@ -21,14 +21,13 @@ class ControllerParser {
 
                 Log.d("ControllerParser.parse", jsonController.toString())
 
-                val id = jsonController.getInt("id")
-                val orgId = jsonController.getInt("orgId")
+                val id = jsonController.getLong("id")
+                //val orgId = jsonController.getInt("orgId")
                 val type = jsonController.getString("type")
                 val description = jsonController.getString("description")
                 //val enable = jsonController.getBoolean("enable")
                 //val notify = jsonController.getBoolean("notify")
                 //val uri = jsonController.getString("uri")
-
                 //val configs = jsonController.getJSONObject("configs")
 
                 val jsonConfigs = jsonController.getJSONObject("configs")
@@ -38,14 +37,18 @@ class ControllerParser {
                     val v = jsonConfigs.getString(k)
                     if (v.toLowerCase().equals("true") || v.toLowerCase().equals("false")) {
                         configs.put(k, v.toBoolean())
+                    //} else if(k.equals("integer") && v.matches("^[+-]?\\d+$".toRegex())) {
+                    //    configs.put(k, v.toInt())
                     } else {
                         configs.put(k, v)
                     }
                     Log.i("ControllerParser.parse", "Putting config -- Key: " + k + ", value: " + v)
                 }
 
-                val hardwareVersion = jsonController.getString("hardwareVersion")
-                val firmwareVersion = jsonController.getString("firmwareVersion")
+                //val hardwareVersion = jsonController.getString("hardwareVersion")
+                //val firmwareVersion = jsonController.getString("firmwareVersion")
+                val hardwareVersion = "TODO"
+                val firmwareVersion = "TODO"
 
                 var parsedMetrics = ArrayList<Metric>()
                 var parsedChannels = ArrayList<Channel>()
@@ -60,8 +63,6 @@ class ControllerParser {
 
                 //controllers.add(Controller(id, orgId, type, description, enable, notify, uri, hardwareVersion, firmwareVersion, parsedMetrics, parsedChannels))
                 val controller = Controller(id, type, description, hardwareVersion, firmwareVersion, configs, parsedMetrics, parsedChannels)
-
-                Log.d("RETURNING (controllerparser)", controller.toString())
 
                 controllers.add(controller)
             }

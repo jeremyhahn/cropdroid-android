@@ -19,7 +19,7 @@ import java.io.IOException
 class ChannelRenameMenuItem(context: Context, menu: ContextMenu, channel: Channel, cropDroidAPI: CropDroidAPI, adapter: MicroControllerRecyclerAdapter) {
 
     init {
-        menu!!.add(0, channel.id, 0, "Rename")
+        menu!!.add(0, channel.id.toInt(), 0, "Rename")
             .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
                 val inflater: LayoutInflater = LayoutInflater.from(context)
 

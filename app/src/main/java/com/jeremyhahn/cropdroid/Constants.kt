@@ -15,8 +15,6 @@ class Constants {
         const val CONFIG_CONTROLLER_PREFIX_KEY = "controller_"
 
         const val PREF_KEY_CONTROLLER_ID = "controller_id"
-        const val PREF_KEY_CONTROLLER_SERVER_ID = "controller_server_id"
-        const val PREF_KEY_CONTROLLER_NAME = "controller_name"
         const val PREF_KEY_CONTROLLER_HOSTNAME = "controller_hostname"
         const val PREF_KEY_USER_ID = "user_id"
         const val PREF_KEY_JWT = "jwt"
@@ -45,10 +43,11 @@ class Constants {
         const val CONFIG_ORG_ID_KEY = "org.id"
         const val CONFIG_ORG_NAME_KEY = "org.name"
 
-        const val CONFIG_FARM_ID_KEY = "farm.id"
-        const val CONFIG_FARM_NAME_KEY = "farm.name"
-        const val CONFIG_FARM_MODE_KEY = "farm.mode"
-        const val CONFIG_FARM_INTERVAL_KEY = "farm.interval"
+        const val CONFIG_FARM_ID_KEY = "id"
+        const val CONFIG_FARM_ORG_ID_KEY = "orgId"
+        const val CONFIG_FARM_NAME_KEY = "name"
+        const val CONFIG_FARM_MODE_KEY = "mode"
+        const val CONFIG_FARM_INTERVAL_KEY = "interval"
 
         const val CONFIG_MODE_VIRTUAL = "virtual"
         const val CONFIG_MODE_SERVER = "server"

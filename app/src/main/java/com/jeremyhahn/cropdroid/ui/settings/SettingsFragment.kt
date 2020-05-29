@@ -8,7 +8,7 @@ import com.jeremyhahn.cropdroid.Constants
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
-import com.jeremyhahn.cropdroid.model.MasterController
+import com.jeremyhahn.cropdroid.model.Server
 import com.jeremyhahn.cropdroid.utils.Preferences
 import okhttp3.Call
 import okhttp3.Callback
@@ -16,7 +16,7 @@ import java.io.IOException
 
 class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedPreferenceChangeListener {
 
-    lateinit private var controller : MasterController
+    lateinit private var controller : Server
     lateinit private var cropdroid: CropDroidAPI
     lateinit var sharedPreferences: SharedPreferences
     lateinit var preferences: Preferences
@@ -29,13 +29,13 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
 
         preferences = Preferences(ctx)
 
-        val id = preferences.currentControllerId()
+        val hostname = preferences.currentController()
         farmId = preferences.currentFarmId()
 
         sharedPreferences = preferences.getControllerPreferences()
         sharedPreferences.registerOnSharedPreferenceChangeListener(this)
 
-        controller = MasterControllerRepository(ctx).getController(id)
+        controller = MasterControllerRepository(ctx).get(hostname)
         cropdroid = CropDroidAPI(controller, sharedPreferences)
 
         Log.d("SettingsActivity.onCreate", "controller=" + controller.toString())
@@ -63,6 +63,11 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
             if (e.message.equals("java.lang.Boolean cannot be cast to java.lang.String")) {
                 value = sharedPreferences!!.getBoolean(key, false).toString()
             }
+/*
+            if (e.message.equals("java.lang.Integer cannot be cast to java.lang.String")) {
+                value = sharedPreferences!!.getInt(key, 0).toString()
+            }
+ */
         }
         Log.d("SettingsActivity.onSharedPreferenceChanged", "key=" + key + ", value="+ value + ", controller=" + controller.toString())
         cropdroid.setConfig(controllerId, key, value, object : Callback {
@@ -89,10 +94,11 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
     private fun parseControllerId(key: String) : String {
         val pieces = key.split(".")
         if(pieces.size == 1) {
-            return farmId.toString()
+            //return farmId.toString()
+            return preferences.currentServerId().toString()
         }
         val controller_key = Constants.CONFIG_CONTROLLER_PREFIX_KEY.plus(pieces[0]) // ex: controller_room
         Log.d("SettingsActivity", "Looking for controller key: " + controller_key)
-        return sharedPreferences!!.getInt(controller_key, 1).toString()
+        return sharedPreferences!!.getLong(controller_key, 1).toString()
     }
 }

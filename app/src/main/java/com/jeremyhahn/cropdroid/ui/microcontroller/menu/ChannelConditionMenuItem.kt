@@ -16,7 +16,7 @@ class ChannelConditionMenuItem(activity: Activity, context: Context, menu: Conte
 ) {
 
     init {
-        menu!!.add(0, channel.id, 0, "Condition")
+        menu!!.add(0, channel.id.toInt(), 0, "Condition")
             .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
 
                 var intent = Intent(context, ConditionListActivity::class.java)

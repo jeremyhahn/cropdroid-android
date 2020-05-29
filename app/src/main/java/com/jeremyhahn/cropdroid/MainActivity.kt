@@ -19,13 +19,17 @@ import androidx.navigation.ui.setupWithNavController
 import androidx.work.Constraints
 import androidx.work.NetworkType
 import com.google.android.material.navigation.NavigationView
-import com.jeremyhahn.cropdroid.model.MasterController
+import com.jeremyhahn.cropdroid.data.CropDroidAPI
+import com.jeremyhahn.cropdroid.model.Server
 import com.jeremyhahn.cropdroid.service.NotificationService
 import com.jeremyhahn.cropdroid.utils.ConfigManager
+import kotlinx.android.synthetic.main.app_bar_navigation.*
 
 class MainActivity : AppCompatActivity() {
 
-    public lateinit var configManager: ConfigManager
+    lateinit var serverConfig: Server
+    lateinit var serverAPI: CropDroidAPI
+    lateinit var configManager: ConfigManager
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var navController: NavController
@@ -44,7 +48,7 @@ class MainActivity : AppCompatActivity() {
 
         createConstraints()
 
-        val toolbar: Toolbar = findViewById(R.id.toolbar)
+        toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
 
         drawer = findViewById(R.id.drawer_layout)
@@ -67,10 +71,14 @@ class MainActivity : AppCompatActivity() {
         startForegroundService(intent)
     }
 
-    fun navigateToLogin(controller: MasterController) {
+    fun setToolbarTitle(title: String) {
+        runOnUiThread(Runnable() {
+            toolbar.title = title
+        })
+    }
+
+    fun navigateToLogin(controller: Server) {
         val bundle = Bundle()
-        bundle.putInt("controller_id", controller.id)
-        bundle.putString("controller_name", controller.name)
         bundle.putString("controller_hostname", controller.hostname)
         navController.navigate(R.id.nav_login, bundle)
     }

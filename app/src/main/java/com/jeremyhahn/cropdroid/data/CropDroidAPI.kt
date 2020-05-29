@@ -17,7 +17,7 @@ import java.io.IOException
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
 
-class CropDroidAPI(val controller: MasterController, preferences: SharedPreferences) {
+class CropDroidAPI(val controller: Server, preferences: SharedPreferences) {
 
     val orgId: Int
     val farmId: Long
@@ -37,7 +37,7 @@ class CropDroidAPI(val controller: MasterController, preferences: SharedPreferen
     val FARM_ENDPOINT: String
     val IAP_ENDPOINT: String
 
-    var websockets : HashMap<MasterController, HashMap<String, WebSocket>> = HashMap()
+    var websockets : HashMap<Server, HashMap<String, WebSocket>> = HashMap()
 
     init {
         orgId = preferences.getInt(CONFIG_ORG_ID_KEY, 0)
@@ -265,7 +265,7 @@ class CropDroidAPI(val controller: MasterController, preferences: SharedPreferen
         doGet(CONTROLLER_ENDPOINT, args, callback)
     }
 
-    fun getMetrics(controllerId: Int, callback: Callback) {
+    fun getMetrics(controllerId: Long, callback: Callback) {
         val endpoint = METRIC_ENDPOINT.plus("/").plus(controllerId)
         val args = ArrayList<String>()
         doGet(endpoint, args, callback)
@@ -433,12 +433,11 @@ class CropDroidAPI(val controller: MasterController, preferences: SharedPreferen
 
     fun createWebsocket(context: Context, resource: String, listener: WebSocketListener): WebSocket? {
         Log.d("CropDroidAPI.createWebSocket", "resource: " + resource)
-        val key = StringBuffer(controller.name).append(resource.replace("/", "_")).toString()
         try {
             val client = OkHttpClient()
             val protocol = if (controller.secure == 1) "wss://" else "ws://"
             var url = protocol.plus(controller.hostname).plus(API_BASE).plus(resource)
-            Log.d("CropDroidAPI.createWebSocket.URL", url)
+            Log.d("CropDroidAPI.createWebsocket", "Created WebSocket: " + url)
             val request = Request.Builder()
                 .url(url)
                 .addHeader("Authorization", "Bearer " + controller.token)
@@ -446,7 +445,7 @@ class CropDroidAPI(val controller: MasterController, preferences: SharedPreferen
 
             val websocket = client.newWebSocket(request, listener)
             //websockets[controller] = HashMap()
-            //websockets[controller]!!.put(key, websocket)
+            //websockets[controller]!!.put(controller.hostname, websocket)
             client.dispatcher().executorService().shutdown()
             client.retryOnConnectionFailure()
             return websocket
@@ -454,12 +453,11 @@ class CropDroidAPI(val controller: MasterController, preferences: SharedPreferen
         catch(e: java.lang.IllegalArgumentException) {
             com.jeremyhahn.cropdroid.Error(context).toast(e.message!!)
         }
-        Log.d("CropDroidAPI.createWebsocket", "Created WebSocket: " + key)
         return null
     }
 
 /*
-    fun getController(webSocket: WebSocket) : MasterController? {
+    fun getController(webSocket: WebSocket) : Server? {
         for((k, v) in websockets) {
             if(v.equals(webSocket)) {
                 return k

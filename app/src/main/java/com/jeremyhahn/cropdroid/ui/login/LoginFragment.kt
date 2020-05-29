@@ -12,26 +12,22 @@ import androidx.annotation.StringRes
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import com.jeremyhahn.cropdroid.Constants
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARM_ID_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ORG_ID_KEY
-import com.jeremyhahn.cropdroid.Error
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
-import com.jeremyhahn.cropdroid.model.MasterController
+import com.jeremyhahn.cropdroid.model.Server
 import com.jeremyhahn.cropdroid.model.ServerConfig
-import com.jeremyhahn.cropdroid.model.User
 import com.jeremyhahn.cropdroid.utils.ConfigManager
-import com.jeremyhahn.cropdroid.utils.ConfigParser
 import com.jeremyhahn.cropdroid.utils.JsonWebToken
 import com.jeremyhahn.cropdroid.utils.Preferences
 import io.jsonwebtoken.ExpiredJwtException
 import kotlinx.android.synthetic.main.activity_login.*
-import okhttp3.Call
-import okhttp3.Callback
-import java.io.IOException
+import kotlinx.android.synthetic.main.app_bar_navigation.*
+import java.time.Instant
+import java.time.format.DateTimeFormatter
 
 class LoginFragment() : Fragment() {
 
@@ -39,7 +35,7 @@ class LoginFragment() : Fragment() {
     private lateinit var preferences: Preferences
     private lateinit var sharedPrefs: SharedPreferences
     private lateinit var loginViewModel: LoginViewModel
-    private lateinit var controller: MasterController
+    private lateinit var controller: Server
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         super.onCreateView(inflater, container, savedInstanceState)
@@ -60,14 +56,7 @@ class LoginFragment() : Fragment() {
         preferences = Preferences(fragmentActivity.applicationContext)
         sharedPrefs = preferences.getDefaultPreferences()
 
-        controller = MasterController(
-            args.getInt("controller_id", 0),
-            0,
-            args.getString("controller_name")!!,
-            args.getString("controller_hostname")!!,
-            0,
-            0,
-            "")
+        controller = Server(args.getString("controller_hostname")!!, 0, "", null)
 
         Log.d("LoginActivity.onCreate", "controller: " + controller.toString())
 
@@ -83,9 +72,9 @@ class LoginFragment() : Fragment() {
         }
 
         try {
-            val selectedController = repository.getController(controller.id)
+            val selectedController = repository.get(controller.hostname)
 
-            Log.d("LoginActivity.onCreate", "selectedController: " + selectedController.name)
+            Log.d("LoginActivity.onCreate", "selectedController: " + selectedController.hostname)
 
             if(selectedController != null && !selectedController.token.isEmpty()) {
                 doLogin(selectedController)
@@ -138,34 +127,35 @@ class LoginFragment() : Fragment() {
 
                 Log.d("LoginActivity token:", user.token)
 
-                var jws = JsonWebToken(requireActivity().applicationContext, user.token)
-                Log.d("jws", jws.claims.toString())
+                val jwt = JsonWebToken(requireContext(), user.token)
+                Log.d("jwt", jwt.claims.toString())
 
-                val organizations = jws.organizations()
+                var organizations = jwt.organizations()
 
-                Log.d("sid", jws.sid().toString())
-                Log.d("uid", jws.uid().toString())
-                Log.d("email", jws.email())
+                Log.d("uid", jwt.uid().toString())
+                Log.d("email", jwt.email())
                 Log.d("organizations", organizations.toString())
+                Log.d("exp", jwt.exp().toString())
+                Log.d("iat", jwt.iat().toString())
+                Log.d("iss", jwt.iss())
 
-                if(organizations.size == 1 && organizations[0].id == 0) {
+                if(organizations.size == 1 && organizations[0].id == 0L) {
 
                     val farmId = organizations[0].farms[0].id
 
-                    user.id = jws.uid().toString()
+                    user.id = jwt.uid().toString()
                     user.orgId = "0"
 
-                    controller.serverId = jws.sid()
-                    controller.userid = jws.uid()
                     controller.secure = if (useSSL.isChecked) 1 else 0
                     controller.token = user.token
+                    controller.jwt = jwt
 
                     var rowsUpdated = repository.updateController(controller)
                     if (rowsUpdated != 1) {
                         Log.e("LoginActivity.loginResult.token", "Unexpected number of rows effected: " + rowsUpdated.toString())
                         return@Observer
                     }
-                    Log.i("LoginActivity.loginResult.token", "Controller successfully authenticated")
+                    Log.i("LoginActivity.loginResult.token", "Successfully authenticated")
 
                     preferences.set(controller, user, 0, farmId)
 
@@ -228,7 +218,7 @@ class LoginFragment() : Fragment() {
         }
     }
 
-    private fun doLogin(controller: MasterController = this.controller) {
+    private fun doLogin(controller: Server = this.controller) {
 
         /*
         val progress = ProgressDialog(activity)
@@ -239,21 +229,24 @@ class LoginFragment() : Fragment() {
          */
 
         val cropDroidAPI = CropDroidAPI(controller, sharedPrefs)
-
         val orgId = sharedPrefs.getInt(CONFIG_ORG_ID_KEY, 0)
         val farmId = sharedPrefs.getLong(CONFIG_FARM_ID_KEY, 0)
 
-        (activity as MainActivity).configManager = ConfigManager(preferences.getControllerPreferences(), ServerConfig())
+        val mainActivity = (activity as MainActivity)
 
-        (activity as MainActivity).configManager.sync()
+        mainActivity.serverConfig = controller
+        mainActivity.serverAPI = cropDroidAPI
 
-        (activity as MainActivity).configManager.listen(requireActivity(), cropDroidAPI, farmId)
+        mainActivity.configManager = ConfigManager(mainActivity, preferences.getControllerPreferences(), ServerConfig())
+        mainActivity.configManager.listen(requireActivity(), cropDroidAPI, farmId)
+
+        //(activity as MainActivity).configManager.sync()
 
         requireActivity().runOnUiThread(Runnable {
             if(orgId == 0) {
-                (activity as MainActivity).navigateToMicrocontroller()
+                mainActivity.navigateToMicrocontroller()
             } else {
-                (activity as MainActivity).navigateToOrganizations()
+                mainActivity.navigateToOrganizations()
             }
         })
 

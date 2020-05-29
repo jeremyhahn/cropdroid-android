@@ -17,8 +17,9 @@ import com.jeremyhahn.cropdroid.Constants.Companion.API_BASE
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
-import com.jeremyhahn.cropdroid.model.MasterController
+import com.jeremyhahn.cropdroid.model.Server
 import com.jeremyhahn.cropdroid.model.Notification
+import com.jeremyhahn.cropdroid.utils.JsonWebToken
 import okhttp3.*
 import okio.ByteString
 import org.json.JSONObject
@@ -33,7 +34,7 @@ class NotificationService : Service() {
     val GROUP_KEY_FOREGROUND = "cropdroid_foreground"
     val CONNECTION_FAILED_DELAY = 60000L  // one minute
     var binder : IBinder? = null
-    var websockets : HashMap<MasterController, WebSocket> = HashMap()
+    var websockets : HashMap<Server, WebSocket> = HashMap()
     var notificationManager: NotificationManager? = null
     var bundlerNotificationBuilder: NotificationCompat.Builder? = null
 
@@ -89,11 +90,11 @@ class NotificationService : Service() {
             return START_NOT_STICKY
         }
 
-        var authenticatedControllers = ArrayList<MasterController>(controllers.size)
+        val authenticatedControllers = ArrayList<Server>(controllers.size)
 
         for(controller in controllers) {
             if(websockets[controller] == null) {
-                if(controller.id == 0) {
+                if(controller.token.isEmpty()) {
                     // Controller hasn't been logged into yet
                     return START_NOT_STICKY
                 }
@@ -135,7 +136,7 @@ class NotificationService : Service() {
         stopSelf()
     }
 
-    fun createWebsocket(controller: MasterController) {
+    fun createWebsocket(controller: Server) {
         try {
             val client = OkHttpClient()
             val protocol = if (controller.secure == 1) "wss://" else "ws://"
@@ -151,7 +152,7 @@ class NotificationService : Service() {
         catch(e: java.lang.IllegalArgumentException) {
             Toast.makeText(applicationContext, e.message, Toast.LENGTH_LONG).show()
         }
-        Log.d("NotificationService.createWebsocket", "Created WebSocket " + websockets[controller].hashCode() + " for " + controller.name)
+        Log.d("NotificationService.createWebsocket", "Created WebSocket " + websockets[controller].hashCode() + " for " + controller.hostname)
     }
 
     fun createNotification(notification: Notification) {
@@ -239,10 +240,11 @@ class NotificationService : Service() {
         override fun onOpen(webSocket: WebSocket, response: Response) {
             var controller = getControllerByWebSocket(webSocket)
             if(controller != null) {
-                var payload = "{\"id\":" + controller.userid.toString() + "}"
-                Log.d("NotificationService.onOpen", "controller="  + controller.name + ", payload=" + payload)
+                val jws = JsonWebToken(applicationContext, controller.token)
+                var payload = "{\"id\":" + jws.uid().toString() + "}"
+                Log.d("NotificationService.onOpen", "controller="  + controller.hostname + ", payload=" + payload)
                 webSocket.send(payload)
-                createNotification(Notification(controller.name,
+                createNotification(Notification(controller.hostname,
                     Constants.NOTIFICATION_PRIORITY_LOW,
                     "Notification Service",
                     "Listening for new notifications",
@@ -276,7 +278,7 @@ class NotificationService : Service() {
 
             var controller = getControllerByWebSocket(webSocket)
             if(controller != null) {
-                createNotification(Notification(controller.name,
+                createNotification(Notification(controller.hostname,
                     Constants.NOTIFICATION_PRIORITY_MED,
                     "Notification Service",
                     "Connection closed!",
@@ -298,9 +300,9 @@ class NotificationService : Service() {
 
             var controller = getControllerByWebSocket(webSocket)
             if(controller != null) {
-                Log.d("NotificationService.onFailure", "Restarting connection for " + controller.name)
+                Log.d("NotificationService.onFailure", "Restarting connection for " + controller.hostname)
 
-                createNotification(Notification(controller.name,
+                createNotification(Notification(controller.hostname,
                     Constants.NOTIFICATION_PRIORITY_MED,
                     "Notification Service",
                     "Connection failed! \n\n" + t.message, ZonedDateTime.now().toString()))
@@ -312,7 +314,7 @@ class NotificationService : Service() {
             Log.d("NotificationService.onFailure", "Unable to locate controller for failed websocket connection: " + webSocket.hashCode())
         }
 
-        fun getControllerByWebSocket(webSocket: WebSocket) : MasterController? {
+        fun getControllerByWebSocket(webSocket: WebSocket) : Server? {
             for((k, v) in websockets) {
                 if(v.equals(webSocket)) {
                     return k

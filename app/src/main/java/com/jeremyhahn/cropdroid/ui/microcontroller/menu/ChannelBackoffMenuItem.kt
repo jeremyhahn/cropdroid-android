@@ -18,7 +18,7 @@ import java.io.IOException
 class ChannelBackoffMenuItem(context: Context, menu: ContextMenu, channel: Channel, cropDroidAPI: CropDroidAPI) {
 
     init {
-        menu!!.add(0, channel.id, 0, "Backoff")
+        menu!!.add(0, channel.id.toInt(), 0, "Backoff")
             .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
                 val inflater: LayoutInflater = LayoutInflater.from(context)
 

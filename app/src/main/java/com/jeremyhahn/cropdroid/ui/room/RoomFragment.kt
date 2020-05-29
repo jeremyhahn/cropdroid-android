@@ -1,10 +1,8 @@
 package com.jeremyhahn.cropdroid.ui.room
 
-import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
@@ -21,7 +19,7 @@ import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
-import com.jeremyhahn.cropdroid.model.MasterController
+import com.jeremyhahn.cropdroid.model.Server
 import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
 import com.jeremyhahn.cropdroid.ui.microcontroller.MicroControllerRecyclerAdapter
 import com.jeremyhahn.cropdroid.utils.Preferences
@@ -31,7 +29,7 @@ class RoomFragment : Fragment() {
     private val TAG = "RoomFragment"
     lateinit private var recyclerView: RecyclerView
     lateinit private var swipeContainer: SwipeRefreshLayout
-    lateinit private var controller : MasterController
+    lateinit private var controller : Server
     lateinit private var cropDroidAPI: CropDroidAPI
     lateinit private var viewModel: RoomViewModel
     lateinit private var fragmentView: View
@@ -45,11 +43,11 @@ class RoomFragment : Fragment() {
         val preferences = Preferences(ctx)
         val controllerPreferences = preferences.getControllerPreferences()
 
-        val id = preferences.currentControllerId()
+        val hostname = preferences.currentController()
         val mode = controllerPreferences.getString(Constants.CONFIG_MODE_KEY, "virtual")
         val enabled = controllerPreferences.getBoolean(Constants.CONFIG_ROOM_ENABLE_KEY, false)
 
-        Log.d("RoomFragment.onCreateView", "controller.id=$id, mode=$mode, enabled=$enabled")
+        Log.d("RoomFragment.onCreateView", "controller.hostname=$hostname, mode=$mode, enabled=$enabled")
 
         if(!enabled) {
             Log.d("RoomFragment.onCreateView", "Room disabled!")
@@ -58,7 +56,7 @@ class RoomFragment : Fragment() {
             return fragmentView
         }
 
-        controller = MasterControllerRepository(ctx).getController(id)
+        controller = MasterControllerRepository(ctx).get(hostname)
         cropDroidAPI = CropDroidAPI(controller, controllerPreferences)
 
         viewModel = ViewModelProviders.of(this, RoomViewModelFactory(cropDroidAPI)).get(RoomViewModel::class.java)

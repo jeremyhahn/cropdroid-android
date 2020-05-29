@@ -18,7 +18,7 @@ import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.EventLog
 import com.jeremyhahn.cropdroid.model.EventsPage
-import com.jeremyhahn.cropdroid.model.MasterController
+import com.jeremyhahn.cropdroid.model.Server
 import com.jeremyhahn.cropdroid.utils.Preferences
 import okhttp3.Call
 import okhttp3.Callback
@@ -42,7 +42,7 @@ class EventListFragment : Fragment() {
     private var isLastPage = false
     private var TOTAL_PAGES : Int = 10
     private var currentPage = PAGE_START
-    private var controller : MasterController? = null
+    private var controller : Server? = null
 
      override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
          
@@ -53,9 +53,9 @@ class EventListFragment : Fragment() {
 
          sharedPrefs = preferences.getControllerPreferences()
 
-        val id = preferences.currentControllerId()
-        Log.d("EventListFragment.onCreate", "controller_id: " + id.toString())
-        controller = MasterControllerRepository(ctx).getController(id)
+        val hostname = preferences.currentController()
+        Log.d("EventListFragment.onCreate", "controller_hostname: " + hostname)
+        controller = MasterControllerRepository(ctx).get(hostname)
 
         var fragmentView = inflater.inflate(R.layout.fragment_events, container, false)
 

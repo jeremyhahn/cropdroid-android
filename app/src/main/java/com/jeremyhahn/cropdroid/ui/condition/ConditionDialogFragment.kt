@@ -44,7 +44,7 @@ class ConditionDialogFragment(cropDroidAPI: CropDroidAPI, condition: Condition, 
 
         Log.d("onCreateDialog", "condition:" + condition.toString())
 
-        val controllerMap = HashMap<Int, Controller>()
+        val controllerMap = HashMap<Long, Controller>()
         val metricMap = HashMap<Int, Metric>()
 
         val inflater: LayoutInflater = LayoutInflater.from(activity)
@@ -69,7 +69,7 @@ class ConditionDialogFragment(cropDroidAPI: CropDroidAPI, condition: Condition, 
             override fun onNothingSelected(parent: AdapterView<*>?) {
             }
             override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
-                val selectedController = controllerMap.get(id.toInt())
+                val selectedController = controllerMap.get(id)
                 cropDroidAPI.getMetrics(selectedController!!.id, object: Callback {
                     override fun onFailure(call: Call, e: IOException) {
                         Log.d("onFailure", "onFailure response: " + e!!.message)
@@ -119,7 +119,7 @@ class ConditionDialogFragment(cropDroidAPI: CropDroidAPI, condition: Condition, 
                 for((i, controller) in controllers.withIndex()) {
                     val display = controller.type.capitalize()
                     controllerArray.add(display)
-                    controllerMap[i] = controller
+                    controllerMap[i.toLong()] = controller
                     if(condition.controllerType.isEmpty()) {
                         if(controller.type == condition.controllerType) {
                             activity!!.runOnUiThread{

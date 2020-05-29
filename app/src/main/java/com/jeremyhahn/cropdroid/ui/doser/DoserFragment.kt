@@ -18,7 +18,7 @@ import com.jeremyhahn.cropdroid.ui.microcontroller.MicroControllerRecyclerAdapte
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
-import com.jeremyhahn.cropdroid.model.MasterController
+import com.jeremyhahn.cropdroid.model.Server
 import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
 import com.jeremyhahn.cropdroid.utils.Preferences
 
@@ -27,7 +27,7 @@ class DoserFragment : Fragment() {
     private val TAG = "DoserFragment"
     lateinit private var recyclerView: RecyclerView
     lateinit private var swipeContainer: SwipeRefreshLayout
-    lateinit private var controller : MasterController
+    lateinit private var controller : Server
     lateinit private var cropDroidAPI: CropDroidAPI
     lateinit private var viewModel: DoserViewModel
     private var recyclerItems = ArrayList<MicroControllerRecyclerModel>()
@@ -39,12 +39,12 @@ class DoserFragment : Fragment() {
         val preferences = Preferences(activity!!.applicationContext)
         val controllerPreferences = preferences.getControllerPreferences()
 
-        val id = preferences.currentControllerId()
+        val hostname = preferences.currentController()
         val farmId = preferences.currentFarmId()
         val mode = controllerPreferences.getString(Constants.CONFIG_MODE_KEY, "virtual")
         val enabled = controllerPreferences.getBoolean(Constants.CONFIG_DOSER_ENABLE_KEY, false)
 
-        Log.d("DoserFragment.onCreateView", "controller.id=$id, mode=$mode, doser.enabled=$enabled")
+        Log.d("DoserFragment.onCreateView", "controller.hostname=$hostname, mode=$mode, doser.enabled=$enabled")
 
         if(!enabled) {
             val emptyView = fragmentView.findViewById(R.id.doserDisabledText) as TextView
@@ -52,7 +52,7 @@ class DoserFragment : Fragment() {
             return fragmentView
         }
 
-        controller = MasterControllerRepository(context!!).getController(id)
+        controller = MasterControllerRepository(context!!).get(hostname)
         cropDroidAPI = CropDroidAPI(controller, controllerPreferences)
 
         viewModel = ViewModelProviders.of(this, DoserViewModelFactory(cropDroidAPI)).get(DoserViewModel::class.java)

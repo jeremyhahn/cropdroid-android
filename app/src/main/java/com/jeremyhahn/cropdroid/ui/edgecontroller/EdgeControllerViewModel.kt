@@ -4,12 +4,12 @@ import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
-import com.jeremyhahn.cropdroid.model.MasterController
+import com.jeremyhahn.cropdroid.model.Server
 
 class EdgeControllerViewModel(repository: MasterControllerRepository) : ViewModel() {
 
     private val repository: MasterControllerRepository
-    val controllers = MutableLiveData<ArrayList<MasterController>>()
+    val controllers = MutableLiveData<ArrayList<Server>>()
 
     init {
         this.repository = repository

@@ -14,7 +14,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
-import com.jeremyhahn.cropdroid.model.MasterController
+import com.jeremyhahn.cropdroid.model.Server
 import com.jeremyhahn.cropdroid.model.Schedule
 import com.jeremyhahn.cropdroid.utils.Preferences
 import kotlinx.android.synthetic.main.activity_schedule_list.*
@@ -27,7 +27,7 @@ class ScheduleListActivity : AppCompatActivity(), ScheduleSelectionListener {
 
     lateinit private var recyclerView: RecyclerView
     lateinit private var swipeContainer: SwipeRefreshLayout
-    lateinit private var controller : MasterController
+    lateinit private var controller : Server
     private var channelId = 0
     private var channelName = ""
     private var channelDuration = 0
@@ -45,14 +45,14 @@ class ScheduleListActivity : AppCompatActivity(), ScheduleSelectionListener {
 
         val preferences = Preferences(applicationContext)
         val controllerPreferences = preferences.getControllerPreferences()
-        val id = preferences.currentControllerId()
+        val hostname = preferences.currentController()
         val emptyText = findViewById(R.id.scheduleEmptyText) as TextView
 
-        Log.d("ScheduleActivity.onCreateView", "channel_id=$channelId, controller.id=$id, controller.duration=$channelDuration")
+        Log.d("ScheduleActivity.onCreateView", "channel_id=$channelId, controller.hostname=$hostname, controller.duration=$channelDuration")
 
         setTitle(channelName + " Schedule")
 
-        controller = MasterControllerRepository(this).getController(id)
+        controller = MasterControllerRepository(this).get(hostname)
 
         cropDroidAPI = CropDroidAPI(controller, controllerPreferences)
         viewModel = ViewModelProviders.of(this, ScheduleViewModelFactory(cropDroidAPI, channelId)).get(ScheduleViewModel::class.java)

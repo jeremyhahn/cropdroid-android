@@ -15,7 +15,7 @@ import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.TabAdapter
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
-import com.jeremyhahn.cropdroid.model.MasterController
+import com.jeremyhahn.cropdroid.model.Server
 import com.jeremyhahn.cropdroid.utils.Preferences
 import kotlinx.android.synthetic.main.app_bar_navigation.*
 
@@ -24,12 +24,10 @@ class MicroControllerFragment: Fragment() {
     private val TAG = "MicroControllerFragment"
     private var tabLayout: TabLayout? = null
     private var viewPager: ViewPager? = null
-    private var controller: MasterController? = null
+    private var controller: Server? = null
     private var videoUrl: String? = null
     private var fragmentView: View? = null
-    private lateinit var tabAdapter: TabAdapter
     lateinit private var preferences: Preferences
-    lateinit private var defaultPreferences: SharedPreferences
     lateinit private var controllerPreferences: SharedPreferences
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle? ): View? {
@@ -46,9 +44,9 @@ class MicroControllerFragment: Fragment() {
 
         videoUrl = controllerPreferences.getString(CONFIG_ROOM_VIDEO_KEY, "")
 
-        controller = MasterControllerRepository(ctx).getController(preferences.currentControllerId())
+        controller = MasterControllerRepository(ctx).get(preferences.currentController())
 
-        fragmentActivity.toolbar.title = controllerPreferences.getString(CONFIG_FARM_NAME_KEY, "undefined (microcontroller fragment)")
+        fragmentActivity.toolbar.title = controllerPreferences.getString(CONFIG_FARM_NAME_KEY, "undefined")
 
         val tabs = ArrayList<String>(4)
         tabs.add(0, resources.getString(R.string.room_fragment))

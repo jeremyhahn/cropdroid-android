@@ -11,6 +11,7 @@
     android:paddingBottom="@dimen/activity_vertical_margin"
     tools:context=".ui.edgecontroller.NewEdgeControllerFragment">
 
+    <!--
     <EditText
         android:id="@+id/name"
         android:layout_width="0dp"
@@ -24,6 +25,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+    -->
 
     <EditText
         android:id="@+id/hostname"

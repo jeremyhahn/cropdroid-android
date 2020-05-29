@@ -42,7 +42,7 @@ class StoreFragment : Fragment(), PurchasesUpdatedListener {
         val fragmentView = inflater.inflate(R.layout.activity_store, container, false)
 
         val preferences = Preferences(ctx)
-        val controller = MasterControllerRepository(ctx).getController(preferences.currentControllerId())
+        val controller = MasterControllerRepository(ctx).get(preferences.currentController())
         cropDroidAPI = CropDroidAPI(controller, preferences.getDefaultPreferences())
 
         recyclerView =  fragmentView.findViewById(R.id.products) as RecyclerView

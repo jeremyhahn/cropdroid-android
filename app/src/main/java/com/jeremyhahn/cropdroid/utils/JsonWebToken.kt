@@ -31,8 +31,8 @@ class JsonWebToken(context: Context, token: String) {
         Log.d("JsonWebToken", claims.toString())
     }
 
-    fun sid(): Int {
-        return claims.get("sid", Integer::class.java).toInt()
+    fun sid(): Long {
+        return claims.get("sid", java.lang.Long::class.java).toLong()
     }
 
     fun uid(): Long {
@@ -44,11 +44,27 @@ class JsonWebToken(context: Context, token: String) {
     }
 
     fun organizations(): List<Organization> {
-        return OrganizationParser.parse(claims.get("organizations", String::class.java).toString())
+        return OrganizationParser.parse(claims.get("organizations", String::class.java).toString(), true)
         /*
         val orgs = claims.get("organizations", List::class.java)
         Log.d("organizations:", orgs.toString())
         return ArrayList<Organization>(0)
          */
+    }
+
+    fun exp(): Int {
+        return claims.get("exp", Integer::class.java).toInt()
+    }
+
+    fun iat(): Int {
+        return claims.get("iat", Integer::class.java).toInt()
+    }
+
+    fun iss(): String {
+        return claims.get("iss", String::class.java)
+    }
+
+    override fun toString() : String {
+        return claims.toString()
     }
 }

@@ -8,11 +8,9 @@ import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARM_ID_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ORG_ID_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_CONTROLLER_HOSTNAME
 import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_CONTROLLER_ID
-import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_CONTROLLER_NAME
-import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_CONTROLLER_SERVER_ID
 import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_JWT
 import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_USER_ID
-import com.jeremyhahn.cropdroid.model.MasterController
+import com.jeremyhahn.cropdroid.model.Server
 import com.jeremyhahn.cropdroid.model.User
 
 class Preferences(context: Context) {
@@ -26,8 +24,12 @@ class Preferences(context: Context) {
         return getDefaultPreferences()
     }
 
-    fun currentControllerId() : Int {
-        return getDefaultPreferences().getInt(PREF_KEY_CONTROLLER_ID, 0)
+    fun currentController() : String {
+        return getDefaultPreferences().getString(PREF_KEY_CONTROLLER_HOSTNAME, "")
+    }
+
+    fun currentServerId() : Long {
+        return getDefaultPreferences().getLong("controller_server", 0L)
     }
 
     fun currentOrgId() : Int {
@@ -42,12 +44,9 @@ class Preferences(context: Context) {
         return PreferenceManager.getDefaultSharedPreferences(context)
     }
 
-    fun set(controller: MasterController, user: User?, orgId: Int, farmId: Long) {
+    fun set(controller: Server, user: User?, orgId: Int, farmId: Long) {
         val prefs = getDefaultPreferences()
         val editor = prefs.edit()
-        editor.putInt(PREF_KEY_CONTROLLER_ID, controller.id)
-        editor.putInt(PREF_KEY_CONTROLLER_SERVER_ID, controller.serverId)
-        editor.putString(PREF_KEY_CONTROLLER_NAME, controller.name)
         editor.putString(PREF_KEY_CONTROLLER_HOSTNAME, controller.hostname)
         if(user != null) {
             editor.putString(PREF_KEY_USER_ID, user.id)
@@ -65,9 +64,6 @@ class Preferences(context: Context) {
     fun clear() {
         val prefs = getDefaultPreferences()
         val editor = prefs.edit()
-        editor.remove(PREF_KEY_CONTROLLER_ID)
-        editor.remove(PREF_KEY_CONTROLLER_SERVER_ID)
-        editor.remove(PREF_KEY_CONTROLLER_NAME)
         editor.remove(PREF_KEY_CONTROLLER_HOSTNAME)
         editor.remove(PREF_KEY_USER_ID)
         editor.remove(PREF_KEY_JWT)

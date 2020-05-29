@@ -18,7 +18,7 @@ import com.jeremyhahn.cropdroid.ui.microcontroller.MicroControllerRecyclerAdapte
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
-import com.jeremyhahn.cropdroid.model.MasterController
+import com.jeremyhahn.cropdroid.model.Server
 import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
 import com.jeremyhahn.cropdroid.utils.Preferences
 
@@ -27,7 +27,7 @@ class ReservoirFragment : Fragment() {
     private val TAG = "ReservoirFragment"
     lateinit private var recyclerView: RecyclerView
     lateinit private var swipeContainer: SwipeRefreshLayout
-    lateinit private var controller : MasterController
+    lateinit private var controller : Server
     lateinit private var cropDroidAPI: CropDroidAPI
     lateinit private var viewModel: ReservoirViewModel
     private var recyclerItems = ArrayList<MicroControllerRecyclerModel>()
@@ -39,11 +39,11 @@ class ReservoirFragment : Fragment() {
         val preferences = Preferences(requireActivity().applicationContext)
         val controllerPreferences = preferences.getControllerPreferences()
 
-        val id = preferences.currentControllerId()
+        val hostname = preferences.currentController()
         val mode = controllerPreferences.getString(Constants.CONFIG_MODE_KEY, "virtual")
         val enabled = controllerPreferences.getBoolean(Constants.CONFIG_RESERVOIR_ENABLE_KEY, false)
 
-        Log.d("RoomFragment.onCreateView", "controller.id=$id, mode=$mode, enabled=$enabled")
+        Log.d("RoomFragment.onCreateView", "controller.hostname=$hostname, mode=$mode, enabled=$enabled")
 
         if(!enabled) {
             val emptyView = fragmentView.findViewById(R.id.reservoirDisabledText) as TextView
@@ -51,7 +51,7 @@ class ReservoirFragment : Fragment() {
             return fragmentView
         }
 
-        controller = MasterControllerRepository(requireContext()).getController(id)
+        controller = MasterControllerRepository(requireContext()).get(hostname)
         cropDroidAPI = CropDroidAPI(controller, controllerPreferences)
 
         viewModel = ViewModelProviders.of(this, ReservoirViewModelFactory(cropDroidAPI)).get(ReservoirViewModel::class.java)
