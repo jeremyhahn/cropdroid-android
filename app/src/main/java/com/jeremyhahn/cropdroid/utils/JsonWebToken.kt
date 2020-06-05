@@ -2,6 +2,7 @@ package com.jeremyhahn.cropdroid.utils
 
 import android.content.Context
 import android.util.Log
+import com.jeremyhahn.cropdroid.config.OrganizationParser
 import com.jeremyhahn.cropdroid.model.Organization
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts

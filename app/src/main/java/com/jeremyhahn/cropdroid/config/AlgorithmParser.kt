@@ -1,4 +1,4 @@
-package com.jeremyhahn.cropdroid.utils
+package com.jeremyhahn.cropdroid.config
 
 import android.util.Log
 import com.jeremyhahn.cropdroid.model.Algorithm
@@ -8,7 +8,9 @@ class AlgorithmParser {
 
     companion object {
         fun parse(json: String): ArrayList<Algorithm> {
-            return parse(JSONArray(json))
+            return parse(
+                JSONArray(json)
+            )
         }
 
         fun parse(jsonAlgorithms : JSONArray) : ArrayList<Algorithm> {

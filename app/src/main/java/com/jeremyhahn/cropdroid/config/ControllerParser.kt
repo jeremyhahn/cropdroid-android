@@ -1,15 +1,16 @@
-package com.jeremyhahn.cropdroid.utils
+package com.jeremyhahn.cropdroid.config
 
 import android.util.Log
 import com.jeremyhahn.cropdroid.model.Channel
 import com.jeremyhahn.cropdroid.model.Controller
 import com.jeremyhahn.cropdroid.model.Metric
+import com.jeremyhahn.cropdroid.utils.MetricParser
 import org.json.JSONArray
-import org.json.JSONObject
 
 class ControllerParser {
 
     companion object {
+
         fun parse(json: String): ArrayList<Controller> {
             return parse(JSONArray(json))
         }

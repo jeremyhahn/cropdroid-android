@@ -13,7 +13,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
-import com.jeremyhahn.cropdroid.model.Server
+import com.jeremyhahn.cropdroid.model.ClientConfig
 import com.jeremyhahn.cropdroid.ui.edgecontroller.EdgeControllerRecyclerAdapter.OnMasterListener
 import com.jeremyhahn.cropdroid.ui.room.EdgeControllerViewModel
 import com.jeremyhahn.cropdroid.utils.Preferences
@@ -22,7 +22,7 @@ import kotlinx.android.synthetic.main.fragment_edge_controller_list.view.*
 
 class EdgeControllerListFragment : Fragment(), OnMasterListener {
 
-    private var controllers = ArrayList<Server>()
+    private var controllers = ArrayList<ClientConfig>()
     private lateinit var adapter: EdgeControllerRecyclerAdapter
     private var swipeContainer: SwipeRefreshLayout? = null
     lateinit private var viewModel: EdgeControllerViewModel

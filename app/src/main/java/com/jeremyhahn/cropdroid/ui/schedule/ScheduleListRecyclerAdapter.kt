@@ -15,7 +15,7 @@ import com.jeremyhahn.cropdroid.Constants.Companion.SCHEDULE_TYPE_ONCE
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Schedule
-import com.jeremyhahn.cropdroid.utils.ScheduleParser
+import com.jeremyhahn.cropdroid.config.ScheduleParser
 import kotlinx.android.synthetic.main.microcontroller_schedule_cardview.view.*
 import okhttp3.Call
 import okhttp3.Callback

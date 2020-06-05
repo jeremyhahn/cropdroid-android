@@ -18,14 +18,15 @@ import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.EventLog
 import com.jeremyhahn.cropdroid.model.EventsPage
-import com.jeremyhahn.cropdroid.model.Server
+import com.jeremyhahn.cropdroid.model.ClientConfig
+import com.jeremyhahn.cropdroid.ui.microcontroller.ControllerFragment
 import com.jeremyhahn.cropdroid.utils.Preferences
 import okhttp3.Call
 import okhttp3.Callback
 import org.json.JSONObject
 import java.io.IOException
 
-class EventListFragment : Fragment() {
+class EventListFragment : ControllerFragment() {
 
     private val TAG = "EventListFragment"
 
@@ -42,7 +43,7 @@ class EventListFragment : Fragment() {
     private var isLastPage = false
     private var TOTAL_PAGES : Int = 10
     private var currentPage = PAGE_START
-    private var controller : Server? = null
+    private var controller : ClientConfig? = null
 
      override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
          

@@ -7,10 +7,9 @@ import androidx.preference.PreferenceManager
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARM_ID_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ORG_ID_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_CONTROLLER_HOSTNAME
-import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_CONTROLLER_ID
 import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_JWT
 import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_USER_ID
-import com.jeremyhahn.cropdroid.model.Server
+import com.jeremyhahn.cropdroid.model.ClientConfig
 import com.jeremyhahn.cropdroid.model.User
 
 class Preferences(context: Context) {
@@ -44,7 +43,7 @@ class Preferences(context: Context) {
         return PreferenceManager.getDefaultSharedPreferences(context)
     }
 
-    fun set(controller: Server, user: User?, orgId: Int, farmId: Long) {
+    fun set(controller: ClientConfig, user: User?, orgId: Int, farmId: Long) {
         val prefs = getDefaultPreferences()
         val editor = prefs.edit()
         editor.putString(PREF_KEY_CONTROLLER_HOSTNAME, controller.hostname)

@@ -1,7 +1,10 @@
-package com.jeremyhahn.cropdroid.utils
+package com.jeremyhahn.cropdroid.config
 
 import android.util.Log
 import com.jeremyhahn.cropdroid.model.Farm
+import com.jeremyhahn.cropdroid.model.SmtpConfig
+import com.jeremyhahn.cropdroid.utils.RoleParser
+import com.jeremyhahn.cropdroid.utils.SmtpParser
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -10,7 +13,11 @@ class FarmParser {
     companion object {
 
         fun parse(json: String, orgId: Long, brief: Boolean): ArrayList<Farm> {
-            return parse(JSONArray(json), orgId, brief)
+            return parse(
+                JSONArray(json),
+                orgId,
+                brief
+            )
         }
 
         fun parse(jsonFarm: JSONObject, orgId: Long, brief: Boolean) : Farm {
@@ -21,7 +28,10 @@ class FarmParser {
             var roles = ArrayList<String>(0)
 
             if(!jsonFarm.isNull("roles")) {
-                roles = RoleParser.parse(jsonFarm.getJSONArray("roles"))
+                roles =
+                    RoleParser.parse(
+                        jsonFarm.getJSONArray("roles")
+                    )
             }
 
             if(!jsonFarm.isNull("orgId")) {
@@ -34,7 +44,11 @@ class FarmParser {
             val mode = jsonFarm.getString("mode")
             val timezone = jsonFarm.getString("timezone")
             val controllers = ControllerParser.parse(jsonFarm.getJSONArray("controllers"))
-            val smtpConfig = SmtpParser.parse(jsonFarm.getJSONObject("smtp"))
+
+            var smtpConfig = SmtpConfig()
+            if(!jsonFarm.isNull("smtp")) {
+                smtpConfig = SmtpParser.parse(jsonFarm.getJSONObject("smtp"))
+            }
 
             return Farm(id, orgId, mode, name, interval, timezone, smtpConfig, controllers, roles)
         }
@@ -44,7 +58,13 @@ class FarmParser {
             for (i in 0..jsonFarms.length() - 1) {
 
                 val jsonFarm = jsonFarms.getJSONObject(i)
-                farms.add(parse(jsonFarm, orgId, brief))
+                farms.add(
+                    parse(
+                        jsonFarm,
+                        orgId,
+                        brief
+                    )
+                )
             }
             return farms
         }

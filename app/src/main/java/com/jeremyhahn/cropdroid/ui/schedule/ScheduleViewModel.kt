@@ -5,7 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Schedule
-import com.jeremyhahn.cropdroid.utils.ScheduleParser
+import com.jeremyhahn.cropdroid.config.ScheduleParser
 import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException

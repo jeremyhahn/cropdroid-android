@@ -5,7 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Condition
-import com.jeremyhahn.cropdroid.utils.ConditionParser
+import com.jeremyhahn.cropdroid.config.ConditionParser
 import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException

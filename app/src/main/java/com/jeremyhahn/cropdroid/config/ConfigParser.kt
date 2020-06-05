@@ -1,4 +1,4 @@
-package com.jeremyhahn.cropdroid.utils
+package com.jeremyhahn.cropdroid.config
 
 import android.util.Log
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_CONTROLLERS_KEY
@@ -6,10 +6,11 @@ import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARMS_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_INTERVAL_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_MODE_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ORGS_KEY
-import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ROLES_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_TIMEZONE_KEY
 import com.jeremyhahn.cropdroid.model.*
+import com.jeremyhahn.cropdroid.utils.MetricParser
+import com.jeremyhahn.cropdroid.utils.SmtpParser
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -18,7 +19,9 @@ class ConfigParser {
     companion object {
 
         fun parse(json: String): ServerConfig {
-            return parse(JSONObject(json))
+            return parse(
+                JSONObject(json)
+            )
         }
 
         fun parse(config: JSONObject): ServerConfig {
@@ -30,8 +33,8 @@ class ConfigParser {
                 config.getString(CONFIG_MODE_KEY),
                 //parseSmtp(config.getJSONObject(CONFIG_SMTP_KEY)),
                 SmtpConfig("false", "localhost", "25", "", "", "nobody@blackhole.com"),
-                parseOrganizations(config.getJSONArray(CONFIG_ORGS_KEY))
-            )
+                parseOrganizations(config.getJSONArray(CONFIG_ORGS_KEY)),
+                parseFarms(config.getJSONArray(CONFIG_FARMS_KEY)))
         }
 
         fun parseOrganizations(jsonOrgs: JSONArray) : ArrayList<Organization> {
@@ -56,7 +59,12 @@ class ConfigParser {
 
                 orgs.add(Organization(id, name, farms, license, roles))
                  */
-                orgs.add(OrganizationParser.parse(jsonOrg, true))
+                orgs.add(
+                    OrganizationParser.parse(
+                        jsonOrg,
+                        true
+                    )
+                )
             }
             return orgs
         }
@@ -77,10 +85,16 @@ class ConfigParser {
                 val mode = jsonFarm.getString("mode")
                 val name = jsonFarm.getString("name")
                 val interval = jsonFarm.getInt("interval")
-                val controllers = parseControllers(jsonFarm.getJSONArray(CONFIG_CONTROLLERS_KEY))
+                val controllers =
+                    parseControllers(
+                        jsonFarm.getJSONArray(CONFIG_CONTROLLERS_KEY)
+                    )
                 val timezone = jsonFarm.getString("timezone")
 
-                val smtp = SmtpParser.parse(jsonFarm.getJSONObject(CONFIG_SMTP_KEY))
+                val smtp =
+                    SmtpParser.parse(
+                        jsonFarm.getJSONObject(CONFIG_SMTP_KEY)
+                    )
 
                 //var jsonRoles = jsonFarm.getJSONArray(CONFIG_ROLES_KEY)
                 //val roles = RoleParser.parse(jsonRoles)
@@ -122,8 +136,14 @@ class ConfigParser {
                 //val uri = jsonChannel.getString("uri")
                 //val hardwareVersion = jsonChannel.getString("hardwareVersion")
                 //val firmwareVersion = jsonChannel.getString("firmwareVersion")
-                val metrics = MetricParser.parse(jsonChannel.getJSONArray("metrics"))
-                val channels = ChannelParser.parse(jsonChannel.getJSONArray("channels"))
+                val metrics =
+                    MetricParser.parse(
+                        jsonChannel.getJSONArray("metrics")
+                    )
+                val channels =
+                    ChannelParser.parse(
+                        jsonChannel.getJSONArray("channels")
+                    )
                 //controllers.add(Controller(id, orgId, type, description, enabled, notify, uri, hardwareVersion, firmwareVersion, metrics, channels))
                 //controllers.add(Controller(id, orgId, type, description, hardwareVersion, firmwareVersion, configs, metrics, channels))
                 controllers.add(Controller(id, type, description, "", "", configs, metrics, channels))

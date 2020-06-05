@@ -18,7 +18,7 @@ import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
 
-class MetricSetValueMenuItem(context: Context, menu: ContextMenu, metric: Metric, cropDroidAPI: CropDroidAPI, adapter: MicroControllerRecyclerAdapter, controllerType: ControllerType) {
+class MetricSetValueMenuItem(context: Context, menu: ContextMenu, metric: Metric, cropDroidAPI: CropDroidAPI, adapter: MicroControllerRecyclerAdapter, controllerType: String) {
 
     init {
         menu.add(0, metric.id, 0, "Set Value")

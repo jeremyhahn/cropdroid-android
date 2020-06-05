@@ -1,4 +1,4 @@
-package com.jeremyhahn.cropdroid.utils
+package com.jeremyhahn.cropdroid.config
 
 import android.content.res.Resources
 import android.util.Log
@@ -18,7 +18,9 @@ class ScheduleParser {
 
         fun parse(json: String): ArrayList<Schedule> {
             Log.d("[ScheduleParser.parse] json: ", json)
-            return parse(JSONArray(json))
+            return parse(
+                JSONArray(json)
+            )
         }
 
         fun parse(jsonSchedules : JSONArray) : ArrayList<Schedule> {
@@ -97,10 +99,21 @@ class ScheduleParser {
             if(schedule.interval > 1) {
                 ret  = ret.plus(schedule.interval.toString()).plus(" ")
             }
-            ret = ret.plus(frequencyIntervalToText(resources, schedule.frequency, schedule.interval))
+            ret = ret.plus(
+                frequencyIntervalToText(
+                    resources,
+                    schedule.frequency,
+                    schedule.interval
+                )
+            )
             if(schedule.count > 0) {
                 ret = ret.plus(" for " + schedule.count.toString() + " " +
-                        frequencyIntervalToText(resources, schedule.frequency, schedule.count))
+                        frequencyIntervalToText(
+                            resources,
+                            schedule.frequency,
+                            schedule.count
+                        )
+                )
             }
             /*
             if(schedule.days.count() > 0) {

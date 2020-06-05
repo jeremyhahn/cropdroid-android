@@ -11,12 +11,12 @@ import com.jeremyhahn.cropdroid.model.Metric
 import com.jeremyhahn.cropdroid.ui.microcontroller.menu.*
 import kotlinx.android.synthetic.main.microcontroller_metric_cardview.view.*
 
-class MetricTypeViewHolder(adapter: MicroControllerRecyclerAdapter, controllerType: ControllerType, mode: String, itemView: View) :
+class MetricTypeViewHolder(adapter: MicroControllerRecyclerAdapter, controllerType: String, mode: String, itemView: View) :
     RecyclerView.ViewHolder(itemView), View.OnCreateContextMenuListener {
 
     val adapter: MicroControllerRecyclerAdapter
     val mode: String
-    val controllerType: ControllerType
+    val controllerType: String
     val cropDroidAPI: CropDroidAPI
 
     init {

@@ -8,7 +8,7 @@ import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Channel
 import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
-import com.jeremyhahn.cropdroid.utils.ChannelParser
+import com.jeremyhahn.cropdroid.config.ChannelParser
 import okhttp3.Call
 import okhttp3.Callback
 import org.json.JSONObject
@@ -33,7 +33,7 @@ class DoserViewModel(cropDroidAPI: CropDroidAPI) : ViewModel() {
     }
 
     fun getDoserStatus() {
-        cropDroidAPI.getState(ControllerType.Doser, object : Callback {
+        cropDroidAPI.getState(Constants.CONFIG_DOSER_KEY, object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 Log.d("DoserViewModel.getDoserStatus()", "onFailure response: " + e!!.message)
                 return

@@ -1,4 +1,4 @@
-package com.jeremyhahn.cropdroid.utils
+package com.jeremyhahn.cropdroid.config
 
 import android.util.Log
 import com.jeremyhahn.cropdroid.model.Condition
@@ -8,7 +8,9 @@ class ConditionParser {
 
     companion object {
         fun parse(json: String): ArrayList<Condition> {
-            return parse(JSONArray(json))
+            return parse(
+                JSONArray(json)
+            )
         }
 
         fun parse(jsonConditions : JSONArray) : ArrayList<Condition> {

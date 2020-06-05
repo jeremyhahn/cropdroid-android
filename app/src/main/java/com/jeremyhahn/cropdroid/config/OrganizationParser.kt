@@ -1,8 +1,8 @@
-package com.jeremyhahn.cropdroid.utils
+package com.jeremyhahn.cropdroid.config
 
 import android.util.Log
 import com.jeremyhahn.cropdroid.model.Organization
-import org.bouncycastle.asn1.x500.style.RFC4519Style.name
+import com.jeremyhahn.cropdroid.utils.RoleParser
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -10,7 +10,10 @@ class OrganizationParser {
 
     companion object {
         fun parse(json: String, brief: Boolean): ArrayList<Organization> {
-            return parse(JSONArray(json), brief)
+            return parse(
+                JSONArray(json),
+                brief
+            )
         }
 
         fun parse(jsonOrg: JSONObject, brief: Boolean): Organization {
@@ -18,7 +21,10 @@ class OrganizationParser {
             val orgId = jsonOrg.getLong("id")
             val name = jsonOrg.getString("name")
             val farms = FarmParser.parse(jsonOrg.getJSONArray("farms"), orgId, brief)
-            var roles = RoleParser.parse(jsonOrg.getJSONArray("roles"))
+            var roles =
+                RoleParser.parse(
+                    jsonOrg.getJSONArray("roles")
+                )
             return Organization(orgId, name, farms, "", roles)
         }
 
@@ -26,7 +32,12 @@ class OrganizationParser {
             var orgs = ArrayList<Organization>(jsonOrgs.length())
             for (i in 0..jsonOrgs.length() - 1) {
                 val jsonOrg = jsonOrgs.getJSONObject(i)
-                orgs.add(parse(jsonOrg, brief))
+                orgs.add(
+                    parse(
+                        jsonOrg,
+                        brief
+                    )
+                )
             }
             return orgs
         }

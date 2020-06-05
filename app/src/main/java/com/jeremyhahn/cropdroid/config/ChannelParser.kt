@@ -1,4 +1,4 @@
-package com.jeremyhahn.cropdroid.utils
+package com.jeremyhahn.cropdroid.config
 
 import android.util.Log
 import com.jeremyhahn.cropdroid.model.Channel
@@ -26,15 +26,15 @@ class ChannelParser {
 
         fun parse(jsonChannel: JSONObject) : Channel {
             val id = jsonChannel.getLong("id")
-            val controllerId = jsonChannel.getInt("controllerId")
-            val channelId = jsonChannel.getInt("channelId")
+            val controllerId =  if(jsonChannel.isNull("controller_id")) jsonChannel.getInt("controllerId") else jsonChannel.getInt("controller_id")
+            val channelId = if(jsonChannel.isNull("channel_id")) jsonChannel.getInt("channelId") else jsonChannel.getInt("channel_id")
             val name = jsonChannel.getString("name")
             val enable = jsonChannel.getBoolean("enable")
             val notify = jsonChannel.getBoolean("notify")
             val duration = jsonChannel.getInt("duration")
             val debounce = jsonChannel.getInt("debounce")
             val backoff = jsonChannel.getInt("backoff")
-            val algorithmId = jsonChannel.getInt("algorithmId")
+            val algorithmId = if(jsonChannel.isNull("algorithm_id")) jsonChannel.getInt("algorithmId") else jsonChannel.getInt("algorithm_id")
             //val value = jsonChannel.getInt("value")
             val value = 0
             return Channel(id, controllerId, channelId, name, enable, notify, duration, debounce, backoff, algorithmId, value)

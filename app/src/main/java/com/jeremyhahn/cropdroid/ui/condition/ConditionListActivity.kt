@@ -16,7 +16,7 @@ import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.Condition
 import com.jeremyhahn.cropdroid.model.ConditionConfig
-import com.jeremyhahn.cropdroid.model.Server
+import com.jeremyhahn.cropdroid.model.ClientConfig
 import com.jeremyhahn.cropdroid.utils.Preferences
 import kotlinx.android.synthetic.main.activity_condition_list.*
 import okhttp3.Call
@@ -28,7 +28,7 @@ class ConditionListActivity : AppCompatActivity(), ConditionDialogHandler {
 
     lateinit private var recyclerView: RecyclerView
     lateinit private var swipeContainer: SwipeRefreshLayout
-    lateinit private var controller : Server
+    lateinit private var controller : ClientConfig
     private var channelId = 0
     private var channelName = ""
     private var channelDuration = 0

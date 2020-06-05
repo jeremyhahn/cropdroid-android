@@ -8,7 +8,7 @@ import com.jeremyhahn.cropdroid.Constants
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
-import com.jeremyhahn.cropdroid.model.Server
+import com.jeremyhahn.cropdroid.model.ClientConfig
 import com.jeremyhahn.cropdroid.utils.Preferences
 import okhttp3.Call
 import okhttp3.Callback
@@ -16,7 +16,7 @@ import java.io.IOException
 
 class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedPreferenceChangeListener {
 
-    lateinit private var controller : Server
+    lateinit private var controller : ClientConfig
     lateinit private var cropdroid: CropDroidAPI
     lateinit var sharedPreferences: SharedPreferences
     lateinit var preferences: Preferences

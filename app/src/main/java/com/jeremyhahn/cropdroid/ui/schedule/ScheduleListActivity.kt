@@ -14,7 +14,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
-import com.jeremyhahn.cropdroid.model.Server
+import com.jeremyhahn.cropdroid.model.ClientConfig
 import com.jeremyhahn.cropdroid.model.Schedule
 import com.jeremyhahn.cropdroid.utils.Preferences
 import kotlinx.android.synthetic.main.activity_schedule_list.*
@@ -27,7 +27,7 @@ class ScheduleListActivity : AppCompatActivity(), ScheduleSelectionListener {
 
     lateinit private var recyclerView: RecyclerView
     lateinit private var swipeContainer: SwipeRefreshLayout
-    lateinit private var controller : Server
+    lateinit private var controller : ClientConfig
     private var channelId = 0
     private var channelName = ""
     private var channelDuration = 0

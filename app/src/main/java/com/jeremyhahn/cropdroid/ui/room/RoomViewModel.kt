@@ -9,7 +9,7 @@ import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Channel
 import com.jeremyhahn.cropdroid.model.Metric
 import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
-import com.jeremyhahn.cropdroid.utils.ChannelParser
+import com.jeremyhahn.cropdroid.config.ChannelParser
 import com.jeremyhahn.cropdroid.utils.MetricParser
 import okhttp3.Call
 import okhttp3.Callback
@@ -36,7 +36,7 @@ class RoomViewModel(cropDroidAPI: CropDroidAPI) : ViewModel() {
     }
 
     fun getRoomStatus() {
-        cropDroidAPI.getState(ControllerType.Room, object : Callback {
+        cropDroidAPI.getState(Constants.CONFIG_ROOM_KEY, object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 Log.d("RoomViewModel.getRoom()", "onFailure response: " + e!!.message)
                 return

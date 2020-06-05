@@ -10,10 +10,10 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
-import com.jeremyhahn.cropdroid.model.Server
+import com.jeremyhahn.cropdroid.model.ClientConfig
 import com.jeremyhahn.cropdroid.ui.room.EdgeControllerViewModel
 
-class EdgeControllerRecyclerAdapter(val controllers: ArrayList<Server>,
+class EdgeControllerRecyclerAdapter(val controllers: ArrayList<ClientConfig>,
                                     val onMasterListener: OnMasterListener, val context: Context, val repository : MasterControllerRepository,
                                     val viewModel: EdgeControllerViewModel) : RecyclerView.Adapter<EdgeControllerRecyclerAdapter.ViewHolder>() {
 
@@ -51,7 +51,7 @@ class EdgeControllerRecyclerAdapter(val controllers: ArrayList<Server>,
             itemView.setOnClickListener(this)
         }
 
-        fun bindItems(item: Server) {
+        fun bindItems(item: ClientConfig) {
             val hostname = itemView.findViewById(R.id.hostname) as TextView
             hostname.text = item.hostname
         }
@@ -61,7 +61,7 @@ class EdgeControllerRecyclerAdapter(val controllers: ArrayList<Server>,
         }
     }
 
-    fun setControllers(list : List<Server>) {
+    fun setControllers(list : List<ClientConfig>) {
         controllers.clear()
         controllers.addAll(list)
         notifyDataSetChanged()

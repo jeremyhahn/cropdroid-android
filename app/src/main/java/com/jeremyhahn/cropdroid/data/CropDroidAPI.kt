@@ -8,7 +8,6 @@ import com.jeremyhahn.cropdroid.Constants
 import com.jeremyhahn.cropdroid.Constants.Companion.API_BASE
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARM_ID_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ORG_ID_KEY
-import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
 import com.jeremyhahn.cropdroid.model.*
 import okhttp3.*
 import org.json.JSONArray
@@ -17,7 +16,7 @@ import java.io.IOException
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
 
-class CropDroidAPI(val controller: Server, preferences: SharedPreferences) {
+class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences) {
 
     val orgId: Int
     val farmId: Long
@@ -36,8 +35,6 @@ class CropDroidAPI(val controller: Server, preferences: SharedPreferences) {
     val CONTROLLER_ENDPOINT: String
     val FARM_ENDPOINT: String
     val IAP_ENDPOINT: String
-
-    var websockets : HashMap<Server, HashMap<String, WebSocket>> = HashMap()
 
     init {
         orgId = preferences.getInt(CONFIG_ORG_ID_KEY, 0)
@@ -81,20 +78,20 @@ class CropDroidAPI(val controller: Server, preferences: SharedPreferences) {
         doGet(EVENTS_ENDPOINT, args, callback)
     }
 
-    fun getMetricHistory(controllerType: ControllerType, metric: String, callback: Callback) {
+    fun getMetricHistory(controllerType: String, metric: String, callback: Callback) {
         var args = ArrayList<String>(2)
         args.add("history")
         args.add(metric)
-        doGet(FARM_ENDPOINT.plus("/").plus(controllerType.name.toLowerCase()), args, callback)
+        doGet(FARM_ENDPOINT.plus("/").plus(controllerType), args, callback)
     }
 
-    fun getState(controllerType: ControllerType, callback: Callback) {
+    fun getState(controllerType: String, callback: Callback) {
         var args = ArrayList<String>(0)
-        doGet(FARM_ENDPOINT.plus("/").plus(controllerType.name.toLowerCase()).plus("/view"), args, callback)
+        doGet(FARM_ENDPOINT.plus("/").plus(controllerType).plus("/view"), args, callback)
     }
 
-    fun timerSwitch(controllerType: ControllerType, channelId: Int, seconds: Int, callback: Callback) {
-        val resource = FARM_ENDPOINT.plus("/").plus(controllerType.name.toLowerCase())
+    fun timerSwitch(controllerType: String, channelId: Int, seconds: Int, callback: Callback) {
+        val resource = FARM_ENDPOINT.plus("/").plus(controllerType)
         var args = ArrayList<String>(4)
         args.add("timerSwitch")
         args.add(channelId.toString())
@@ -102,8 +99,8 @@ class CropDroidAPI(val controller: Server, preferences: SharedPreferences) {
         doGet(resource, args, callback)
     }
 
-    fun switch(controllerType: ControllerType, channelId: Int, state: Boolean, callback: Callback) {
-        val resource = FARM_ENDPOINT.plus("/").plus(controllerType.name.toLowerCase())
+    fun switch(controllerType: String, channelId: Int, state: Boolean, callback: Callback) {
+        val resource = FARM_ENDPOINT.plus("/").plus(controllerType)
         var state = if(state) "1" else "0"
         var args = ArrayList<String>(4)
         args.add("switch")
@@ -225,10 +222,10 @@ class CropDroidAPI(val controller: Server, preferences: SharedPreferences) {
         doPut(METRIC_ENDPOINT, json, callback)
     }
 
-    fun setVirtualMetricValue(controllerType: ControllerType, metric: Metric, callback: Callback) {
+    fun setVirtualMetricValue(controllerType: String, metric: Metric, callback: Callback) {
         Log.d("CropDropAPI.setVirtualMetricValue", "metric="+metric)
         var args = ArrayList<String>(4)
-        args.add(controllerType.name.toLowerCase())
+        args.add(controllerType)
         args.add(metric.key)
         args.add(metric.value.toString())
         doGet(VIRTUAL_ENDPOINT, args, callback)
@@ -457,7 +454,7 @@ class CropDroidAPI(val controller: Server, preferences: SharedPreferences) {
     }
 
 /*
-    fun getController(webSocket: WebSocket) : Server? {
+    fun getController(webSocket: WebSocket) : ClientConfig? {
         for((k, v) in websockets) {
             if(v.equals(webSocket)) {
                 return k

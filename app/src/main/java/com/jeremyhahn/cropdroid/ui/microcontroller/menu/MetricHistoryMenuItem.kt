@@ -14,7 +14,7 @@ import okhttp3.Callback
 import org.json.JSONArray
 import java.io.IOException
 
-class MetricHistoryMenuItem(context: Context, menu: ContextMenu, metric: Metric, cropDroidAPI: CropDroidAPI, controllerType: ControllerType) {
+class MetricHistoryMenuItem(context: Context, menu: ContextMenu, metric: Metric, cropDroidAPI: CropDroidAPI, controllerType: String) {
 
     init {
         menu.add(0, metric.id, 0, "History")

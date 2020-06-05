@@ -18,7 +18,7 @@ import com.jeremyhahn.cropdroid.ui.microcontroller.MicroControllerRecyclerAdapte
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
-import com.jeremyhahn.cropdroid.model.Server
+import com.jeremyhahn.cropdroid.model.ClientConfig
 import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
 import com.jeremyhahn.cropdroid.utils.Preferences
 
@@ -27,7 +27,7 @@ class ReservoirFragment : Fragment() {
     private val TAG = "ReservoirFragment"
     lateinit private var recyclerView: RecyclerView
     lateinit private var swipeContainer: SwipeRefreshLayout
-    lateinit private var controller : Server
+    lateinit private var controller : ClientConfig
     lateinit private var cropDroidAPI: CropDroidAPI
     lateinit private var viewModel: ReservoirViewModel
     private var recyclerItems = ArrayList<MicroControllerRecyclerModel>()
@@ -63,7 +63,7 @@ class ReservoirFragment : Fragment() {
                 requireActivity(),
                 CropDroidAPI(controller, controllerPreferences),
                 recyclerItems,
-                ControllerType.Reservoir,
+                Constants.CONFIG_RESERVOIR_KEY,
                 mode
             )
 

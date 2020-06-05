@@ -15,7 +15,7 @@ import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.TabAdapter
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
-import com.jeremyhahn.cropdroid.model.Server
+import com.jeremyhahn.cropdroid.model.ClientConfig
 import com.jeremyhahn.cropdroid.utils.Preferences
 import kotlinx.android.synthetic.main.app_bar_navigation.*
 
@@ -24,7 +24,7 @@ class MicroControllerFragment: Fragment() {
     private val TAG = "MicroControllerFragment"
     private var tabLayout: TabLayout? = null
     private var viewPager: ViewPager? = null
-    private var controller: Server? = null
+    private var controller: ClientConfig? = null
     private var videoUrl: String? = null
     private var fragmentView: View? = null
     lateinit private var preferences: Preferences
@@ -34,8 +34,8 @@ class MicroControllerFragment: Fragment() {
         super.onCreateView(inflater, container, savedInstanceState)
         setHasOptionsMenu(true)
 
-        val fragmentActivity = requireActivity()
-        val ctx = fragmentActivity.applicationContext
+        val mainActivity = requireActivity() as MainActivity
+        val ctx = mainActivity.applicationContext
 
         fragmentView = inflater.inflate(R.layout.fragment_microcontroller_tabs, container, false)
 
@@ -46,8 +46,9 @@ class MicroControllerFragment: Fragment() {
 
         controller = MasterControllerRepository(ctx).get(preferences.currentController())
 
-        fragmentActivity.toolbar.title = controllerPreferences.getString(CONFIG_FARM_NAME_KEY, "undefined")
+        //fragmentActivity.toolbar.title = controllerPreferences.getString(CONFIG_FARM_NAME_KEY, "undefined")
 
+        /*
         val tabs = ArrayList<String>(4)
         tabs.add(0, resources.getString(R.string.room_fragment))
         tabs.add(1, resources.getString(R.string.reservoir_fragment))
@@ -56,11 +57,26 @@ class MicroControllerFragment: Fragment() {
 
         viewPager = fragmentView!!.findViewById(R.id.viewPager) as ViewPager
         viewPager!!.adapter = TabAdapter(childFragmentManager, tabs)
+         */
+        viewPager = fragmentView!!.findViewById(R.id.viewPager) as ViewPager
+
+        configureTabs(mainActivity)
 
         tabLayout = fragmentView!!.findViewById(R.id.tabLayout)
         tabLayout!!.setupWithViewPager(viewPager)
 
         return fragmentView
+    }
+
+    fun configureTabs(mainActivity: MainActivity) {
+        var i = 0
+        val tabs = ArrayList<String>(mainActivity.controllerFragments.size)
+        for ((k, controller) in mainActivity.controllerViewModels) {
+            tabs.add(i, k.capitalize())
+            i++
+        }
+        tabs.add(i, resources.getString(R.string.events_fragment))
+        viewPager!!.adapter = TabAdapter(childFragmentManager, tabs, mainActivity.controllerFragments)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, menuInflater: MenuInflater) {

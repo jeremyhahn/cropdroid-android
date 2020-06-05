@@ -18,16 +18,12 @@ import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
-import com.jeremyhahn.cropdroid.model.Server
-import com.jeremyhahn.cropdroid.model.ServerConfig
-import com.jeremyhahn.cropdroid.utils.ConfigManager
+import com.jeremyhahn.cropdroid.model.ClientConfig
+import com.jeremyhahn.cropdroid.config.ConfigManager
 import com.jeremyhahn.cropdroid.utils.JsonWebToken
 import com.jeremyhahn.cropdroid.utils.Preferences
 import io.jsonwebtoken.ExpiredJwtException
 import kotlinx.android.synthetic.main.activity_login.*
-import kotlinx.android.synthetic.main.app_bar_navigation.*
-import java.time.Instant
-import java.time.format.DateTimeFormatter
 
 class LoginFragment() : Fragment() {
 
@@ -35,13 +31,12 @@ class LoginFragment() : Fragment() {
     private lateinit var preferences: Preferences
     private lateinit var sharedPrefs: SharedPreferences
     private lateinit var loginViewModel: LoginViewModel
-    private lateinit var controller: Server
+    private lateinit var controller: ClientConfig
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         super.onCreateView(inflater, container, savedInstanceState)
 
         val fragmentActivity = requireActivity()
-
         repository = MasterControllerRepository(fragmentActivity.applicationContext)
 
         var fragmentView = inflater.inflate(R.layout.fragment_login, container, false)
@@ -56,7 +51,7 @@ class LoginFragment() : Fragment() {
         preferences = Preferences(fragmentActivity.applicationContext)
         sharedPrefs = preferences.getDefaultPreferences()
 
-        controller = Server(args.getString("controller_hostname")!!, 0, "", null)
+        controller = ClientConfig(args.getString("controller_hostname")!!, 0, "", null)
 
         Log.d("LoginActivity.onCreate", "controller: " + controller.toString())
 
@@ -218,7 +213,9 @@ class LoginFragment() : Fragment() {
         }
     }
 
-    private fun doLogin(controller: Server = this.controller) {
+    private fun doLogin(appConfig: ClientConfig = this.controller) {
+
+        (activity as MainActivity).login(appConfig)
 
         /*
         val progress = ProgressDialog(activity)
@@ -227,29 +224,6 @@ class LoginFragment() : Fragment() {
         progress.setCancelable(false)
         progress.show()
          */
-
-        val cropDroidAPI = CropDroidAPI(controller, sharedPrefs)
-        val orgId = sharedPrefs.getInt(CONFIG_ORG_ID_KEY, 0)
-        val farmId = sharedPrefs.getLong(CONFIG_FARM_ID_KEY, 0)
-
-        val mainActivity = (activity as MainActivity)
-
-        mainActivity.serverConfig = controller
-        mainActivity.serverAPI = cropDroidAPI
-
-        mainActivity.configManager = ConfigManager(mainActivity, preferences.getControllerPreferences(), ServerConfig())
-        mainActivity.configManager.listen(requireActivity(), cropDroidAPI, farmId)
-
-        //(activity as MainActivity).configManager.sync()
-
-        requireActivity().runOnUiThread(Runnable {
-            if(orgId == 0) {
-                mainActivity.navigateToMicrocontroller()
-            } else {
-                mainActivity.navigateToOrganizations()
-            }
-        })
-
 /*
         cropDroidAPI.getConfig(object : Callback {
             override fun onFailure(call: Call, e: IOException) {

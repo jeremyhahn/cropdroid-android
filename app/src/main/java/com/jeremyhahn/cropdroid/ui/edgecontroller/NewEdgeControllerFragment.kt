@@ -11,7 +11,7 @@ import androidx.fragment.app.Fragment
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
-import com.jeremyhahn.cropdroid.model.Server
+import com.jeremyhahn.cropdroid.model.ClientConfig
 
 class NewEdgeControllerFragment : Fragment() {
 
@@ -35,12 +35,12 @@ class NewEdgeControllerFragment : Fragment() {
         val repository = MasterControllerRepository(requireContext())
         var controller = repository.getByHostname(hostname)
         if(controller != null) {
-            Toast.makeText(requireContext(), "Server already exists!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "ClientConfig already exists!", Toast.LENGTH_SHORT).show()
 
             (activity as MainActivity).navigateToHome()
         }
         else {
-            var persistedController = repository.create(Server(hostname, 0,"", null))
+            var persistedController = repository.create(ClientConfig(hostname, 0,"", null))
             (activity as MainActivity).navigateToLogin(persistedController)
         }
     }

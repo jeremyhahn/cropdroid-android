@@ -57,7 +57,7 @@ class SwitchTypeViewHolder(adapter: MicroControllerRecyclerAdapter, itemView: Vi
             }
             d.setPositiveButton("Done") { dialogInterface, i ->
                 Log.d("btnDispense.onClick", "onClick: " + numberPicker.value)
-                cropDroidAPI.timerSwitch(Constants.Companion.ControllerType.Doser, channel.channelId, numberPicker.value, object :
+                cropDroidAPI.timerSwitch(Constants.CONFIG_DOSER_KEY, channel.channelId, numberPicker.value, object :
                     Callback {
                     override fun onFailure(call: Call, e: IOException) {
                         Log.d("MicroControllerRecyclerAdapter.onSwitchState", "onFailure response: " + e!!.message)
@@ -77,7 +77,7 @@ class SwitchTypeViewHolder(adapter: MicroControllerRecyclerAdapter, itemView: Vi
         }
     }
 
-    fun bind(controllerType: Constants.Companion.ControllerType, channel: Channel) {
+    fun bind(controllerType: String, channel: Channel) {
 
         val displayName = if(channel.name != "") channel.name else "Channel ".plus(channel.id)
 

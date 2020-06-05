@@ -18,7 +18,7 @@ import com.jeremyhahn.cropdroid.ui.microcontroller.MicroControllerRecyclerAdapte
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
-import com.jeremyhahn.cropdroid.model.Server
+import com.jeremyhahn.cropdroid.model.ClientConfig
 import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
 import com.jeremyhahn.cropdroid.utils.Preferences
 
@@ -27,7 +27,7 @@ class DoserFragment : Fragment() {
     private val TAG = "DoserFragment"
     lateinit private var recyclerView: RecyclerView
     lateinit private var swipeContainer: SwipeRefreshLayout
-    lateinit private var controller : Server
+    lateinit private var controller : ClientConfig
     lateinit private var cropDroidAPI: CropDroidAPI
     lateinit private var viewModel: DoserViewModel
     private var recyclerItems = ArrayList<MicroControllerRecyclerModel>()
@@ -59,7 +59,7 @@ class DoserFragment : Fragment() {
 
         recyclerView = fragmentView.findViewById(R.id.doserRecyclerView) as RecyclerView
         recyclerView!!.layoutManager = LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
-        recyclerView!!.adapter = MicroControllerRecyclerAdapter(activity!!, cropDroidAPI, recyclerItems, ControllerType.Doser, mode)
+        recyclerView!!.adapter = MicroControllerRecyclerAdapter(activity!!, cropDroidAPI, recyclerItems, Constants.CONFIG_DOSER_KEY, mode)
 
         swipeContainer = fragmentView.findViewById(R.id.doserSwipeRefresh) as SwipeRefreshLayout
         swipeContainer?.setOnRefreshListener(SwipeRefreshLayout.OnRefreshListener {

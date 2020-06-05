@@ -1,4 +1,4 @@
-package com.jeremyhahn.cropdroid.ui.reservoir
+package com.jeremyhahn.cropdroid.ui.microcontroller
 
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
@@ -6,10 +6,9 @@ import androidx.lifecycle.ViewModel
 import com.jeremyhahn.cropdroid.Constants
 import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
-import com.jeremyhahn.cropdroid.model.Channel
-import com.jeremyhahn.cropdroid.model.Metric
-import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
 import com.jeremyhahn.cropdroid.config.ChannelParser
+import com.jeremyhahn.cropdroid.config.ConfigObserver
+import com.jeremyhahn.cropdroid.model.*
 import com.jeremyhahn.cropdroid.utils.MetricParser
 import okhttp3.Call
 import okhttp3.Callback
@@ -19,38 +18,43 @@ import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.concurrent.timerTask
 
-class ReservoirViewModel(cropDroidAPI: CropDroidAPI) : ViewModel() {
+class ControllerViewModel(cropDroidAPI: CropDroidAPI, controllerType: String) : ViewModel(), ConfigObserver {
 
     private val cropDroidAPI: CropDroidAPI
-    private var refreshTimer: Timer
+    private val controllerType: String
+    //private var refreshTimer: Timer
     val metrics = MutableLiveData<ArrayList<Metric>>()
     val channels = MutableLiveData<ArrayList<Channel>>()
     val models = MutableLiveData<ArrayList<MicroControllerRecyclerModel>>()
 
     init {
         this.cropDroidAPI = cropDroidAPI
+        this.controllerType = controllerType
+        /*
         refreshTimer = Timer()
         refreshTimer.scheduleAtFixedRate(timerTask {
-            getReservoirStatus()
+            getState()
         }, 0, Constants.MICROCONTROLLER_REFRESH)
+         */
     }
 
-    fun getReservoirStatus() {
-        cropDroidAPI.getState(Constants.CONFIG_RESERVOIR_KEY, object : Callback {
+    fun getState() {
+        cropDroidAPI.getState(controllerType, object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                Log.d("ReservoirViewModel.getReservoirStatus()", "onFailure response: " + e!!.message)
+                Log.d("ControllerViewModel.getState()", "onFailure response: " + e!!.message)
                 return
             }
             override fun onResponse(call: Call, response: okhttp3.Response) {
                 var responseBody = response.body().string()
 
-                Log.d("ReservoirViewModel.getReservoirStatus()", "responseBody: " + responseBody)
+                Log.d("ControllerViewModel.getState()", "responseBody: " + responseBody)
 
                 if (response.code() != 200) {
                     return
                 }
 
                 val json = JSONObject(responseBody)
+
                 val jsonMetrics = json.getJSONArray("metrics")
                 val _metrics = MetricParser.parse(jsonMetrics)
                 metrics.postValue(_metrics)
@@ -74,7 +78,31 @@ class ReservoirViewModel(cropDroidAPI: CropDroidAPI) : ViewModel() {
 
     override fun onCleared() {
         super.onCleared()
-        refreshTimer.cancel()
-        refreshTimer.purge()
+        //refreshTimer.cancel()
+        //refreshTimer.purge()
     }
+
+    override fun updateConfig(controller: Controller) {
+        Log.d("ControllerViewModel.updateConfig", "ControllerViewModel.updateConfig EXECUTED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        metrics.postValue(controller.metrics)
+        channels.postValue(controller.channels)
+
+        val _models = ArrayList<MicroControllerRecyclerModel>(controller.metrics.size + controller.channels.size)
+        for(metric in controller.metrics) {
+            val metric = Metric(metric.id, metric.key, metric.name, metric.enable, metric.notify, metric.unit, metric.alarmLow, metric.alarmHigh, metric.value)
+            _models.add(MicroControllerRecyclerModel(MicroControllerRecyclerModel.METRIC_TYPE, metric,null))
+        }
+        for(channel in controller.channels) {
+            _models.add(MicroControllerRecyclerModel(MicroControllerRecyclerModel.CHANNEL_TYPE, null, channel))
+        }
+        models.postValue(_models)
+    }
+
+    /*
+    override fun updateMetrics(controller: Controller) {
+        Log.d("ControllerViewModel.updateMetrics", "EXECUTED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        metrics.postValue(ArrayList(controller.metrics))
+    }
+    */
+
 }

@@ -14,7 +14,7 @@ import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Algorithm
 import com.jeremyhahn.cropdroid.model.Channel
-import com.jeremyhahn.cropdroid.utils.AlgorithmParser
+import com.jeremyhahn.cropdroid.config.AlgorithmParser
 import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException

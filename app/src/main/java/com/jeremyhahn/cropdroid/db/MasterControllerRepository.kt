@@ -6,7 +6,7 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import com.jeremyhahn.cropdroid.Constants.Companion.DATABASE_NAME
-import com.jeremyhahn.cropdroid.model.Server
+import com.jeremyhahn.cropdroid.model.ClientConfig
 import com.jeremyhahn.cropdroid.utils.JsonWebToken
 
 private const val DATABASE_VERSION = 1
@@ -60,7 +60,7 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
         return id
     }
 
-    fun create(controller: Server) : Server {
+    fun create(controller: ClientConfig) : ClientConfig {
         val db: SQLiteDatabase = this.getWritableDatabase()
         val values = ContentValues()
         values.put(KEY_HOSTNAME, controller.hostname)
@@ -73,7 +73,7 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
         return controller
     }
 
-    fun get(hostname: String): Server {
+    fun get(hostname: String): ClientConfig {
         val db: SQLiteDatabase = this.getReadableDatabase()
         val cursor: Cursor = db.query(
             TABLE_SERVERS,
@@ -90,7 +90,7 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
             null
         )
         cursor.moveToFirst()
-        var controller  = Server(
+        var controller  = ClientConfig(
             cursor.getString(0),
             cursor.getString(1).toInt(),
             cursor.getString(2),
@@ -102,8 +102,8 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
         return controller
     }
 
-    fun getByHostname(hostname: String): Server? {
-        var controller : Server? = null
+    fun getByHostname(hostname: String): ClientConfig? {
+        var controller : ClientConfig? = null
         val db: SQLiteDatabase = this.getReadableDatabase()
         val cursor: Cursor = db.query(
             TABLE_SERVERS,
@@ -121,7 +121,7 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
         )
         cursor.moveToFirst()
         if(cursor.count > 0) {
-            controller = Server(
+            controller = ClientConfig(
                 cursor.getString(0),
                 cursor.getString(1).toInt(),
                 cursor.getString(2),
@@ -134,15 +134,15 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
         return controller
     }
 
-    val allControllers: ArrayList<Server>
+    val allControllers: ArrayList<ClientConfig>
         get() {
-            var controllerList: ArrayList<Server> = ArrayList<Server>()
+            var controllerList: ArrayList<ClientConfig> = ArrayList<ClientConfig>()
             val selectQuery = "SELECT  * FROM $TABLE_SERVERS ORDER BY $KEY_HOSTNAME"
             val db: SQLiteDatabase = this.getWritableDatabase()
             val cursor: Cursor = db.rawQuery(selectQuery, null)
             if (cursor.moveToFirst()) {
                 do {
-                    val controller = Server(
+                    val controller = ClientConfig(
                         cursor.getString(0),
                         cursor.getString(1).toInt(),
                         cursor.getString(2),
@@ -157,7 +157,7 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
             return controllerList
         }
 
-    fun updateController(controller: Server): Int {
+    fun updateController(controller: ClientConfig): Int {
         val db: SQLiteDatabase = this.getWritableDatabase()
         val values = ContentValues()
         values.put(KEY_HOSTNAME, controller.hostname)
@@ -173,7 +173,7 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
         return response
     }
 
-    fun delete(controller: Server) {
+    fun delete(controller: ClientConfig) {
         val db: SQLiteDatabase = this.getWritableDatabase()
         db.delete(
             TABLE_SERVERS,

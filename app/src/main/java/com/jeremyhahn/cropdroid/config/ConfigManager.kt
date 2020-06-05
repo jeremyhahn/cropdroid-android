@@ -1,9 +1,8 @@
-package com.jeremyhahn.cropdroid.utils
+package com.jeremyhahn.cropdroid.config
 
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
-import androidx.appcompat.widget.Toolbar
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARM_ID_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARM_INTERVAL_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARM_MODE_KEY
@@ -21,7 +20,6 @@ import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_RECIPIENT_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_USERNAME_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_TIMEZONE_KEY
 import com.jeremyhahn.cropdroid.MainActivity
-import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.*
 import okhttp3.Response
 import okhttp3.WebSocket
@@ -31,10 +29,10 @@ import org.json.JSONObject
 import java.lang.Integer.parseInt
 import java.lang.Thread.sleep
 
-class ConfigManager(val mainActivity: MainActivity, val sharedPreferences: SharedPreferences, val config: ServerConfig) : WebSocketListener() {
+class ConfigManager(val mainActivity: MainActivity, val sharedPreferences: SharedPreferences) : WebSocketListener() {
 
     val editor: SharedPreferences.Editor = sharedPreferences.edit()
-    var websockets : HashMap<WebSocket, Server> = HashMap()
+    var websockets : HashMap<WebSocket, ClientConfig> = HashMap()
     private val TAG = "ConfigManager"
 
     companion object {
@@ -51,12 +49,10 @@ class ConfigManager(val mainActivity: MainActivity, val sharedPreferences: Share
         editor.commit()
     }
 */
-    fun listen(context: Context, cropDroidAPI: CropDroidAPI, farmId: Long) {
+    fun listen(context: Context, farmId: Long) {
         //val websocket = cropDroidAPI.createWebsocket(context, "/farms/$farmId/config/changefeed", this)
-    val websocket = cropDroidAPI.createWebsocket(context, "/changefeed/$farmId", this)
-        if(websocket != null) {
-            websockets[websocket] = cropDroidAPI.controller
-        }
+        val websocket = mainActivity.cropDroidAPI.createWebsocket(context, "/changefeed/$farmId", this)
+        if(websocket != null) websockets[websocket] = mainActivity.cropDroidAPI.controller
     }
 
     fun getString(key: String) : String {
@@ -117,11 +113,10 @@ class ConfigManager(val mainActivity: MainActivity, val sharedPreferences: Share
             setEditorValue(CONFIG_FARM_MODE_KEY, farm.mode)
         }
         if(parseInt(interval) != farm.interval) {
-
             setEditorValue(CONFIG_FARM_INTERVAL_KEY, farm.interval)
             //editor.putInt(CONFIG_FARM_INTERVAL_KEY, farm.interval)
         }
-        if(timezone != config.timezone) {
+        if(timezone != farm.timezone) {
             setEditorValue(CONFIG_TIMEZONE_KEY, farm.timezone)
         }
         syncSmtp(farm.smtp)
@@ -225,9 +220,10 @@ class ConfigManager(val mainActivity: MainActivity, val sharedPreferences: Share
 
     override fun onMessage(webSocket: WebSocket, text: String) {
         Log.d("ConfigManager.onMessage(text)", text)
-        syncFarm(FarmParser.parse(JSONObject(text), 0L, false))
+        val farm = FarmParser.parse(JSONObject(text), 0L, false)
+        syncFarm(farm)
         editor.commit()
-        mainActivity.setToolbarTitle(sharedPreferences.getString(CONFIG_FARM_NAME_KEY, "undefined"))
+        mainActivity.update(farm)
     }
 
     override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
@@ -279,4 +275,19 @@ class ConfigManager(val mainActivity: MainActivity, val sharedPreferences: Share
 
         Log.d("COnfigManager.onFailure", "Unable to locate controller for failed websocket connection: " + webSocket.hashCode())
     }
+/*
+    override fun register(o: ConfigObserver) {
+        this.observers.add(o)
+    }
+
+    override fun unregister(o: ConfigObserver) {
+        this.observers.remove(o)
+    }
+
+    override fun updateObservers(controller: Controller) {
+        for(observer in observers) {
+            observer.updateConfig(controller)
+        }
+    }
+ */
 }
