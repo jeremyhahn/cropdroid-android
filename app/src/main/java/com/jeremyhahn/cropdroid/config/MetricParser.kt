@@ -34,10 +34,7 @@ class MetricParser {
             val unit = jsonMetric.getString("unit")
             val alarmLow = jsonMetric.getDouble("alarmLow")
             val alarmHigh = jsonMetric.getDouble("alarmHigh")
-            var value: Double = 0.0
-            if(!jsonMetric.isNull("value")) {
-                value = jsonMetric.getDouble("value")
-            }
+            var value: Double = if(!jsonMetric.isNull("value")) jsonMetric.getDouble("value") else 0.0
             return Metric(id, controllerId, datatype, key, name, enabled, notify, unit, alarmLow, alarmHigh, value)
         }
     }
