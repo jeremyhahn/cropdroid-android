@@ -85,7 +85,7 @@ open class ControllerFragment : Fragment() {
             return fragmentView
         }
         emptyView.visibility = View.INVISIBLE
-        viewModel!!.getState()
+        //viewModel!!.getState()
 
         swipeContainer = fragmentView.findViewById(R.id.controllerSwipeRefresh) as SwipeRefreshLayout
         swipeContainer?.setOnRefreshListener(OnRefreshListener {

@@ -28,7 +28,7 @@ class ScheduleListActivity : AppCompatActivity(), ScheduleSelectionListener {
     lateinit private var recyclerView: RecyclerView
     lateinit private var swipeContainer: SwipeRefreshLayout
     lateinit private var controller : ClientConfig
-    private var channelId = 0
+    private var channelId = 0L
     private var channelName = ""
     private var channelDuration = 0
     private var recyclerItems = ArrayList<Schedule>()
@@ -39,7 +39,7 @@ class ScheduleListActivity : AppCompatActivity(), ScheduleSelectionListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_schedule_list)
 
-        channelId = intent.getIntExtra("channel_id", 0)
+        channelId = intent.getLongExtra("channel_id", 0)
         channelName = intent.getStringExtra("channel_name")
         channelDuration = intent.getIntExtra("channel_duration", 0)
 

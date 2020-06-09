@@ -28,8 +28,7 @@ class LoginViewModel() : ViewModel() {
 
             override fun onFailure(call: Call?, e: IOException?) {
                 Log.d("LoginViewModel.login", "onFailure response: " + e!!.message)
-                _loginResult.postValue(LoginResult(error = e!!.message))
-                return
+                _loginResult.postValue(LoginResult(error = e.message))
             }
 
             override fun onResponse(call: Call, response: Response) {

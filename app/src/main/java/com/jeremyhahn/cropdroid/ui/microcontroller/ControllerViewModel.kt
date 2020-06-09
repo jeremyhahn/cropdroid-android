@@ -65,7 +65,7 @@ class ControllerViewModel(cropDroidAPI: CropDroidAPI, controllerType: String) : 
 
                 val _models = ArrayList<MicroControllerRecyclerModel>(_metrics.size + _channels.size)
                 for(metric in _metrics) {
-                    val metric = Metric(metric.id, metric.key, metric.name, metric.enable, metric.notify, metric.unit, metric.alarmLow, metric.alarmHigh, metric.value)
+                    val metric = Metric(metric.id, metric.controllerId, metric.datatype, metric.key, metric.name, metric.enable, metric.notify, metric.unit, metric.alarmLow, metric.alarmHigh, metric.value)
                     _models.add(MicroControllerRecyclerModel(MicroControllerRecyclerModel.METRIC_TYPE, metric,null))
                 }
                 for(channel in _channels) {
@@ -83,13 +83,13 @@ class ControllerViewModel(cropDroidAPI: CropDroidAPI, controllerType: String) : 
     }
 
     override fun updateConfig(controller: Controller) {
-        Log.d("ControllerViewModel.updateConfig", "ControllerViewModel.updateConfig EXECUTED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        Log.d("ControllerViewModel.updateConfig", controller.toString())
         metrics.postValue(controller.metrics)
         channels.postValue(controller.channels)
 
         val _models = ArrayList<MicroControllerRecyclerModel>(controller.metrics.size + controller.channels.size)
         for(metric in controller.metrics) {
-            val metric = Metric(metric.id, metric.key, metric.name, metric.enable, metric.notify, metric.unit, metric.alarmLow, metric.alarmHigh, metric.value)
+            val metric = Metric(metric.id, metric.controllerId, metric.datatype, metric.key, metric.name, metric.enable, metric.notify, metric.unit, metric.alarmLow, metric.alarmHigh, metric.value)
             _models.add(MicroControllerRecyclerModel(MicroControllerRecyclerModel.METRIC_TYPE, metric,null))
         }
         for(channel in controller.channels) {

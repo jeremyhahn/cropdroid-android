@@ -13,7 +13,7 @@ import java.io.IOException
 class MetricEnableMenuItem(menu: ContextMenu, metric: Metric, cropDroidAPI: CropDroidAPI, adapter: MicroControllerRecyclerAdapter) {
 
     init {
-        menu.add(0, metric.id, 0, "Enable")
+        menu.add(0, metric.id.toInt(), 0, "Enable")
             .setCheckable(true)
             .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
                 metric.enable = if (it.isChecked) false else true

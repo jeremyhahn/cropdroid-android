@@ -3,6 +3,7 @@ package com.jeremyhahn.cropdroid.config
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import com.jeremyhahn.cropdroid.Constants
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARM_ID_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARM_INTERVAL_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARM_MODE_KEY
@@ -21,9 +22,8 @@ import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_USERNAME_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_TIMEZONE_KEY
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.model.*
-import okhttp3.Response
-import okhttp3.WebSocket
-import okhttp3.WebSocketListener
+import com.jeremyhahn.cropdroid.Error
+import okhttp3.*
 import okio.ByteString
 import org.json.JSONObject
 import java.lang.Integer.parseInt
@@ -34,6 +34,8 @@ class ConfigManager(val mainActivity: MainActivity, val sharedPreferences: Share
     val editor: SharedPreferences.Editor = sharedPreferences.edit()
     var websockets : HashMap<WebSocket, ClientConfig> = HashMap()
     private val TAG = "ConfigManager"
+
+    private var farmId: Long = 0
 
     companion object {
         private const val NORMAL_CLOSURE_STATUS = 1000
@@ -49,9 +51,10 @@ class ConfigManager(val mainActivity: MainActivity, val sharedPreferences: Share
         editor.commit()
     }
 */
-    fun listen(context: Context, farmId: Long) {
+    fun listen(farmId: Long) {
+        this.farmId = farmId
         //val websocket = cropDroidAPI.createWebsocket(context, "/farms/$farmId/config/changefeed", this)
-        val websocket = mainActivity.cropDroidAPI.createWebsocket(context, "/changefeed/$farmId", this)
+        val websocket = mainActivity.cropDroidAPI.createWebsocket(mainActivity, "/changefeed/$farmId", this)
         if(websocket != null) websockets[websocket] = mainActivity.cropDroidAPI.controller
     }
 
@@ -205,7 +208,6 @@ class ConfigManager(val mainActivity: MainActivity, val sharedPreferences: Share
     private fun setEditorValue(key: String, value: Long) {
         editor.putLong(key, value)
     }
-
     override fun onOpen(webSocket: WebSocket, response: Response) {
         val controller =  websockets[webSocket]
         if(controller != null) {
@@ -220,33 +222,29 @@ class ConfigManager(val mainActivity: MainActivity, val sharedPreferences: Share
 
     override fun onMessage(webSocket: WebSocket, text: String) {
         Log.d("ConfigManager.onMessage(text)", text)
-        val farm = FarmParser.parse(JSONObject(text), 0L, false)
-        syncFarm(farm)
-        editor.commit()
-        mainActivity.update(farm)
+        try {
+            val farm = FarmParser.parse(JSONObject(text), 0L, false)
+            syncFarm(farm)
+            editor.commit()
+            mainActivity.update(farm)
+        }
+        catch(e: Exception) {
+            Error(mainActivity).alert(e.message.toString(), null, null)
+        }
     }
 
     override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
-        Log.d("COnfigManager.onMessage(bytes)", bytes.hex())
+        Log.d("ConfigManager.onMessage(bytes)", bytes.hex())
     }
 
     override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
-        webSocket.close(NORMAL_CLOSURE_STATUS, null)
         Log.d("ConfigManager.onClosing", "$code / $reason")
-
         var controller = websockets[webSocket]
         if(controller != null) {
-            /*
-            createNotification(Notification(controller.name,
-                Constants.NOTIFICATION_PRIORITY_MED,
-                "Notification Service",
-                "Connection closed!",
-                ZonedDateTime.now().toString()))
-             */
+            webSocket.close(NORMAL_CLOSURE_STATUS, null);
             return
         }
-
-        Log.d("COnfigManager.onFailure", "Unable to locate controller for closed websocket connection: " + webSocket.hashCode())
+        Log.d("ConfigManager.onFailure", "Unable to locate controller for closed websocket connection: " + webSocket.hashCode())
     }
 
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
@@ -254,26 +252,19 @@ class ConfigManager(val mainActivity: MainActivity, val sharedPreferences: Share
         t.printStackTrace()
 
         Log.d("ConfigManager.onFailure", "response: " + response.toString())
-        Log.d("ConfigManager.onFailure", "t:" + t.toString())
+        Log.d("ConfigManager.onFailure", "throwable: " + t.toString())
 
         sleep(CONNECTION_FAILED_DELAY)
 
         var controller = websockets[webSocket]
         if(controller != null) {
             Log.d("COnfigManager.onFailure", "Restarting connection for " + controller.hostname)
-
-            /*
-            createNotification(Notification(controller.name,
-                Constants.NOTIFICATION_PRIORITY_MED,
-                "Notification Service",
-                "Connection failed! \n\n" + t.message, ZonedDateTime.now().toString()))
             webSocket.cancel()
-            createWebsocket(controller)
-             */
+            if(farmId > 0) listen(farmId)
             return
         }
 
-        Log.d("COnfigManager.onFailure", "Unable to locate controller for failed websocket connection: " + webSocket.hashCode())
+        Log.d("ConfigManager.onFailure", "Unable to locate controller for failed websocket connection: " + webSocket.hashCode())
     }
 /*
     override fun register(o: ConfigObserver) {

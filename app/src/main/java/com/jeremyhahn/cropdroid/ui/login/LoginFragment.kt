@@ -72,7 +72,7 @@ class LoginFragment() : Fragment() {
             Log.d("LoginActivity.onCreate", "selectedController: " + selectedController.hostname)
 
             if(selectedController != null && !selectedController.token.isEmpty()) {
-                doLogin(selectedController)
+                (activity as MainActivity).login(selectedController)
                 return fragmentView
             }
         }
@@ -106,9 +106,10 @@ class LoginFragment() : Fragment() {
             loading.visibility = View.GONE
             //setResult(Activity.RESULT_OK)
 
-            if (loginResult.error!= null) {
+            if (loginResult.error != null) {
                 showLoginFailed(loginResult.error)
             }
+
             if(loginResult.registered) {
                 loginViewModel.login(
                     CropDroidAPI(controller, sharedPrefs),
@@ -154,7 +155,7 @@ class LoginFragment() : Fragment() {
 
                     preferences.set(controller, user, 0, farmId)
 
-                    doLogin()
+                    (activity as MainActivity).login(controller)
                 }
             }
 
@@ -207,65 +208,10 @@ class LoginFragment() : Fragment() {
 
     fun checkSslFlag() {
         if(useSSL.isChecked()) {
-            controller!!.secure = 1
+            controller.secure = 1
         } else {
-            controller!!.secure = 0
+            controller.secure = 0
         }
-    }
-
-    private fun doLogin(appConfig: ClientConfig = this.controller) {
-
-        (activity as MainActivity).login(appConfig)
-
-        /*
-        val progress = ProgressDialog(activity)
-        progress.setTitle("Configuration")
-        progress.setMessage("Loading...")
-        progress.setCancelable(false)
-        progress.show()
-         */
-/*
-        cropDroidAPI.getConfig(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                Log.d(":LoginActivity.getConfig.onFailure", "onFailure response: " + e.message)
-                //progress.dismiss()
-                activity!!.runOnUiThread(Runnable {
-                    if(e.message == null) {
-                        Error(activity!!.applicationContext).toast(e.localizedMessage)
-                    } else {
-                        Error(activity!!.applicationContext).toast(e.message!!)
-                    }
-                })
-            }
-            override fun onResponse(call: Call, response: okhttp3.Response) {
-
-                var responseBody = response.body().string()
-                Log.d("LoginActivity.getConfig.onResponse", "responseBody: " + responseBody)
-
-                val orgId = sharedPrefs.getInt(CONFIG_ORG_ID_KEY, 0)
-                val farmId = sharedPrefs.getInt(CONFIG_FARM_ID_KEY, 0)
-
-                (activity as MainActivity).configManager = ConfigManager(preferences.getControllerPreferences(), ConfigParser.parse(responseBody))
-                //(activity as MainActivity).configManager.sync()
-                (activity as MainActivity).configManager.listen(activity!!.applicationContext, cropDroidAPI, farmId)
-
-                //val notificationServiceIntent = Intent(this, NotificationService::class.java)
-                //notificationServiceIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                //startForegroundService(notificationServiceIntent)
-
-                //progress.dismiss()
-
-                activity!!.runOnUiThread(Runnable {
-                    if(orgId == 0 && farmId == 0) {
-                        (activity as MainActivity).navigateToMicrocontroller()
-                    } else {
-                        (activity as MainActivity).navigateToOrganizations()
-                    }
-
-                })
-            }
-        })
-        */
     }
 
     private fun showLoginFailed(@StringRes errorString: Int) {
@@ -273,7 +219,7 @@ class LoginFragment() : Fragment() {
     }
 
     private fun showLoginFailed(errorString: String) {
-        Toast.makeText(requireActivity().applicationContext, errorString, Toast.LENGTH_SHORT).show()
+        Toast.makeText(activity as MainActivity, errorString, Toast.LENGTH_SHORT).show()
     }
 
 }

@@ -91,8 +91,8 @@ class MainActivity : AppCompatActivity() {
 
         var intent = Intent(this, NotificationService::class.java)
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        startService(intent)
         startForegroundService(intent)
+        startService(intent)
     }
 
     fun setToolbarTitle(title: String) {
@@ -164,7 +164,7 @@ class MainActivity : AppCompatActivity() {
         appConfig = config
 
         configManager = ConfigManager(this, sharedPreferences)
-        configManager.listen(this, farmId)
+        configManager.listen(farmId)
         //configManager.sync()
 
         /*
@@ -177,9 +177,16 @@ class MainActivity : AppCompatActivity() {
             Error(applicationContext).toast("Timed out contacting server: ${cropDroidAPI.controller.hostname}")
         }*/
 
-        while (controllerViewModels.isEmpty()) {
+        for(i in 10 downTo 0) {
             Log.d("MainActivity", "Waiting for configuration reply from server...")
-            Thread.sleep(200L)
+            if(controllerViewModels.size > 0) break
+            if(i == 0) {
+                runOnUiThread(Runnable {
+                    Error(this).alert("Timed out contacting server: ${cropDroidAPI.controller.hostname}", null, null)
+                })
+                return
+            }
+            Thread.sleep(500L)
         }
 
         runOnUiThread(Runnable {
@@ -222,24 +229,7 @@ class MainActivity : AppCompatActivity() {
             microcontrollerFragment.configureTabs(this)
         }
     }
-/*
-    @Synchronized fun updateConfig(controllerConfig: Farm) {
-        var redraw = false
-        farm = farmConfig
-        for(controller in farm.controllers) {
-            var viewModel = controllerViewModels[controller.type]
-            if(viewModel == null) {
-                viewModel = ViewModelProviders.of(this, ControllerViewModelFactory(cropDroidAPI)).get(ControllerViewModel::class.java)
-                controllerViewModels[controller.type] = viewModel
-                redraw = true
-            }
-            viewModel.updateConfig(controller)
-        }
-        if(redraw) {
-            microcontrollerFragment.redrawTabs()
-        }
-    }
-*/
+
     override fun onSupportNavigateUp(): Boolean {
         return navController.navigateUp(appBarConfiguration)// || super.onSupportNavigateUp()
     }

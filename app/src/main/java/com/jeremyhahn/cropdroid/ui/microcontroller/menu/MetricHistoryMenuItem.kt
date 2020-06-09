@@ -17,7 +17,7 @@ import java.io.IOException
 class MetricHistoryMenuItem(context: Context, menu: ContextMenu, metric: Metric, cropDroidAPI: CropDroidAPI, controllerType: String) {
 
     init {
-        menu.add(0, metric.id, 0, "History")
+        menu.add(0, metric.id.toInt(), 0, "History")
             .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
 
                 cropDroidAPI.getMetricHistory(controllerType, metric.key, object: Callback {

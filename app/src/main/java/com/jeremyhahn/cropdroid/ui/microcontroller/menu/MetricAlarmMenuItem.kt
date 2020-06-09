@@ -19,7 +19,7 @@ import java.io.IOException
 class MetricAlarmMenuItem(context: Context, menu: ContextMenu, metric: Metric, cropDroidAPI: CropDroidAPI, adapter: MicroControllerRecyclerAdapter) {
 
     init {
-        menu.add(0, metric.id, 0, "Alarm")
+        menu.add(0, metric.id.toInt(), 0, "Alarm")
             .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
                 val inflater: LayoutInflater = LayoutInflater.from(context)
 

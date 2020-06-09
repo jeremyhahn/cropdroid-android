@@ -90,7 +90,7 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
         doGet(FARM_ENDPOINT.plus("/").plus(controllerType).plus("/view"), args, callback)
     }
 
-    fun timerSwitch(controllerType: String, channelId: Int, seconds: Int, callback: Callback) {
+    fun timerSwitch(controllerType: String, channelId: Long, seconds: Int, callback: Callback) {
         val resource = FARM_ENDPOINT.plus("/").plus(controllerType)
         var args = ArrayList<String>(4)
         args.add("timerSwitch")
@@ -99,7 +99,7 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
         doGet(resource, args, callback)
     }
 
-    fun switch(controllerType: String, channelId: Int, state: Boolean, callback: Callback) {
+    fun switch(controllerType: String, channelId: Long, state: Boolean, callback: Callback) {
         val resource = FARM_ENDPOINT.plus("/").plus(controllerType)
         var state = if(state) "1" else "0"
         var args = ArrayList<String>(4)
@@ -117,7 +117,7 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
         doGet(CONFIG_ENDPOINT, args, callback)
     }
 
-    fun getConditions(channelId: Int, callback: Callback) {
+    fun getConditions(channelId: Long, callback: Callback) {
         var args = ArrayList<String>(1)
         args.add("channel")
         args.add(channelId.toString())
@@ -152,7 +152,7 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
         doDelete(CONDITION_ENDPOINT, args, callback)
     }
 
-    fun getSchedule(channelId: Int, callback: Callback) {
+    fun getSchedule(channelId: Long, callback: Callback) {
         var args = ArrayList<String>(1)
         args.add("channel")
         args.add(channelId.toString())

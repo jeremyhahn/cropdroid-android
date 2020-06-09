@@ -23,7 +23,7 @@ class ConditionParser {
                 val id = jsonCondition.getInt("id")
                 val controllerType = jsonCondition.getString("controllerType")
                 //val metric = MetricParser.parse(jsonCondition.getJSONObject("metric"))
-                val metricId = jsonCondition.getInt("metricId")
+                val metricId = jsonCondition.getLong("metricId")
                 val channelId = jsonCondition.getInt("channelId")
                 val metricName = jsonCondition.getString("metricName")
                 val comparator = jsonCondition.getString("comparator")

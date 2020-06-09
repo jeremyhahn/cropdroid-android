@@ -10,10 +10,10 @@ import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
 
-class ScheduleViewModel(cropDroidAPI: CropDroidAPI, channelId: Int) : ViewModel() {
+class ScheduleViewModel(cropDroidAPI: CropDroidAPI, channelId: Long) : ViewModel() {
 
     private val cropDroidAPI: CropDroidAPI
-    private val channelId: Int
+    private val channelId: Long
     val schedules = MutableLiveData<ArrayList<Schedule>>()
 
     init {

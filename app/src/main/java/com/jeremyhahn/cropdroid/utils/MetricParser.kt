@@ -1,6 +1,5 @@
 package com.jeremyhahn.cropdroid.utils
 
-import android.util.Log
 import com.jeremyhahn.cropdroid.model.Metric
 import org.json.JSONArray
 import org.json.JSONObject
@@ -25,7 +24,9 @@ class MetricParser {
         }
 
         fun parse(jsonMetric: JSONObject): Metric {
-            val id = jsonMetric.getInt("id")
+            val id = jsonMetric.getLong("id")
+            val controllerId = if(!jsonMetric.isNull("controller_io")) jsonMetric.getLong("controller_id") else 0
+            val datatype = jsonMetric.getInt("datatype")
             val enabled = jsonMetric.getBoolean("enable")
             val notify = jsonMetric.getBoolean("notify")
             val key = jsonMetric.getString("key")
@@ -33,9 +34,11 @@ class MetricParser {
             val unit = jsonMetric.getString("unit")
             val alarmLow = jsonMetric.getDouble("alarmLow")
             val alarmHigh = jsonMetric.getDouble("alarmHigh")
-            //val value = jsonMetric.getDouble("value")
-            val value = 12.34
-            return Metric(id, key, name, enabled, notify, unit, alarmLow, alarmHigh, value)
+            var value: Double = 0.0
+            if(!jsonMetric.isNull("value")) {
+                value = jsonMetric.getDouble("value")
+            }
+            return Metric(id, controllerId, datatype, key, name, enabled, notify, unit, alarmLow, alarmHigh, value)
         }
     }
 }

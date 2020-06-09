@@ -19,7 +19,7 @@ import java.io.IOException
 class MetricRenameMenuItem(context: Context, menu: ContextMenu, metric: Metric, cropDroidAPI: CropDroidAPI, adapter: MicroControllerRecyclerAdapter) {
 
     init {
-        menu.add(0, metric.id, 0, "Rename")
+        menu.add(0, metric.id.toInt(), 0, "Rename")
             .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
                 val inflater: LayoutInflater = LayoutInflater.from(context)
 

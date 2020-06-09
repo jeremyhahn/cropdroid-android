@@ -13,11 +13,7 @@ class FarmParser {
     companion object {
 
         fun parse(json: String, orgId: Long, brief: Boolean): ArrayList<Farm> {
-            return parse(
-                JSONArray(json),
-                orgId,
-                brief
-            )
+            return parse(JSONArray(json), orgId, brief)
         }
 
         fun parse(jsonFarm: JSONObject, orgId: Long, brief: Boolean) : Farm {
@@ -28,10 +24,7 @@ class FarmParser {
             var roles = ArrayList<String>(0)
 
             if(!jsonFarm.isNull("roles")) {
-                roles =
-                    RoleParser.parse(
-                        jsonFarm.getJSONArray("roles")
-                    )
+                roles = RoleParser.parse(jsonFarm.getJSONArray("roles"))
             }
 
             if(!jsonFarm.isNull("orgId")) {
@@ -56,15 +49,8 @@ class FarmParser {
         fun parse(jsonFarms: JSONArray, orgId: Long, brief: Boolean) : ArrayList<Farm> {
             var farms = ArrayList<Farm>(jsonFarms.length())
             for (i in 0..jsonFarms.length() - 1) {
-
                 val jsonFarm = jsonFarms.getJSONObject(i)
-                farms.add(
-                    parse(
-                        jsonFarm,
-                        orgId,
-                        brief
-                    )
-                )
+                farms.add(parse(jsonFarm, orgId, brief))
             }
             return farms
         }

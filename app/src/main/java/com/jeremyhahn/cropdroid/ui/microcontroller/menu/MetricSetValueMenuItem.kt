@@ -21,7 +21,7 @@ import java.io.IOException
 class MetricSetValueMenuItem(context: Context, menu: ContextMenu, metric: Metric, cropDroidAPI: CropDroidAPI, adapter: MicroControllerRecyclerAdapter, controllerType: String) {
 
     init {
-        menu.add(0, metric.id, 0, "Set Value")
+        menu.add(0, metric.id.toInt(), 0, "Set Value")
             .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
 
                 val inflater: LayoutInflater = LayoutInflater.from(context)
@@ -45,7 +45,7 @@ class MetricSetValueMenuItem(context: Context, menu: ContextMenu, metric: Metric
                             Log.d("onCreateContextMenu.SetValue", "onResponse response: " + response.body().string())
                             adapter.activity.runOnUiThread(Runnable() {
                                 for((i, recyclerModel) in  adapter.recyclerItems.withIndex()) {
-                                    if(recyclerModel.metric!!.id == it.itemId) {
+                                    if(recyclerModel.metric!!.id.toInt() == it.itemId) {
                                         adapter.recyclerItems[i] = MicroControllerRecyclerModel(MicroControllerRecyclerModel.METRIC_TYPE, metric, null)
                                         adapter.notifyDataSetChanged()
                                         break

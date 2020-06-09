@@ -29,7 +29,7 @@ class ConditionListActivity : AppCompatActivity(), ConditionDialogHandler {
     lateinit private var recyclerView: RecyclerView
     lateinit private var swipeContainer: SwipeRefreshLayout
     lateinit private var controller : ClientConfig
-    private var channelId = 0
+    private var channelId = 0L
     private var channelName = ""
     private var channelDuration = 0
     private var recyclerItems = ArrayList<Condition>()
@@ -41,7 +41,7 @@ class ConditionListActivity : AppCompatActivity(), ConditionDialogHandler {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_condition_list)
 
-        channelId = intent.getIntExtra("channel_id", 0)
+        channelId = intent.getLongExtra("channel_id", 0)
         channelName = intent.getStringExtra("channel_name")
 
         val preferences = Preferences(applicationContext)

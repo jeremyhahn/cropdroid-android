@@ -36,7 +36,7 @@ class ScheduleParser {
                 Log.d("ScheduleParser.parse", jsonSchedule.toString())
 
                 val id = jsonSchedule.getLong("id")
-                val channelId = jsonSchedule.getInt("channelId")
+                val channelId = if(jsonSchedule.isNull("channel_id")) jsonSchedule.getLong("channelId") else jsonSchedule.getLong("channel_id")
                 val startDate = jsonSchedule.getString("startDate")
                 val endDate = jsonSchedule.getString("endDate")
                 val frequency = jsonSchedule.getInt("frequency")
@@ -44,9 +44,8 @@ class ScheduleParser {
                 val count = jsonSchedule.getInt("count")
 
                 var days = ArrayList<String>()
-                val jsonArray = jsonSchedule.getJSONArray("days")
-                for(i in 0..jsonArray.length()-1) {
-                    days.add(jsonArray.getString(i))
+                if(!jsonSchedule.isNull("days")) {
+                    days = ArrayList(jsonSchedule.getString("days").split(","))
                 }
 
                 var startCalendar = Calendar.getInstance()

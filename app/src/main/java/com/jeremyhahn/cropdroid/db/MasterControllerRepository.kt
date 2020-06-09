@@ -69,7 +69,9 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
         db.insert(TABLE_SERVERS, null, values)
         //controller.id = getLastInsertedId(db)
         db.close()
-        controller.jwt = JsonWebToken(context!!, controller.token)
+        if (!controller.token.isEmpty()) {
+            controller.jwt = JsonWebToken(context!!, controller.token)
+        }
         return controller
     }
 

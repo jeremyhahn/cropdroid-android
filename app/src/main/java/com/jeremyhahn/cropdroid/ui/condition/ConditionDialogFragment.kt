@@ -25,11 +25,11 @@ import okhttp3.Callback
 import java.io.IOException
 import java.util.*
 
-class ConditionDialogFragment(cropDroidAPI: CropDroidAPI, condition: Condition, channelId: Int, dialogHandler: ConditionDialogHandler) : DialogFragment() {
+class ConditionDialogFragment(cropDroidAPI: CropDroidAPI, condition: Condition, channelId: Long, dialogHandler: ConditionDialogHandler) : DialogFragment() {
 
     private val handler: ConditionDialogHandler
     private val condition: Condition
-    private val channelId: Int
+    private val channelId: Long
     private val cropDroidAPI: CropDroidAPI
 
     init {
