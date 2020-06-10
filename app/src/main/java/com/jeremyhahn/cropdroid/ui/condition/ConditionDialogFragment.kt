@@ -18,7 +18,7 @@ import com.jeremyhahn.cropdroid.model.ConditionConfig
 import com.jeremyhahn.cropdroid.model.Controller
 import com.jeremyhahn.cropdroid.model.Metric
 import com.jeremyhahn.cropdroid.config.ControllerParser
-import com.jeremyhahn.cropdroid.utils.MetricParser
+import com.jeremyhahn.cropdroid.config.MetricParser
 import kotlinx.android.synthetic.main.dialog_condition.view.*
 import okhttp3.Call
 import okhttp3.Callback

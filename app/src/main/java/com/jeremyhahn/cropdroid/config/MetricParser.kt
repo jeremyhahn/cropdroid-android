@@ -1,4 +1,4 @@
-package com.jeremyhahn.cropdroid.utils
+package com.jeremyhahn.cropdroid.config
 
 import com.jeremyhahn.cropdroid.model.Metric
 import org.json.JSONArray
@@ -8,7 +8,9 @@ class MetricParser {
 
     companion object {
         fun parse(json: String): ArrayList<Metric> {
-            return parse(JSONArray(json))
+            return parse(
+                JSONArray(json)
+            )
         }
 
         fun parse(jsonMetrics : JSONArray) : ArrayList<Metric> {
@@ -18,7 +20,7 @@ class MetricParser {
 
                 //Log.d("MetricParser.parse", jsonMetric.toString())
 
-                metrics.add(MetricParser.parse(jsonMetric))
+                metrics.add(parse(jsonMetric))
             }
             return metrics
         }

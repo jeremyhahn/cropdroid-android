@@ -85,7 +85,10 @@ open class ControllerFragment : Fragment() {
             return fragmentView
         }
         emptyView.visibility = View.INVISIBLE
-        //viewModel!!.getState()
+
+        if(viewModel!!.metrics.isEmpty() && viewModel!!.channels.isEmpty()) {
+            viewModel!!.getState()
+        }
 
         swipeContainer = fragmentView.findViewById(R.id.controllerSwipeRefresh) as SwipeRefreshLayout
         swipeContainer?.setOnRefreshListener(OnRefreshListener {
@@ -101,7 +104,7 @@ open class ControllerFragment : Fragment() {
         viewModel!!.models.observe(viewLifecycleOwner, Observer {
             swipeContainer.setRefreshing(false)
             val _adapter = recyclerView.adapter!! as MicroControllerRecyclerAdapter
-            _adapter.metricCount = viewModel!!.metrics.value!!.size
+            _adapter.metricCount = viewModel!!.metrics.size
             _adapter.setData(viewModel!!.models.value!!)
             recyclerView.adapter!!.notifyDataSetChanged()
         })

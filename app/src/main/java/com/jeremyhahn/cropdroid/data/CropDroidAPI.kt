@@ -30,7 +30,6 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
     val SCHEDULE_ENDPOINT: String
     val CHANNEL_ENDPOINT: String
     val METRIC_ENDPOINT: String
-    val VIRTUAL_ENDPOINT: String
     val ALGORITHMS_ENDPOINT: String
     val CONTROLLER_ENDPOINT: String
     val FARM_ENDPOINT: String
@@ -56,7 +55,6 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
         SCHEDULE_ENDPOINT = FARM_ENDPOINT.plus("/schedule")
         CHANNEL_ENDPOINT = FARM_ENDPOINT.plus("/channels")
         METRIC_ENDPOINT = FARM_ENDPOINT.plus("/metrics")
-        VIRTUAL_ENDPOINT = FARM_ENDPOINT.plus( "/virtual")
         ALGORITHMS_ENDPOINT = FARM_ENDPOINT.plus("/algorithms")
         CONTROLLER_ENDPOINT = FARM_ENDPOINT.plus("/controllers")
         IAP_ENDPOINT = FARM_ENDPOINT.plus("/iap")
@@ -90,7 +88,7 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
         doGet(FARM_ENDPOINT.plus("/").plus(controllerType).plus("/view"), args, callback)
     }
 
-    fun timerSwitch(controllerType: String, channelId: Long, seconds: Int, callback: Callback) {
+    fun timerSwitch(controllerType: String, channelId: Int, seconds: Int, callback: Callback) {
         val resource = FARM_ENDPOINT.plus("/").plus(controllerType)
         var args = ArrayList<String>(4)
         args.add("timerSwitch")
@@ -99,7 +97,7 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
         doGet(resource, args, callback)
     }
 
-    fun switch(controllerType: String, channelId: Long, state: Boolean, callback: Callback) {
+    fun switch(controllerType: String, channelId: Int, state: Boolean, callback: Callback) {
         val resource = FARM_ENDPOINT.plus("/").plus(controllerType)
         var state = if(state) "1" else "0"
         var args = ArrayList<String>(4)
@@ -222,13 +220,14 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
         doPut(METRIC_ENDPOINT, json, callback)
     }
 
-    fun setVirtualMetricValue(controllerType: String, metric: Metric, callback: Callback) {
-        Log.d("CropDropAPI.setVirtualMetricValue", "metric="+metric)
+    fun setMetricValue(controllerType: String, metric: Metric, callback: Callback) {
+        Log.d("CropDropAPI.setMetricValue", "metric="+metric)
         var args = ArrayList<String>(4)
         args.add(controllerType)
+        args.add("metrics")
         args.add(metric.key)
         args.add(metric.value.toString())
-        doGet(VIRTUAL_ENDPOINT, args, callback)
+        doGet(FARM_ENDPOINT, args, callback)
     }
 
     fun setChannelConfig(channel: Channel, callback: Callback) {

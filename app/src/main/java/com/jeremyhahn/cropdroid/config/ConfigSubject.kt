@@ -1,16 +1,9 @@
 package com.jeremyhahn.cropdroid.config
 
-import com.jeremyhahn.cropdroid.model.Controller
-import com.jeremyhahn.cropdroid.model.Farm
-
-interface ConfigSubject {
-    fun register(o: ConfigObserver)
-    fun unregister(o :ConfigObserver)
-    fun updateObservers(farmConfig: Farm)
-}
+import com.jeremyhahn.cropdroid.model.*
 
 interface ConfigObserver {
-    //fun update(farmConfig: Farm)
-    fun updateConfig(controller: Controller)
-    //fun updateMetrics(controller: Controller)
+    fun setConfig(controller: Controller)
+    fun setState(state: ControllerState)
+    fun setStateDelta(delta: ControllerStateDelta)
 }

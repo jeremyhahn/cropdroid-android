@@ -3,28 +3,24 @@ package com.jeremyhahn.cropdroid.ui.microcontroller
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.jeremyhahn.cropdroid.Constants
-import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.config.ChannelParser
 import com.jeremyhahn.cropdroid.config.ConfigObserver
 import com.jeremyhahn.cropdroid.model.*
-import com.jeremyhahn.cropdroid.utils.MetricParser
+import com.jeremyhahn.cropdroid.config.MetricParser
 import okhttp3.Call
 import okhttp3.Callback
 import org.json.JSONObject
 import java.io.IOException
-import java.util.*
 import kotlin.collections.ArrayList
-import kotlin.concurrent.timerTask
 
 class ControllerViewModel(cropDroidAPI: CropDroidAPI, controllerType: String) : ViewModel(), ConfigObserver {
 
     private val cropDroidAPI: CropDroidAPI
     private val controllerType: String
     //private var refreshTimer: Timer
-    val metrics = MutableLiveData<ArrayList<Metric>>()
-    val channels = MutableLiveData<ArrayList<Channel>>()
+    var metrics = ArrayList<Metric>()
+    var channels = ArrayList<Channel>()
     val models = MutableLiveData<ArrayList<MicroControllerRecyclerModel>>()
 
     init {
@@ -56,19 +52,17 @@ class ControllerViewModel(cropDroidAPI: CropDroidAPI, controllerType: String) : 
                 val json = JSONObject(responseBody)
 
                 val jsonMetrics = json.getJSONArray("metrics")
-                val _metrics = MetricParser.parse(jsonMetrics)
-                metrics.postValue(_metrics)
+                metrics = MetricParser.parse(jsonMetrics)
 
                 val jsonChannels = json.getJSONArray("channels")
-                var _channels = ChannelParser.parse(jsonChannels)
-                channels.postValue(_channels)
+                channels = ChannelParser.parse(jsonChannels)
 
-                val _models = ArrayList<MicroControllerRecyclerModel>(_metrics.size + _channels.size)
-                for(metric in _metrics) {
+                val _models = ArrayList<MicroControllerRecyclerModel>(metrics.size + channels.size)
+                for(metric in metrics) {
                     val metric = Metric(metric.id, metric.controllerId, metric.datatype, metric.key, metric.name, metric.enable, metric.notify, metric.unit, metric.alarmLow, metric.alarmHigh, metric.value)
                     _models.add(MicroControllerRecyclerModel(MicroControllerRecyclerModel.METRIC_TYPE, metric,null))
                 }
-                for(channel in _channels) {
+                for(channel in channels) {
                     _models.add(MicroControllerRecyclerModel(MicroControllerRecyclerModel.CHANNEL_TYPE, null, channel))
                 }
                 models.postValue(_models)
@@ -82,11 +76,10 @@ class ControllerViewModel(cropDroidAPI: CropDroidAPI, controllerType: String) : 
         //refreshTimer.purge()
     }
 
-    override fun updateConfig(controller: Controller) {
+    override fun setConfig(controller: Controller) {
         Log.d("ControllerViewModel.updateConfig", controller.toString())
-        metrics.postValue(controller.metrics)
-        channels.postValue(controller.channels)
-
+        metrics = controller.metrics
+        channels = controller.channels
         val _models = ArrayList<MicroControllerRecyclerModel>(controller.metrics.size + controller.channels.size)
         for(metric in controller.metrics) {
             val metric = Metric(metric.id, metric.controllerId, metric.datatype, metric.key, metric.name, metric.enable, metric.notify, metric.unit, metric.alarmLow, metric.alarmHigh, metric.value)
@@ -98,11 +91,50 @@ class ControllerViewModel(cropDroidAPI: CropDroidAPI, controllerType: String) : 
         models.postValue(_models)
     }
 
-    /*
-    override fun updateMetrics(controller: Controller) {
-        Log.d("ControllerViewModel.updateMetrics", "EXECUTED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        metrics.postValue(ArrayList(controller.metrics))
+    override fun setState(state: ControllerState)  {
+        val _models = ArrayList<MicroControllerRecyclerModel>(state.metrics.size + state.channels.size)
+        for((k, v) in state.metrics) {
+            for(metric in metrics) {
+                if(metric.key == k) {
+                    metric.value = v
+                    _models.add(MicroControllerRecyclerModel(MicroControllerRecyclerModel.METRIC_TYPE, metric,null))
+                    break
+                }
+            }
+        }
+        for(i in state.channels) {
+            for(channel in channels) {
+                if(channel.channelId == i) {
+                    channel.value = i
+                    _models.add(MicroControllerRecyclerModel(MicroControllerRecyclerModel.CHANNEL_TYPE, null, channel)
+                    )
+                    break
+                }
+            }
+        }
+        models.postValue(_models)
     }
-    */
 
+    override fun setStateDelta(delta: ControllerStateDelta) {
+        val _models = ArrayList<MicroControllerRecyclerModel>(metrics.size + channels.size)
+        for((i, metric) in metrics.withIndex()) {
+            for((k, v) in delta.metrics) {
+                if (metric.key == k) {
+                    metric.value = v
+                    break
+                }
+            }
+            _models.add(MicroControllerRecyclerModel(MicroControllerRecyclerModel.METRIC_TYPE, metric, null))
+        }
+        for(channel in channels) {
+            for((k, v)  in delta.channels) {
+                if(channel.channelId == k) {
+                    channel.value = v
+                    break
+                }
+            }
+            _models.add(MicroControllerRecyclerModel(MicroControllerRecyclerModel.CHANNEL_TYPE, null, channel))
+        }
+        models.postValue(_models)
+    }
 }

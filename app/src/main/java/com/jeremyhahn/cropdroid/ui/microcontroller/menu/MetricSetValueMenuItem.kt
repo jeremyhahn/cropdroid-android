@@ -36,7 +36,7 @@ class MetricSetValueMenuItem(context: Context, menu: ContextMenu, metric: Metric
                 d.setPositiveButton("Apply") { dialogInterface, i ->
                     Log.d("Duration", "onClick: " + it.itemId)
                     metric.value = dialogView.editNumber.text.toString().toDouble()
-                    cropDroidAPI.setVirtualMetricValue(controllerType, metric, object: Callback {
+                    cropDroidAPI.setMetricValue(controllerType, metric, object: Callback {
                         override fun onFailure(call: Call, e: IOException) {
                             Log.d("onCreateContextMenu.SetValue", "onFailure response: " + e!!.message)
                             return

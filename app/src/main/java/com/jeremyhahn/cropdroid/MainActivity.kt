@@ -24,8 +24,7 @@ import androidx.work.NetworkType
 import com.google.android.material.navigation.NavigationView
 import com.jeremyhahn.cropdroid.config.ConfigManager
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
-import com.jeremyhahn.cropdroid.model.ClientConfig
-import com.jeremyhahn.cropdroid.model.Farm
+import com.jeremyhahn.cropdroid.model.*
 import com.jeremyhahn.cropdroid.service.NotificationService
 import com.jeremyhahn.cropdroid.ui.events.EventListFragment
 import com.jeremyhahn.cropdroid.ui.microcontroller.ControllerFragment
@@ -33,7 +32,6 @@ import com.jeremyhahn.cropdroid.ui.microcontroller.ControllerViewModel
 import com.jeremyhahn.cropdroid.ui.microcontroller.ControllerViewModelFactory
 import com.jeremyhahn.cropdroid.ui.microcontroller.MicroControllerFragment
 import com.jeremyhahn.cropdroid.utils.Preferences
-import kotlinx.coroutines.*
 import java.lang.Runnable
 import java.util.concurrent.ConcurrentHashMap
 
@@ -92,7 +90,7 @@ class MainActivity : AppCompatActivity() {
         var intent = Intent(this, NotificationService::class.java)
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         startForegroundService(intent)
-        startService(intent)
+        //startService(intent)
     }
 
     fun setToolbarTitle(title: String) {
@@ -220,11 +218,58 @@ class MainActivity : AppCompatActivity() {
                 redraw = true
                 continue
             }
-            viewModel.updateConfig(controller)
+            viewModel.setConfig(controller)
         }
         if(!microcontrollerFragment.isAdded) {
             controllerFragments["events"] = EventListFragment()
         }
+        if(redraw && microcontrollerFragment.isAdded) {
+            microcontrollerFragment.configureTabs(this)
+        }
+    }
+
+    @Synchronized fun update(farmState: FarmState) {
+        var redraw = false
+        for((controllerType, controllerState) in farmState.controllers) {
+            if(controllerType == "server") continue
+            var viewModel = controllerViewModels[controllerType]
+            if(viewModel == null) {
+                controllerFragments[controllerType] = ControllerFragment.newInstance(controllerType)
+                controllerViewModels[controllerType] = ViewModelProvider(ViewModelStore(), ControllerViewModelFactory(cropDroidAPI, controllerType)).get(ControllerViewModel::class.java)
+                redraw = true
+            }
+            viewModel!!.setState(controllerState)
+        }
+        if(redraw && microcontrollerFragment.isAdded) {
+            microcontrollerFragment.configureTabs(this)
+        }
+    }
+
+    @Synchronized fun update(controllerState: ControllerState) {
+        var redraw = false
+       if(controllerState.type == "server") return
+        var viewModel = controllerViewModels[controllerState.type]
+        if(viewModel == null) {
+            controllerFragments[controllerState.type] = ControllerFragment.newInstance(controllerState.type)
+            controllerViewModels[controllerState.type] = ViewModelProvider(ViewModelStore(), ControllerViewModelFactory(cropDroidAPI, controllerState.type)).get(ControllerViewModel::class.java)
+            redraw = true
+        }
+        viewModel!!.setState(controllerState)
+        if(redraw && microcontrollerFragment.isAdded) {
+            microcontrollerFragment.configureTabs(this)
+        }
+    }
+
+    @Synchronized fun updateDelta(controllerState: ControllerStateDelta) {
+        var redraw = false
+        if(controllerState.type == "server") return
+        var viewModel = controllerViewModels[controllerState.type]
+        if(viewModel == null) {
+            controllerFragments[controllerState.type] = ControllerFragment.newInstance(controllerState.type)
+            controllerViewModels[controllerState.type] = ViewModelProvider(ViewModelStore(), ControllerViewModelFactory(cropDroidAPI, controllerState.type)).get(ControllerViewModel::class.java)
+            redraw = true
+        }
+        viewModel!!.setStateDelta(controllerState)
         if(redraw && microcontrollerFragment.isAdded) {
             microcontrollerFragment.configureTabs(this)
         }

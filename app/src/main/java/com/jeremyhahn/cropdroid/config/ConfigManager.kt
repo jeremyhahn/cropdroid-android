@@ -222,6 +222,7 @@ class ConfigManager(val mainActivity: MainActivity, val sharedPreferences: Share
 
     override fun onMessage(webSocket: WebSocket, text: String) {
         Log.d("ConfigManager.onMessage(text)", text)
+        //val message = JSONObject(text)
         try {
             val farm = FarmParser.parse(JSONObject(text), 0L, false)
             syncFarm(farm)
@@ -229,7 +230,14 @@ class ConfigManager(val mainActivity: MainActivity, val sharedPreferences: Share
             mainActivity.update(farm)
         }
         catch(e: Exception) {
-            Error(mainActivity).alert(e.message.toString(), null, null)
+            if(e.message.equals("No value for id")) {
+                //mainActivity.update(ControllerStateParser.parse(text))
+                mainActivity.updateDelta(ControllerStateDeltaParser.parse(text))
+                return
+            }
+            mainActivity.runOnUiThread(Runnable() {
+                Error(mainActivity).alert(e.message.toString(), null, null)
+            })
         }
     }
 
