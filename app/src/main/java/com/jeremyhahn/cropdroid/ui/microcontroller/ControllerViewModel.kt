@@ -70,12 +70,6 @@ class ControllerViewModel(cropDroidAPI: CropDroidAPI, controllerType: String) : 
         })
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        //refreshTimer.cancel()
-        //refreshTimer.purge()
-    }
-
     override fun setConfig(controller: Controller) {
         Log.d("ControllerViewModel.updateConfig", controller.toString())
         metrics = controller.metrics

@@ -83,37 +83,9 @@ class NotificationService : Service() {
             return START_NOT_STICKY
         }
 
-        var controllers = MasterControllerRepository(this).allControllers
-
-        if(controllers.size <= 0) {
-            Log.d("NotificationService.onStartCommand", "No controllers configured, aborting...")
+        if(!startListeners()) {
             return START_NOT_STICKY
         }
-
-        val authenticatedControllers = ArrayList<ClientConfig>(controllers.size)
-
-        for(controller in controllers) {
-            if(websockets[controller] == null) {
-                if(controller.token.isEmpty()) {
-                    // Controller hasn't been logged into yet
-                    return START_NOT_STICKY
-                }
-                Log.d("NotificationService.onStartCommand", "Found controller: " + controller)
-                authenticatedControllers.add(controller)
-            }
-        }
-
-        if(authenticatedControllers.size <= 0) {
-            return START_NOT_STICKY
-        }
-
-        for(controller in authenticatedControllers) {
-            if(websockets.get(controller) == null) {
-                createWebsocket(controller)
-            }
-        }
-
-        Log.d("NotificationService", "Connected to " + controllers.size.toString() + " controller(s)")
 
         //super.onStartCommand(intent, flags, startId)
         return START_STICKY
@@ -124,6 +96,42 @@ class NotificationService : Service() {
         //Log.d("NotificationService.onDestroy", "Starting new NotificationService intent")
         //notificationManager = null
         //sendBroadcast(Intent(this, NotificationService::class.java))
+    }
+
+    fun startListeners() : Boolean {
+        var controllers = MasterControllerRepository(this).allControllers
+
+        if(controllers.size <= 0) {
+            Log.d("NotificationService.onStartCommand", "No controllers configured, aborting...")
+            return false
+        }
+
+        val authenticatedControllers = ArrayList<ClientConfig>(controllers.size)
+
+        for(controller in controllers) {
+            if(websockets[controller] == null) {
+                if(controller.token.isEmpty()) {
+                    // Controller hasn't been logged into yet
+                    continue
+                }
+                Log.d("NotificationService.onStartCommand", "Found controller: " + controller)
+                authenticatedControllers.add(controller)
+            }
+        }
+
+        if(authenticatedControllers.size <= 0) {
+            return false
+        }
+
+        for(controller in authenticatedControllers) {
+            if(websockets.get(controller) == null) {
+                createWebsocket(controller)
+            }
+        }
+
+        Log.d("NotificationService", "Connected to " + websockets.size.toString() + " controller(s)")
+
+        return true
     }
 
     fun stopService() {
@@ -137,22 +145,27 @@ class NotificationService : Service() {
     }
 
     fun createWebsocket(controller: ClientConfig) {
-        try {
-            val client = OkHttpClient()
-            val protocol = if (controller.secure == 1) "wss://" else "ws://"
-            val request = Request.Builder()
-                .url(protocol.plus(controller.hostname).plus(API_BASE).plus("/farms/557387252778762241/notifications"))
-                .addHeader("Authorization", "Bearer " + controller.token)
-                .build()
-            val listener = NotificationWebSocketListener()
-            websockets[controller] = client.newWebSocket(request, listener)
-            client.dispatcher().executorService().shutdown()
-            client.retryOnConnectionFailure()
+        val jwt = JsonWebToken(applicationContext, controller.token)
+        for(org in jwt.organizations()) {
+            for(farm in org.farms) {
+                try {
+                    val client = OkHttpClient()
+                    val protocol = if (controller.secure == 1) "wss://" else "ws://"
+                    val request = Request.Builder()
+                        .url(protocol.plus(controller.hostname).plus(API_BASE).plus("/farms/${farm.id}/notifications"))
+                        .addHeader("Authorization", "Bearer " + controller.token)
+                        .build()
+                    val listener = NotificationWebSocketListener()
+                    websockets[controller] = client.newWebSocket(request, listener)
+                    client.dispatcher().executorService().shutdown()
+                    client.retryOnConnectionFailure()
+                }
+                catch(e: java.lang.IllegalArgumentException) {
+                    Toast.makeText(applicationContext, e.message, Toast.LENGTH_LONG).show()
+                }
+                Log.d("NotificationService.createWebsocket", "Created WebSocket " + websockets[controller].hashCode() + " for " + controller.hostname)
+            }
         }
-        catch(e: java.lang.IllegalArgumentException) {
-            Toast.makeText(applicationContext, e.message, Toast.LENGTH_LONG).show()
-        }
-        Log.d("NotificationService.createWebsocket", "Created WebSocket " + websockets[controller].hashCode() + " for " + controller.hostname)
     }
 
     fun createNotification(notification: Notification) {
@@ -306,8 +319,24 @@ class NotificationService : Service() {
                     Constants.NOTIFICATION_PRIORITY_MED,
                     "Notification Service",
                     "Connection failed! \n\n" + t.message, ZonedDateTime.now().toString()))
+
                 webSocket.cancel()
-                createWebsocket(controller)
+
+                // Get latest controller config; may have changed since service started running
+                var controllers = MasterControllerRepository(applicationContext).allControllers
+                if(controllers.size <= 0) {
+                    return
+                }
+                for(c in controllers) {
+                    if (controller.equals(c)) {
+                        if (controller.token.isEmpty()) {
+                            // Controller hasn't been logged into yet
+                            return
+                        }
+                        Log.d("NotificationService.onStartCommand", "Found controller: " + controller)
+                        createWebsocket(controller)
+                    }
+                }
                 return
             }
 

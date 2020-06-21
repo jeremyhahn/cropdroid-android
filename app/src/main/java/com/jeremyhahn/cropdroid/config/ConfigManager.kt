@@ -1,9 +1,7 @@
 package com.jeremyhahn.cropdroid.config
 
-import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
-import com.jeremyhahn.cropdroid.Constants
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARM_ID_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARM_INTERVAL_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARM_MODE_KEY
@@ -20,10 +18,12 @@ import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_PORT_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_RECIPIENT_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_USERNAME_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_TIMEZONE_KEY
+import com.jeremyhahn.cropdroid.Error
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.model.*
-import com.jeremyhahn.cropdroid.Error
-import okhttp3.*
+import okhttp3.Response
+import okhttp3.WebSocket
+import okhttp3.WebSocketListener
 import okio.ByteString
 import org.json.JSONObject
 import java.lang.Integer.parseInt
@@ -56,6 +56,10 @@ class ConfigManager(val mainActivity: MainActivity, val sharedPreferences: Share
         //val websocket = cropDroidAPI.createWebsocket(context, "/farms/$farmId/config/changefeed", this)
         val websocket = mainActivity.cropDroidAPI.createWebsocket(mainActivity, "/changefeed/$farmId", this)
         if(websocket != null) websockets[websocket] = mainActivity.cropDroidAPI.controller
+    }
+
+    fun getStringOrDefault(key: String, default: String) : String {
+        return sharedPreferences.getString(key, default)
     }
 
     fun getString(key: String) : String {
@@ -93,15 +97,15 @@ class ConfigManager(val mainActivity: MainActivity, val sharedPreferences: Share
 
         // sync controllers first to overwrite farm level settings
         // with correct data types (controller settings are always strings)
-        for(controller in farm.controllers) {
+        //for(controller in farm.controllers) {
             syncControllers(farm.controllers)
-        }
+        //}
 
         val id = getLong(CONFIG_FARM_ID_KEY)
         val orgId = getLong(CONFIG_FARM_ORG_ID_KEY)
         val name = getString(CONFIG_FARM_NAME_KEY)
         val mode = getString(CONFIG_FARM_MODE_KEY)
-        val interval = getString(CONFIG_FARM_INTERVAL_KEY)
+        val interval = getInt(CONFIG_FARM_INTERVAL_KEY)
         val timezone = getString(CONFIG_TIMEZONE_KEY)
         if(id != farm.id) {
             setEditorValue(CONFIG_FARM_ID_KEY, farm.id)
@@ -115,9 +119,8 @@ class ConfigManager(val mainActivity: MainActivity, val sharedPreferences: Share
         if(mode != farm.mode) {
             setEditorValue(CONFIG_FARM_MODE_KEY, farm.mode)
         }
-        if(parseInt(interval) != farm.interval) {
-            setEditorValue(CONFIG_FARM_INTERVAL_KEY, farm.interval)
-            //editor.putInt(CONFIG_FARM_INTERVAL_KEY, farm.interval)
+        if(interval != farm.interval) {
+            editor.putInt(CONFIG_FARM_INTERVAL_KEY, farm.interval)
         }
         if(timezone != farm.timezone) {
             setEditorValue(CONFIG_TIMEZONE_KEY, farm.timezone)
