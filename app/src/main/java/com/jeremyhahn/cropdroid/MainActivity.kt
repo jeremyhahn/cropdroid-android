@@ -4,7 +4,6 @@ import android.app.AlertDialog
 import android.app.Dialog
 import android.content.DialogInterface
 import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -21,9 +20,12 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.work.Constraints
 import androidx.work.NetworkType
+import com.google.android.gms.common.ConnectionResult.*
+import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.material.navigation.NavigationView
 import com.jeremyhahn.cropdroid.config.ConfigManager
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
+import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.*
 import com.jeremyhahn.cropdroid.service.NotificationService
 import com.jeremyhahn.cropdroid.ui.events.EventListFragment
@@ -32,7 +34,6 @@ import com.jeremyhahn.cropdroid.ui.microcontroller.ControllerViewModel
 import com.jeremyhahn.cropdroid.ui.microcontroller.ControllerViewModelFactory
 import com.jeremyhahn.cropdroid.ui.microcontroller.MicroControllerFragment
 import com.jeremyhahn.cropdroid.utils.Preferences
-import java.lang.Runnable
 import java.util.concurrent.ConcurrentHashMap
 
 class MainActivity : AppCompatActivity() {
@@ -41,11 +42,10 @@ class MainActivity : AppCompatActivity() {
     val controllerFragments: ConcurrentHashMap<String, ControllerFragment>
     val microcontrollerFragment: MicroControllerFragment
 
+    lateinit var connection: Connection
     lateinit var cropDroidAPI: CropDroidAPI
     lateinit var configManager: ConfigManager
-    lateinit var appConfig: ClientConfig
     lateinit var preferences: Preferences
-    lateinit var sharedPreferences: SharedPreferences
     lateinit var farm: Farm
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var navController: NavController
@@ -70,6 +70,15 @@ class MainActivity : AppCompatActivity() {
 
         createConstraints()
 
+        val googleAvail = GoogleApiAvailability.getInstance()
+        val playServicesAvail = googleAvail.isGooglePlayServicesAvailable(this)
+
+        if(playServicesAvail == SERVICE_MISSING || playServicesAvail == SERVICE_VERSION_UPDATE_REQUIRED ||
+            playServicesAvail == SERVICE_DISABLED) {
+
+            googleAvail.getErrorDialog(this, playServicesAvail, 1)
+        }
+
         toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
 
@@ -81,7 +90,7 @@ class MainActivity : AppCompatActivity() {
         // menu should be considered as top level destinations.
         appBarConfiguration = AppBarConfiguration(
             setOf(
-                R.id.nav_home, R.id.nav_store, R.id.nav_quit
+                R.id.nav_connections, R.id.nav_store, R.id.nav_quit
             ), drawer
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
@@ -99,7 +108,7 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    fun navigateToLogin(controller: ClientConfig) {
+    fun navigateToLogin(controller: Connection) {
         val bundle = Bundle()
         bundle.putString("controller_hostname", controller.hostname)
         navController.navigate(R.id.nav_login, bundle)
@@ -117,7 +126,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun navigateToHome() {
-        navController.navigate(R.id.nav_home)
+        navController.navigate(R.id.nav_connections)
     }
 
     fun navigateToNewEdgeController() {
@@ -131,7 +140,7 @@ class MainActivity : AppCompatActivity() {
 
     suspend fun waitForReply(orgId: Int) {
         while (controllerViewModels.isEmpty()) {
-            Log.d("MainActivity", "Waiting for configuration reply from server...")
+            Log.d("MainActivity", "Waiting for configuration reply from serverConnection...")
             Thread.sleep(200L)
         }
         runOnUiThread(Runnable {
@@ -143,7 +152,25 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    fun login(config: ClientConfig) {
+    fun logout() {
+        connection.token = ""
+        MasterControllerRepository(this).updateController(connection)
+
+        val editor = preferences.getControllerPreferences().edit()
+        editor.remove("controller_id")
+        editor.remove("controller_name")
+        editor.remove("controller_hostname")
+        editor.remove("user_id")
+        editor.remove("jwt")
+        if(!editor.commit()) {
+            Log.e("MainActivity.Logout", "Unable to commit session invalidation to shared preferences")
+        }
+        runOnUiThread(Runnable {
+            navigateToLogin(connection)
+        })
+    }
+
+    fun login(connection: Connection) {
 
         if(controllerFragments != null) {
             controllerFragments.clear()
@@ -152,14 +179,14 @@ class MainActivity : AppCompatActivity() {
             controllerViewModels.clear()
         }
 
+        this.connection = connection
         preferences = Preferences(applicationContext)
-        sharedPreferences = preferences.getDefaultPreferences()
+        val sharedPreferences = preferences.getDefaultPreferences()
 
         val orgId = sharedPreferences.getInt(Constants.CONFIG_ORG_ID_KEY, 0)
         val farmId = sharedPreferences.getLong(Constants.CONFIG_FARM_ID_KEY, 0)
 
-        cropDroidAPI = CropDroidAPI(config, sharedPreferences)
-        appConfig = config
+        cropDroidAPI = CropDroidAPI(connection, sharedPreferences)
 
         configManager = ConfigManager(this, sharedPreferences)
         configManager.listen(farmId)
@@ -172,15 +199,15 @@ class MainActivity : AppCompatActivity() {
             }
             delay(500) // 3 seconds
             job.cancelAndJoin()
-            Error(applicationContext).toast("Timed out contacting server: ${cropDroidAPI.controller.hostname}")
+            Error(applicationContext).toast("Timed out contacting serverConnection: ${cropDroidAPI.controller.hostname}")
         }*/
 
         for(i in 10 downTo 0) {
-            Log.d("MainActivity", "Waiting for configuration reply from server...")
+            Log.d("MainActivity", "Waiting for configuration reply from serverConnection...")
             if(controllerViewModels.size > 0) break
             if(i == 0) {
                 runOnUiThread(Runnable {
-                    Error(this).alert("Timed out contacting server: ${cropDroidAPI.controller.hostname}", null, null)
+                    Error(this).alert("Timed out contacting serverConnection: ${this.connection.hostname}", null, null)
                 })
                 return
             }
@@ -231,7 +258,7 @@ class MainActivity : AppCompatActivity() {
     @Synchronized fun update(farmState: FarmState) {
         var redraw = false
         for((controllerType, controllerState) in farmState.controllers) {
-            if(controllerType == "server") continue
+            if(controllerType == "serverConnection") continue
             var viewModel = controllerViewModels[controllerType]
             if(viewModel == null) {
                 controllerFragments[controllerType] = ControllerFragment.newInstance(controllerType)
@@ -247,7 +274,7 @@ class MainActivity : AppCompatActivity() {
 
     @Synchronized fun update(controllerState: ControllerState) {
         var redraw = false
-       if(controllerState.type == "server") return
+       if(controllerState.type == "serverConnection") return
         var viewModel = controllerViewModels[controllerState.type]
         if(viewModel == null) {
             controllerFragments[controllerState.type] = ControllerFragment.newInstance(controllerState.type)
@@ -262,7 +289,7 @@ class MainActivity : AppCompatActivity() {
 
     @Synchronized fun updateDelta(controllerState: ControllerStateDelta) {
         var redraw = false
-        if(controllerState.type == "server") return
+        if(controllerState.type == "serverConnection") return
         var viewModel = controllerViewModels[controllerState.type]
         if(viewModel == null) {
             controllerFragments[controllerState.type] = ControllerFragment.newInstance(controllerState.type)

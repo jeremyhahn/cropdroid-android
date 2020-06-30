@@ -1,10 +1,13 @@
 package com.jeremyhahn.cropdroid.ui.login
 
+import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
+import android.view.View.GONE
+import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.*
@@ -12,31 +15,42 @@ import androidx.annotation.StringRes
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARM_ID_KEY
-import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ORG_ID_KEY
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.cast.CastStatusCodes.*
+import com.google.android.gms.common.SignInButton
+import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.tasks.Task
+import com.jeremyhahn.cropdroid.Constants.Companion.APP_SERVER_CLIENT_ID
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
-import com.jeremyhahn.cropdroid.model.ClientConfig
-import com.jeremyhahn.cropdroid.config.ConfigManager
+import com.jeremyhahn.cropdroid.model.Connection
 import com.jeremyhahn.cropdroid.utils.JsonWebToken
 import com.jeremyhahn.cropdroid.utils.Preferences
 import io.jsonwebtoken.ExpiredJwtException
 import kotlinx.android.synthetic.main.activity_login.*
 
-class LoginFragment() : Fragment() {
+
+class LoginFragment() : Fragment(), View.OnClickListener {
 
     private lateinit var repository: MasterControllerRepository
     private lateinit var preferences: Preferences
     private lateinit var sharedPrefs: SharedPreferences
     private lateinit var loginViewModel: LoginViewModel
-    private lateinit var controller: ClientConfig
+    private lateinit var connection: Connection
+    private lateinit var googleSignInClient: GoogleSignInClient
+    private lateinit var gsoButton: SignInButton
+    private lateinit var loading: ProgressBar
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         super.onCreateView(inflater, container, savedInstanceState)
 
         val fragmentActivity = requireActivity()
+        val mainActivity = (fragmentActivity as MainActivity)
         repository = MasterControllerRepository(fragmentActivity.applicationContext)
 
         var fragmentView = inflater.inflate(R.layout.fragment_login, container, false)
@@ -45,40 +59,52 @@ class LoginFragment() : Fragment() {
         val password = fragmentView.findViewById<EditText>(R.id.password)
         val useSSL = fragmentView.findViewById<CheckBox>(R.id.useSSL)
         val login = fragmentView.findViewById<Button>(R.id.login)
-        val loading = fragmentView.findViewById<ProgressBar>(R.id.loading)
+        loading = fragmentView.findViewById<ProgressBar>(R.id.loading)
         val registerButton = fragmentView.findViewById(R.id.register) as Button
+        gsoButton = fragmentView.findViewById(R.id.gso_sign_in_button) as SignInButton
+        gsoButton.setOnClickListener(this)
+
+        val gsoOptions = GoogleSignInOptions.Builder().
+            requestId().
+            requestProfile().
+            requestServerAuthCode(APP_SERVER_CLIENT_ID).
+            requestIdToken(APP_SERVER_CLIENT_ID).
+            build()
+        val gso = GoogleSignInOptions.Builder(gsoOptions).requestEmail().build()
+        googleSignInClient = GoogleSignIn.getClient(fragmentActivity, gso)
 
         preferences = Preferences(fragmentActivity.applicationContext)
         sharedPrefs = preferences.getDefaultPreferences()
+        connection = Connection(args.getString("controller_hostname")!!, 0, "", null)
 
-        controller = ClientConfig(args.getString("controller_hostname")!!, 0, "", null)
-
-        Log.d("LoginActivity.onCreate", "controller: " + controller.toString())
+        Log.d("LoginActivity.onCreate", "controller: " + connection.toString())
 
         loginViewModel = ViewModelProviders.of(this, LoginViewModelFactory()).get(LoginViewModel::class.java)
         login.setOnClickListener {
             loading.visibility = View.VISIBLE
             checkSslFlag()
             loginViewModel.login(
-                CropDroidAPI(controller, sharedPrefs),
+                CropDroidAPI(connection, sharedPrefs),
                 username.text.toString(),
                 password.text.toString()
             )
         }
 
         try {
-            val selectedController = repository.get(controller.hostname)
 
-            Log.d("LoginActivity.onCreate", "selectedController: " + selectedController.hostname)
+            val selectedController = repository.get(connection.hostname)
 
-            if(selectedController != null && !selectedController.token.isEmpty()) {
+            Log.d("LoginActivity.onCreate", "selectedController: " + selectedController)
+
+            if(selectedController != null && !selectedController.token.isEmpty() ) {
+                Log.d("LoginActivity.onCreate", "token not empty, sending to mainActivity.login(selectedController)...")
                 (activity as MainActivity).login(selectedController)
                 return fragmentView
             }
         }
         catch(e: ExpiredJwtException) {
             Log.d("LoginActivity.onCreate", "JWT expired")
-            controller!!.token = ""
+            connection.token = ""
             return fragmentView
         }
 
@@ -112,7 +138,7 @@ class LoginFragment() : Fragment() {
 
             if(loginResult.registered) {
                 loginViewModel.login(
-                    CropDroidAPI(controller, sharedPrefs),
+                    CropDroidAPI(connection, sharedPrefs),
                     username.text.toString(),
                     password.text.toString())
             }
@@ -142,26 +168,22 @@ class LoginFragment() : Fragment() {
                     user.id = jwt.uid().toString()
                     user.orgId = "0"
 
-                    controller.secure = if (useSSL.isChecked) 1 else 0
-                    controller.token = user.token
-                    controller.jwt = jwt
+                    connection.secure = if (useSSL.isChecked) 1 else 0
+                    connection.token = user.token
+                    connection.jwt = jwt
 
-                    var rowsUpdated = repository.updateController(controller)
+                    var rowsUpdated = repository.updateController(connection)
                     if (rowsUpdated != 1) {
                         Log.e("LoginActivity.loginResult.token", "Unexpected number of rows effected: " + rowsUpdated.toString())
                         return@Observer
                     }
                     Log.i("LoginActivity.loginResult.token", "Successfully authenticated")
 
-                    preferences.set(controller, user, 0, farmId)
+                    preferences.set(connection, user, 0, farmId)
 
-                    (activity as MainActivity).login(controller)
+                    (activity as MainActivity).login(connection)
                 }
             }
-
-            registerButton.setOnClickListener(View.OnClickListener {
-                onRegister(it)
-            })
         })
 /*
         username.afterTextChanged {
@@ -185,7 +207,7 @@ class LoginFragment() : Fragment() {
                 when (actionId) {
                     EditorInfo.IME_ACTION_DONE ->
                         loginViewModel.login(
-                            CropDroidAPI(controller, sharedPrefs),
+                            CropDroidAPI(connection, sharedPrefs),
                             username.text.toString(),
                             password.text.toString()
                         )
@@ -194,13 +216,84 @@ class LoginFragment() : Fragment() {
             }
         }
 
+        registerButton.setOnClickListener(View.OnClickListener {
+            onRegister(it)
+        })
+
+        val account = GoogleSignIn.getLastSignedInAccount(fragmentActivity)
+        if(account != null && !connection.token.isEmpty()) {
+            Log.d("LoginFragment.onCreate", "Google session already established, bypassing login...")
+           (activity as MainActivity).login(connection)
+        }
+
         return fragmentView
     }
+
+    override fun onClick(v: View) {
+        when (v.id) {
+            R.id.gso_sign_in_button -> {
+                loading.visibility = VISIBLE
+                signIn()
+            }
+        }
+    }
+
+    private fun signIn() {
+        val signInIntent: Intent = googleSignInClient.getSignInIntent()
+        startActivityForResult(signInIntent, 1)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        loading.visibility = GONE
+
+        // Result returned from launching the Intent from GoogleSignInClient.getSignInIntent(...);
+        if (requestCode == 1) {
+            // The Task returned from this call is always completed, no need to attach
+            // a listener.
+            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
+            handleSignInResult(task)
+        }
+    }
+
+    private fun handleSignInResult(completedTask: Task<GoogleSignInAccount>) {
+
+        val cropdroid = CropDroidAPI(connection, sharedPrefs)
+
+        try {
+
+            val account = completedTask.getResult(ApiException::class.java)
+            Log.w("LoginFragment", "account: " + account)
+            Log.w("LoginFragment", "account.idToken " + account!!.idToken)
+            Log.w("LoginFragment", "account.serverAuthCode " + account.serverAuthCode)
+            loginViewModel.googleLogin(cropdroid, account)
+
+        } catch (e: ApiException) {
+            // The ApiException status code indicates the detailed failure reason.
+            // Please refer to the GoogleSignInStatusCodes class reference for more information.
+            // https://developers.google.com/android/reference/com/google/android/gms/common/api/CommonStatusCodes.html
+
+            val retryStatusCodes = HashMap<Int, Boolean>()
+            retryStatusCodes[NETWORK_ERROR] = true
+            retryStatusCodes[INTERRUPTED] = true
+            retryStatusCodes[CANCELED] = true
+            retryStatusCodes[TIMEOUT] = true
+
+            if(retryStatusCodes.containsKey(e.statusCode)) {
+                Thread.sleep(500)
+                handleSignInResult(completedTask)
+            }
+
+            Log.w("LoginFragment", "signInResult:failed code=" + e.statusCode)
+        }
+    }
+
 
     fun onRegister(v: View) {
         checkSslFlag()
         loginViewModel.register(
-            CropDroidAPI(controller, sharedPrefs),
+            CropDroidAPI(connection, sharedPrefs),
             username.text.toString(),
             password.text.toString()
         )
@@ -208,9 +301,9 @@ class LoginFragment() : Fragment() {
 
     fun checkSslFlag() {
         if(useSSL.isChecked()) {
-            controller.secure = 1
+            connection.secure = 1
         } else {
-            controller.secure = 0
+            connection.secure = 0
         }
     }
 

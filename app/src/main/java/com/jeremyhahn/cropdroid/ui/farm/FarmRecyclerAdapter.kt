@@ -1,4 +1,4 @@
-package com.jeremyhahn.cropdroid.ui.edgecontroller
+package com.jeremyhahn.cropdroid.ui.farm
 
 import android.app.AlertDialog
 import android.content.Context
@@ -13,14 +13,13 @@ import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.Connection
 import com.jeremyhahn.cropdroid.ui.room.EdgeControllerViewModel
 
-class EdgeControllerRecyclerAdapter(val controllers: ArrayList<Connection>,
-                                    val onMasterListener: OnMasterListener, val context: Context, val repository : MasterControllerRepository,
-                                    val viewModel: EdgeControllerViewModel) : RecyclerView.Adapter<EdgeControllerRecyclerAdapter.ViewHolder>() {
+class FarmRecyclerAdapter(val controllers: ArrayList<Connection>,  val context: Context, val repository : MasterControllerRepository,
+                          val viewModel: EdgeControllerViewModel) : RecyclerView.Adapter<FarmRecyclerAdapter.ViewHolder>() {
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val v = LayoutInflater.from(parent.context).inflate(R.layout.master_cardview, parent, false)
-        return ViewHolder(v, onMasterListener)
+        return ViewHolder(v)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -45,19 +44,10 @@ class EdgeControllerRecyclerAdapter(val controllers: ArrayList<Connection>,
         return controllers.size
     }
 
-    class ViewHolder(itemView: View, var onMasterListener: OnMasterListener) : RecyclerView.ViewHolder(itemView), View.OnClickListener {
-
-        init {
-            itemView.setOnClickListener(this)
-        }
-
+    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun bindItems(item: Connection) {
             val hostname = itemView.findViewById(R.id.hostname) as TextView
             hostname.text = item.hostname
-        }
-
-        override fun onClick(v: View?) {
-            onMasterListener.onMasterClick(adapterPosition)
         }
     }
 
@@ -71,13 +61,4 @@ class EdgeControllerRecyclerAdapter(val controllers: ArrayList<Connection>,
         controllers.clear()
         notifyDataSetChanged()
     }
-
-    interface OnMasterListener {
-       fun onMasterClick(position : Int)
-    }
-
-    interface OnItemLongClickListener {
-        fun onItemLongClicked(position : Int);
-    }
-
 }

@@ -1,4 +1,4 @@
-package com.jeremyhahn.cropdroid.ui.edgecontroller
+package com.jeremyhahn.cropdroid.ui.farm
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -20,10 +20,10 @@ import com.jeremyhahn.cropdroid.utils.Preferences
 import kotlinx.android.synthetic.main.fragment_edge_controller_list.view.*
 
 
-class EdgeControllerListFragment : Fragment(), OnMasterListener {
+class FarmListFragment : Fragment(), OnMasterListener {
 
     private var controllers = ArrayList<Connection>()
-    private lateinit var adapter: EdgeControllerRecyclerAdapter
+    private lateinit var adapter: FarmRecyclerAdapter
     private var swipeContainer: SwipeRefreshLayout? = null
     lateinit private var viewModel: EdgeControllerViewModel
 
@@ -38,9 +38,9 @@ class EdgeControllerListFragment : Fragment(), OnMasterListener {
         }
 
         val repository = MasterControllerRepository(fragmentActivity.applicationContext)
-        viewModel = ViewModelProviders.of(this, EdgeControllerViewModelFactory(repository)).get(EdgeControllerViewModel::class.java)
+        viewModel = ViewModelProviders.of(this, FarmViewModelFactory(repository)).get(EdgeControllerViewModel::class.java)
 
-        adapter = EdgeControllerRecyclerAdapter(controllers, this, fragmentActivity, repository, viewModel)
+        adapter = FarmRecyclerAdapter(controllers, fragmentActivity, repository, viewModel)
 
         var recyclerView = fragmentView.findViewById(R.id.mastersRecyclerView) as RecyclerView
         recyclerView.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
@@ -57,9 +57,9 @@ class EdgeControllerListFragment : Fragment(), OnMasterListener {
             R.color.holo_red_light
         )
 
-        viewModel.controllers.observe(this@EdgeControllerListFragment, Observer {
+        viewModel.controllers.observe(this@FarmListFragment, Observer {
             swipeContainer!!.setRefreshing(false)
-            val _adapter = recyclerView.adapter!! as EdgeControllerRecyclerAdapter
+            val _adapter = recyclerView.adapter!! as FarmRecyclerAdapter
             val controllers = viewModel.controllers.value!!
             _adapter.setControllers(controllers)
             recyclerView.adapter!!.notifyDataSetChanged()

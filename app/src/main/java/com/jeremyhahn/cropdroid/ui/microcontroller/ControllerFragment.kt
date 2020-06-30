@@ -8,20 +8,16 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener
-import com.jeremyhahn.cropdroid.Constants
-import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
-import com.jeremyhahn.cropdroid.model.ClientConfig
+import com.jeremyhahn.cropdroid.model.Connection
 import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
 import com.jeremyhahn.cropdroid.utils.Preferences
 
@@ -30,7 +26,7 @@ open class ControllerFragment : Fragment() {
     private val TAG = "ControllerFragment"
     lateinit private var recyclerView: RecyclerView
     lateinit private var swipeContainer: SwipeRefreshLayout
-    lateinit private var controller : ClientConfig
+    lateinit private var controller : Connection
     lateinit private var cropDroidAPI: CropDroidAPI
     lateinit private var fragmentView: View
     private var recyclerItems = ArrayList<MicroControllerRecyclerModel>()
@@ -66,7 +62,7 @@ open class ControllerFragment : Fragment() {
         Log.d("ControllerFragment.onCreateView", "controller type=$controllerType, hostname=$hostname, mode=$mode, enabled=$enabled")
 
         controller = MasterControllerRepository(ctx).get(hostname)
-
+        //controller = mainActivity.connection
         cropDroidAPI = CropDroidAPI(controller, controllerPreferences)
 
         //viewModel = ViewModelProvider(this, ControllerViewModelFactory(cropDroidAPI)).get(ControllerViewModel::class.java)

@@ -8,7 +8,6 @@ import android.view.View
 import android.view.View.GONE
 import android.view.ViewGroup
 import android.widget.ProgressBar
-import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -18,7 +17,7 @@ import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.EventLog
 import com.jeremyhahn.cropdroid.model.EventsPage
-import com.jeremyhahn.cropdroid.model.ClientConfig
+import com.jeremyhahn.cropdroid.model.Connection
 import com.jeremyhahn.cropdroid.ui.microcontroller.ControllerFragment
 import com.jeremyhahn.cropdroid.utils.Preferences
 import okhttp3.Call
@@ -43,7 +42,7 @@ class EventListFragment : ControllerFragment() {
     private var isLastPage = false
     private var TOTAL_PAGES : Int = 10
     private var currentPage = PAGE_START
-    private var controller : ClientConfig? = null
+    private var controller : Connection? = null
 
      override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
          

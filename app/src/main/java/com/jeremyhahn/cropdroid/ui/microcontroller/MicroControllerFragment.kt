@@ -15,7 +15,7 @@ import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.TabAdapter
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
-import com.jeremyhahn.cropdroid.model.ClientConfig
+import com.jeremyhahn.cropdroid.model.Connection
 import com.jeremyhahn.cropdroid.utils.Preferences
 import kotlinx.android.synthetic.main.app_bar_navigation.*
 
@@ -24,7 +24,7 @@ class MicroControllerFragment: Fragment() {
     private val TAG = "MicroControllerFragment"
     private var tabLayout: TabLayout? = null
     private var viewPager: ViewPager? = null
-    private var controller: ClientConfig? = null
+    private var controller: Connection? = null
     private var videoUrl: String? = null
     private var fragmentView: View? = null
     lateinit private var preferences: Preferences
@@ -45,6 +45,7 @@ class MicroControllerFragment: Fragment() {
         videoUrl = controllerPreferences.getString(CONFIG_ROOM_VIDEO_KEY, "")
 
         controller = MasterControllerRepository(ctx).get(preferences.currentController())
+        //controller = mainActivity.connection
 
         //fragmentActivity.toolbar.title = controllerPreferences.getString(CONFIG_FARM_NAME_KEY, "undefined")
 
@@ -103,23 +104,7 @@ class MicroControllerFragment: Fragment() {
                 true
             }
             R.id.action_logout -> {
-
-                Log.d("MainActivity.OnOptionsItemSelected", "action_logout caught")
-
-                controller!!.token = ""
-                val repo = MasterControllerRepository(requireActivity().applicationContext)
-                repo.updateController(controller!!)
-
-                val editor = preferences.getControllerPreferences().edit()
-                editor.remove("controller_id")
-                editor.remove("controller_name")
-                editor.remove("controller_hostname")
-                editor.remove("user_id")
-                editor.remove("jwt")
-                if(!editor.commit()) {
-                    Log.e("MainActivity.Logout", "Unable to commit session invalidation to shared preferences")
-                }
-                (activity as MainActivity).navigateToHome()
+                (activity as MainActivity).logout()
                 return true
             }
             else -> super.onOptionsItemSelected(item)

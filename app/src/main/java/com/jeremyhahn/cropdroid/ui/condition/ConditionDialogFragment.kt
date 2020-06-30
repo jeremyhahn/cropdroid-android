@@ -107,7 +107,7 @@ class ConditionDialogFragment(cropDroidAPI: CropDroidAPI, condition: Condition, 
         }
 
         // Load the controller list
-        cropDroidAPI.getControllers(object: Callback {
+        cropDroidAPI.getDevices(object: Callback {
             override fun onFailure(call: Call, e: IOException) {
                 Log.d("onCreateContextMenu.Condition", "onFailure response: " + e!!.message)
                 return

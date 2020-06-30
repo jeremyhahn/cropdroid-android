@@ -26,13 +26,13 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import okio.ByteString
 import org.json.JSONObject
-import java.lang.Integer.parseInt
 import java.lang.Thread.sleep
 
 class ConfigManager(val mainActivity: MainActivity, val sharedPreferences: SharedPreferences) : WebSocketListener() {
 
-    val editor: SharedPreferences.Editor = sharedPreferences.edit()
-    var websockets : HashMap<WebSocket, ClientConfig> = HashMap()
+    val sharedPrefs: SharedPreferences
+    val editor: SharedPreferences.Editor
+    var websockets : HashMap<WebSocket, Connection> = HashMap()
     private val TAG = "ConfigManager"
 
     private var farmId: Long = 0
@@ -41,7 +41,13 @@ class ConfigManager(val mainActivity: MainActivity, val sharedPreferences: Share
         private const val NORMAL_CLOSURE_STATUS = 1000
         private const val CONNECTION_FAILED_DELAY = 60000L
     }
-/*
+
+    init {
+        sharedPrefs = sharedPreferences
+        editor = sharedPrefs.edit()
+    }
+
+    /*
     fun sync() {
         Log.d(TAG, "Running sync. controller_id=" + getInt(PREF_KEY_CONTROLLER_HOSTNAME))
         for(org in config.organizations) {
@@ -50,16 +56,16 @@ class ConfigManager(val mainActivity: MainActivity, val sharedPreferences: Share
         syncSmtp()
         editor.commit()
     }
-*/
+    */
+
     fun listen(farmId: Long) {
         this.farmId = farmId
-        //val websocket = cropDroidAPI.createWebsocket(context, "/farms/$farmId/config/changefeed", this)
-        val websocket = mainActivity.cropDroidAPI.createWebsocket(mainActivity, "/changefeed/$farmId", this)
-        if(websocket != null) websockets[websocket] = mainActivity.cropDroidAPI.controller
+        val websocket = mainActivity.cropDroidAPI.createWebsocket(mainActivity, "/farmticker/$farmId", this)
+        if(websocket != null) websockets[websocket] = mainActivity.connection
     }
 
-    fun getStringOrDefault(key: String, default: String) : String {
-        return sharedPreferences.getString(key, default)
+    fun getPreferences() : SharedPreferences {
+        return sharedPrefs
     }
 
     fun getString(key: String) : String {
@@ -105,7 +111,7 @@ class ConfigManager(val mainActivity: MainActivity, val sharedPreferences: Share
         val orgId = getLong(CONFIG_FARM_ORG_ID_KEY)
         val name = getString(CONFIG_FARM_NAME_KEY)
         val mode = getString(CONFIG_FARM_MODE_KEY)
-        val interval = getInt(CONFIG_FARM_INTERVAL_KEY)
+        val interval = getString(CONFIG_FARM_INTERVAL_KEY)
         val timezone = getString(CONFIG_TIMEZONE_KEY)
         if(id != farm.id) {
             setEditorValue(CONFIG_FARM_ID_KEY, farm.id)
@@ -119,8 +125,14 @@ class ConfigManager(val mainActivity: MainActivity, val sharedPreferences: Share
         if(mode != farm.mode) {
             setEditorValue(CONFIG_FARM_MODE_KEY, farm.mode)
         }
-        if(interval != farm.interval) {
-            editor.putInt(CONFIG_FARM_INTERVAL_KEY, farm.interval)
+        // When interval is not specifically set, the internal shared
+        // preferences hashmap stores/sets it to a string causing a
+        // class cast exception.
+        //if(interval != farm.interval) {
+        if(interval != farm.interval.toString()) {
+            //editor.putInt(CONFIG_FARM_INTERVAL_KEY, farm.interval)
+            //setEditorValue(CONFIG_FARM_INTERVAL_KEY, farm.interval)
+            editor.putString(CONFIG_FARM_INTERVAL_KEY, farm.interval.toString())
         }
         if(timezone != farm.timezone) {
             setEditorValue(CONFIG_TIMEZONE_KEY, farm.timezone)
@@ -173,7 +185,7 @@ class ConfigManager(val mainActivity: MainActivity, val sharedPreferences: Share
             for ((k, v) in controller.configs) {
 
                 /*
-                if(controller.type.equals("server") && k.equals("interval")) {
+                if(controller.type.equals("serverConnection") && k.equals("interval")) {
                     editor.putInt(k, v)
                     continue
                 }*/
@@ -262,14 +274,21 @@ class ConfigManager(val mainActivity: MainActivity, val sharedPreferences: Share
 
         t.printStackTrace()
 
-        Log.d("ConfigManager.onFailure", "response: " + response.toString())
-        Log.d("ConfigManager.onFailure", "throwable: " + t.toString())
+        Log.d("ConfigManager.onFailure2", "response: " + response.toString())
+        Log.d("ConfigManager.onFailure2", "throwable: " + t.toString())
+
+        if(response != null && response.code() == 400) {
+            // Something went wrong communicating with the backend
+            Log.d("ConfigManager.onFailure2", "logout mofo")
+            mainActivity.logout()
+            return
+        }
 
         sleep(CONNECTION_FAILED_DELAY)
 
         var controller = websockets[webSocket]
         if(controller != null) {
-            Log.d("COnfigManager.onFailure", "Restarting connection for " + controller.hostname)
+            Log.d("ConfigManager.onFailure", "Restarting connection for " + controller.hostname)
             webSocket.cancel()
             if(farmId > 0) listen(farmId)
             return

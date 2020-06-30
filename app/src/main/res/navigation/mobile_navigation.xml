@@ -3,10 +3,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mobile_navigation"
-    app:startDestination="@+id/nav_home">
+    app:startDestination="@+id/nav_connections">
 
     <fragment
-        android:id="@+id/nav_home"
+        android:id="@+id/nav_connections"
         android:name="com.jeremyhahn.cropdroid.ui.edgecontroller.EdgeControllerListFragment"
         android:label="@string/menu_home"
         tools:layout="@layout/fragment_edge_controller_list">

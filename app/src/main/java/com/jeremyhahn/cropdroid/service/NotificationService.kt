@@ -17,7 +17,7 @@ import com.jeremyhahn.cropdroid.Constants.Companion.API_BASE
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
-import com.jeremyhahn.cropdroid.model.ClientConfig
+import com.jeremyhahn.cropdroid.model.Connection
 import com.jeremyhahn.cropdroid.model.Notification
 import com.jeremyhahn.cropdroid.utils.JsonWebToken
 import okhttp3.*
@@ -34,7 +34,7 @@ class NotificationService : Service() {
     val GROUP_KEY_FOREGROUND = "cropdroid_foreground"
     val CONNECTION_FAILED_DELAY = 60000L  // one minute
     var binder : IBinder? = null
-    var websockets : HashMap<ClientConfig, WebSocket> = HashMap()
+    var websockets : HashMap<Connection, WebSocket> = HashMap()
     var notificationManager: NotificationManager? = null
     var bundlerNotificationBuilder: NotificationCompat.Builder? = null
 
@@ -106,7 +106,7 @@ class NotificationService : Service() {
             return false
         }
 
-        val authenticatedControllers = ArrayList<ClientConfig>(controllers.size)
+        val authenticatedControllers = ArrayList<Connection>(controllers.size)
 
         for(controller in controllers) {
             if(websockets[controller] == null) {
@@ -144,7 +144,7 @@ class NotificationService : Service() {
         stopSelf()
     }
 
-    fun createWebsocket(controller: ClientConfig) {
+    fun createWebsocket(controller: Connection) {
         val jwt = JsonWebToken(applicationContext, controller.token)
         for(org in jwt.organizations()) {
             for(farm in org.farms) {
@@ -343,7 +343,7 @@ class NotificationService : Service() {
             Log.d("NotificationService.onFailure", "Unable to locate controller for failed websocket connection: " + webSocket.hashCode())
         }
 
-        fun getControllerByWebSocket(webSocket: WebSocket) : ClientConfig? {
+        fun getControllerByWebSocket(webSocket: WebSocket) : Connection? {
             for((k, v) in websockets) {
                 if(v.equals(webSocket)) {
                     return k

@@ -1,4 +1,4 @@
-package com.jeremyhahn.cropdroid.ui.edgecontroller
+package com.jeremyhahn.cropdroid.ui.farm
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -13,7 +13,7 @@ import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.Connection
 
-class NewEdgeControllerFragment : Fragment() {
+class NewFarmFragment : Fragment() {
 
     private lateinit var controllerView: View
 

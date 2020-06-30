@@ -9,6 +9,7 @@ import com.jeremyhahn.cropdroid.Constants.Companion.API_BASE
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARM_ID_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ORG_ID_KEY
 import com.jeremyhahn.cropdroid.model.*
+import com.jeremyhahn.cropdroid.model.Connection
 import okhttp3.*
 import org.json.JSONArray
 import org.json.JSONObject
@@ -16,7 +17,7 @@ import java.io.IOException
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
 
-class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences) {
+class CropDroidAPI(private val connection: Connection, preferences: SharedPreferences) {
 
     val orgId: Int
     val farmId: Long
@@ -24,40 +25,46 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
     val REST_ENDPOINT: String
     val VERSIONED_ENDPOINT: String
     val ORGANIZATION_ENDPOINT: String
-    val EVENTS_ENDPOINT: String
+
+    val ALGORITHMS_ENDPOINT: String
+    val CHANNEL_ENDPOINT: String
     val CONFIG_ENDPOINT: String
     val CONDITION_ENDPOINT: String
-    val SCHEDULE_ENDPOINT: String
-    val CHANNEL_ENDPOINT: String
-    val METRIC_ENDPOINT: String
-    val ALGORITHMS_ENDPOINT: String
-    val CONTROLLER_ENDPOINT: String
+    //val CONTROLLER_ENDPOINT: String
+    val DEVICES_ENDPOINT: String
+    val EVENTS_ENDPOINT: String
     val FARM_ENDPOINT: String
+    val GOOGLE_ENDPOINT: String
     val IAP_ENDPOINT: String
+    val METRICS_ENDPOINT: String
+    val SCHEDULE_ENDPOINT: String
 
     init {
         orgId = preferences.getInt(CONFIG_ORG_ID_KEY, 0)
         farmId = preferences.getLong(CONFIG_FARM_ID_KEY, 0)
 
-        REST_ENDPOINT = if(controller.secure == 1)
-            "https://".plus(controller.hostname)
-        else "http://".plus(controller.hostname)
+        REST_ENDPOINT = if(connection.secure == 1)
+            "https://".plus(connection.hostname)
+        else "http://".plus(connection.hostname)
 
         VERSIONED_ENDPOINT = REST_ENDPOINT.plus(API_BASE)
         ORGANIZATION_ENDPOINT = VERSIONED_ENDPOINT.plus("/organizations/").plus(orgId)
 
         //FARM_ENDPOINT = ORGANIZATION_ENDPOINT.plus("/farms/").plus(farmId)
         FARM_ENDPOINT = VERSIONED_ENDPOINT.plus("/farms/").plus(farmId)
+        DEVICES_ENDPOINT = FARM_ENDPOINT.plus("/devices")
+
+        METRICS_ENDPOINT = FARM_ENDPOINT.plus("/metrics")
+        IAP_ENDPOINT = FARM_ENDPOINT.plus("/iap")
 
         EVENTS_ENDPOINT = FARM_ENDPOINT.plus("/events")
         CONFIG_ENDPOINT = FARM_ENDPOINT.plus("/config")
         CONDITION_ENDPOINT = FARM_ENDPOINT.plus("/conditions")
         SCHEDULE_ENDPOINT = FARM_ENDPOINT.plus("/schedule")
         CHANNEL_ENDPOINT = FARM_ENDPOINT.plus("/channels")
-        METRIC_ENDPOINT = FARM_ENDPOINT.plus("/metrics")
         ALGORITHMS_ENDPOINT = FARM_ENDPOINT.plus("/algorithms")
-        CONTROLLER_ENDPOINT = FARM_ENDPOINT.plus("/controllers")
-        IAP_ENDPOINT = FARM_ENDPOINT.plus("/iap")
+        //CONTROLLER_ENDPOINT = FARM_ENDPOINT.plus("/servers")
+        GOOGLE_ENDPOINT = VERSIONED_ENDPOINT.plus("/google")
     }
 
     fun verifyPurchase(purchase: Purchase, callback: Callback) {
@@ -76,20 +83,20 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
         doGet(EVENTS_ENDPOINT, args, callback)
     }
 
-    fun getMetricHistory(controllerType: String, metric: String, callback: Callback) {
+    fun getMetricHistory(serverType: String, metric: String, callback: Callback) {
         var args = ArrayList<String>(2)
         args.add("history")
         args.add(metric)
-        doGet(FARM_ENDPOINT.plus("/").plus(controllerType), args, callback)
+        doGet(DEVICES_ENDPOINT.plus("/").plus(serverType), args, callback)
     }
 
-    fun getState(controllerType: String, callback: Callback) {
+    fun getState(serverType: String, callback: Callback) {
         var args = ArrayList<String>(0)
-        doGet(FARM_ENDPOINT.plus("/").plus(controllerType).plus("/view"), args, callback)
+        doGet(DEVICES_ENDPOINT.plus("/").plus(serverType).plus("/view"), args, callback)
     }
 
-    fun timerSwitch(controllerType: String, channelId: Int, seconds: Int, callback: Callback) {
-        val resource = FARM_ENDPOINT.plus("/").plus(controllerType)
+    fun timerSwitch(serverType: String, channelId: Int, seconds: Int, callback: Callback) {
+        val resource = DEVICES_ENDPOINT.plus("/").plus(serverType)
         var args = ArrayList<String>(4)
         args.add("timerSwitch")
         args.add(channelId.toString())
@@ -97,8 +104,8 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
         doGet(resource, args, callback)
     }
 
-    fun switch(controllerType: String, channelId: Int, state: Boolean, callback: Callback) {
-        val resource = FARM_ENDPOINT.plus("/").plus(controllerType)
+    fun switch(serverType: String, channelId: Int, state: Boolean, callback: Callback) {
+        val resource = DEVICES_ENDPOINT.plus("/").plus(serverType)
         var state = if(state) "1" else "0"
         var args = ArrayList<String>(4)
         args.add("switch")
@@ -107,9 +114,9 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
         doGet(resource, args, callback)
     }
 
-    fun setConfig(controllerId: String, key: String, value: String, callback: Callback) {
+    fun setConfig(serverId: String, key: String, value: String, callback: Callback) {
         var args = ArrayList<String>(3)
-        args.add(controllerId)
+        args.add(serverId)
         args.add(key)
         args.add("?value="+URLEncoder.encode(value, "utf-8"))
         doGet(CONFIG_ENDPOINT, args, callback)
@@ -125,8 +132,8 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
     fun createCondition(condition: ConditionConfig, callback: Callback) {
         Log.d("CropDropAPI.createCondition", "condition="+condition)
         var json = JSONObject()
-        json.put("channelID", condition.channelId)
-        json.put("metricID", condition.metricId)
+        json.put("channel_id", condition.channelId)
+        json.put("metric_id", condition.metricId)
         json.put("comparator", condition.comparator)
         json.put("threshold", condition.threshold)
         doPost(CONDITION_ENDPOINT, json, callback)
@@ -136,8 +143,8 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
         Log.d("CropDropAPI.createCondition", "condition="+condition)
         var json = JSONObject()
         json.put("id", condition.id)
-        json.put("channelID", condition.channelId)
-        json.put("metricID", condition.metricId)
+        json.put("channel_id", condition.channelId)
+        json.put("metric_id", condition.metricId)
         json.put("comparator", condition.comparator)
         json.put("threshold", condition.threshold)
         doPut(CONDITION_ENDPOINT, json, callback)
@@ -163,9 +170,12 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
         val formatter = SimpleDateFormat(Constants.DATE_FORMAT_RFC3339)
         formatter.calendar = schedule.startDate
 
+        var days: String? = schedule.days.joinToString(",")
+        days = if(days == "") null else days
+
         var json = JSONObject()
         json.put("id", schedule.id)
-        json.put("channelId", schedule.channelId)
+        json.put("channel_id", schedule.channelId)
         json.put("startDate", formatter.format(schedule.startDate.time))
         if(schedule.endDate != null) {
             formatter.calendar = schedule.endDate
@@ -174,7 +184,7 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
         json.put("frequency", schedule.frequency)
         json.put("interval", schedule.interval)
         json.put("count", schedule.count)
-        json.put("days", JSONArray(schedule.days))
+        json.put("days", days)
         doPost(SCHEDULE_ENDPOINT, json, callback)
     }
 
@@ -184,9 +194,12 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
         val formatter = SimpleDateFormat(Constants.DATE_FORMAT_RFC3339)
         formatter.calendar = schedule.startDate
 
+        var days: String? = schedule.days.joinToString(",")
+        days = if(days == "") null else days
+
         var json = JSONObject()
         json.put("id", schedule.id)
-        json.put("channelId", schedule.channelId)
+        json.put("channel_id", schedule.channelId)
         json.put("startDate", formatter.format(schedule.startDate.time))
         if(schedule.endDate != null) {
             formatter.calendar = schedule.endDate
@@ -195,7 +208,7 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
         json.put("frequency", schedule.frequency)
         json.put("interval", schedule.interval)
         json.put("count", schedule.count)
-        json.put("days", JSONArray(schedule.days))
+        json.put("days", days)
         doPut(SCHEDULE_ENDPOINT, json, callback)
     }
 
@@ -217,17 +230,17 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
         json.put("unit", metric.unit)
         json.put("alarmLow", metric.alarmLow)
         json.put("alarmHigh", metric.alarmHigh)
-        doPut(METRIC_ENDPOINT, json, callback)
+        doPut(METRICS_ENDPOINT, json, callback)
     }
 
-    fun setMetricValue(controllerType: String, metric: Metric, callback: Callback) {
+    fun setMetricValue(serverType: String, metric: Metric, callback: Callback) {
         Log.d("CropDropAPI.setMetricValue", "metric="+metric)
         var args = ArrayList<String>(4)
-        args.add(controllerType)
+        args.add(serverType)
         args.add("metrics")
         args.add(metric.key)
         args.add(metric.value.toString())
-        doGet(FARM_ENDPOINT, args, callback)
+        doGet(DEVICES_ENDPOINT, args, callback)
     }
 
     fun setChannelConfig(channel: Channel, callback: Callback) {
@@ -256,13 +269,13 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
         doGet(CONFIG_ENDPOINT, args, callback)
     }
 
-    fun getControllers(callback: Callback) {
+    fun getDevices(callback: Callback) {
         val args = ArrayList<String>()
-        doGet(CONTROLLER_ENDPOINT, args, callback)
+        doGet(DEVICES_ENDPOINT, args, callback)
     }
 
-    fun getMetrics(controllerId: Long, callback: Callback) {
-        val endpoint = METRIC_ENDPOINT.plus("/").plus(controllerId)
+    fun getMetrics(serverId: Long, callback: Callback) {
+        val endpoint = METRICS_ENDPOINT.plus("/").plus(serverId)
         val args = ArrayList<String>()
         doGet(endpoint, args, callback)
     }
@@ -278,7 +291,16 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
         var json = JSONObject()
         json.put("email", username)
         json.put("password", password)
+        json.put("authType", 0)
         doPost(VERSIONED_ENDPOINT.plus("/login"), json, callback)
+    }
+
+    fun googleLogin(idToken: String, serverAuthCode: String, callback: Callback) {
+        var json = JSONObject()
+        json.put("email", idToken)
+        json.put("password", serverAuthCode)
+        json.put("authType", 1)
+        doPost(GOOGLE_ENDPOINT.plus("/login"), json, callback)
     }
 
     fun register(username: String, password: String, callback: Callback) {
@@ -291,7 +313,7 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
     }
 
     fun doGet(endpoint: String, args: ArrayList<String>, callback: Callback) {
-        if(controller.hostname.isEmpty()) return fail(callback, "Hostname required")
+        if(connection.hostname.isEmpty()) return fail(callback, "Hostname required")
         //var endpoint = REST_ENDPOINT.plus(resource)
         var endpoint = endpoint
         if(args.size > 0) {
@@ -300,7 +322,7 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
             }
         }
         Log.d("CropDroidAPI.doGet", "endpoint: " + endpoint)
-        Log.d("CropDroidAPI.doGet", "token: " + controller.token)
+        Log.d("CropDroidAPI.doGet", "token: " + connection.token)
         //val logging = HttpLoggingInterceptor()
         //logging.setLevel(HttpLoggingInterceptor.Level.BASIC)
         //val client = OkHttpClient.Builder()
@@ -308,7 +330,7 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
         //  .build()
         val client = OkHttpClient()
         var request = Request.Builder()
-            .header("Authorization","Bearer " + controller.token)
+            .header("Authorization","Bearer " + connection.token)
             .url(endpoint)
             .get()
             .build();
@@ -325,14 +347,14 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
     }
 
     fun doPost(endpoint: String, json: JSONObject, callback: Callback) {
-        if(controller.hostname.isEmpty()) return fail(callback, "Hostname required")
+        if(connection.hostname.isEmpty()) return fail(callback, "Hostname required")
         //var endpoint = REST_ENDPOINT.plus(resource)
         Log.d("CropDroidAPI.doPost", "endpoint: " + endpoint)
         var client = OkHttpClient()
         var JSON = MediaType.parse("application/json; charset=utf-8")
         var body = RequestBody.create(JSON, json.toString())
         var request: Request? = null
-        if(controller.token.isEmpty()) {
+        if(connection.token.isEmpty()) {
             request = Request.Builder()
                 .url(endpoint)
                 .post(body)
@@ -342,7 +364,7 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
             request = Request.Builder()
                 .url(endpoint)
                 .post(body)
-                .header("Authorization","Bearer " + controller.token)
+                .header("Authorization","Bearer " + connection.token)
                 .build();
         }
         try {
@@ -358,14 +380,14 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
     }
 
     fun doPut(endpoint: String, json: JSONObject, callback: Callback) {
-        if(controller.hostname.isEmpty()) return fail(callback, "Hostname required")
+        if(connection.hostname.isEmpty()) return fail(callback, "Hostname required")
         //var endpoint = REST_ENDPOINT.plus(resource)
         Log.d("CropDroidAPI.doPut", "endpoint: " + endpoint)
         var client = OkHttpClient()
         var JSON = MediaType.parse("application/json; charset=utf-8")
         var body = RequestBody.create(JSON, json.toString())
         var request: Request? = null
-        if(controller.token.isEmpty()) {
+        if(connection.token.isEmpty()) {
             request = Request.Builder()
                 .url(endpoint)
                 .put(body)
@@ -375,7 +397,7 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
             request = Request.Builder()
                 .url(endpoint)
                 .put(body)
-                .header("Authorization","Bearer " + controller.token)
+                .header("Authorization","Bearer " + connection.token)
                 .build();
         }
         try {
@@ -391,7 +413,7 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
     }
 
     fun doDelete(endpoint: String,  args: ArrayList<String>, callback: Callback) {
-        if(controller.hostname.isEmpty()) return fail(callback, "Hostname required")
+        if(connection.hostname.isEmpty()) return fail(callback, "Hostname required")
         //var endpoint = REST_ENDPOINT.plus(resource)
         var endpoint = endpoint
         Log.d("CropDroidAPI.doDelete", "endpoint: " + endpoint)
@@ -402,7 +424,7 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
         }
         var client = OkHttpClient()
         var request: Request? = null
-        if(controller.token.isEmpty()) {
+        if(connection.token.isEmpty()) {
             request = Request.Builder()
                 .url(endpoint)
                 .delete()
@@ -412,7 +434,7 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
             request = Request.Builder()
                 .url(endpoint)
                 .delete()
-                .header("Authorization","Bearer " + controller.token)
+                .header("Authorization","Bearer " + connection.token)
                 .build();
         }
         try {
@@ -431,17 +453,17 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
         Log.d("CropDroidAPI.createWebSocket", "resource: " + resource)
         try {
             val client = OkHttpClient()
-            val protocol = if (controller.secure == 1) "wss://" else "ws://"
-            var url = protocol.plus(controller.hostname).plus(API_BASE).plus(resource)
+            val protocol = if (connection.secure == 1) "wss://" else "ws://"
+            var url = protocol.plus(connection.hostname).plus(API_BASE).plus(resource)
             Log.d("CropDroidAPI.createWebsocket", "Created WebSocket: " + url)
             val request = Request.Builder()
                 .url(url)
-                .addHeader("Authorization", "Bearer " + controller.token)
+                .addHeader("Authorization", "Bearer " + connection.token)
                 .build()
 
             val websocket = client.newWebSocket(request, listener)
-            //websockets[controller] = HashMap()
-            //websockets[controller]!!.put(controller.hostname, websocket)
+            //websockets[server] = HashMap()
+            //websockets[server]!!.put(server.hostname, websocket)
             client.dispatcher().executorService().shutdown()
             client.retryOnConnectionFailure()
             return websocket
@@ -453,7 +475,7 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
     }
 
 /*
-    fun getController(webSocket: WebSocket) : ClientConfig? {
+    fun getController(webSocket: WebSocket) : Connection? {
         for((k, v) in websockets) {
             if(v.equals(webSocket)) {
                 return k
@@ -471,7 +493,7 @@ class CropDroidAPI(val controller: ClientConfig, preferences: SharedPreferences)
         }
         val request: Request = Request.Builder()
             .url(REST_ENDPOINT.plus(resource))
-            .header("Authorization","Bearer " + controller.token)
+            .header("Authorization","Bearer " + server.token)
             .post(formBuilder.build())
             .build()
         try {

@@ -7,6 +7,7 @@ class Constants {
     companion object {
 
         const val APP_NAME = "cropdroid"
+        const val APP_SERVER_CLIENT_ID = "44940630804-4sffn1rb0salhkgk1j2cgrl667tis49s.apps.googleusercontent.com"
         const val DATABASE_NAME = APP_NAME
         //const val DATE_FORMAT_RFC3339 = "yyyy-MM-dd'T'HH:mm:ssz"
           const val DATE_FORMAT_RFC3339 = "yyyy-MM-dd'T'HH:mm:ssXXX"
@@ -50,7 +51,7 @@ class Constants {
         const val CONFIG_FARM_INTERVAL_KEY = "interval"
 
         const val CONFIG_MODE_VIRTUAL = "virtual"
-        const val CONFIG_MODE_SERVER = "server"
+        const val CONFIG_MODE_SERVER = "serverConnection"
         const val CONFIG_MODE_CLOUD = "cloud"
         const val CONFIG_MODE_MAINTENANCE = "maintenance"
 

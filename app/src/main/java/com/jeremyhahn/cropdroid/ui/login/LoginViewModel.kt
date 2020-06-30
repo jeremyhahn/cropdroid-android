@@ -5,6 +5,7 @@ import android.util.Patterns
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.User
@@ -21,6 +22,44 @@ class LoginViewModel() : ViewModel() {
 
     private val _loginResult = MutableLiveData<LoginResult>()
     val loginResult: LiveData<LoginResult> = _loginResult
+
+    fun googleLogin(cropdroid: CropDroidAPI, account: GoogleSignInAccount) {
+
+        cropdroid.googleLogin(account.idToken!!, account.serverAuthCode!!, object : Callback {
+            override fun onFailure(call: Call?, e: IOException?) {
+                Log.d("LoginViewModel.googleLogin", "onFailure response: " + e!!.message)
+                _loginResult.postValue(LoginResult(error = e.message))
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+
+                Log.d("LoginViewModel.googleLogin", "login response: " + response)
+
+                var responseBody = response.body().string()
+                Log.d("LoginViewModel.googleLogin", "responseBody: " + responseBody)
+
+                if(response.code() == 404) {
+                    _loginResult.postValue(LoginResult(error = "Google login disabled"))
+                    return
+                }
+
+                var json = JSONObject(responseBody)
+                if (!response.isSuccessful()) {
+                    Log.d("LoginViewModel.googleLogin", "fail: " + responseBody)
+                    _loginResult.postValue(LoginResult(error = json.getString("error")))
+                    return
+                }
+
+                if(!json.isNull("success") && !json.getBoolean("success")) {
+                    _loginResult.postValue(LoginResult(error = json.getString("payload")))
+                    return
+                }
+
+                var token = json.getString("token")
+                _loginResult.postValue(LoginResult(User("0", account.email!!, account.idToken!!, token, "", "")))
+            }
+        })
+    }
 
     fun login(cropdroid: CropDroidAPI, username: String, password: String) {
 

@@ -20,7 +20,7 @@
     <string name="title_activity_video">Video</string>
     <string name="title_activity_settings">Settings</string>
     <string name="title_activity_schedule">Schedule</string>
-    <string name="title_new_edge_controller">New Edge Controller</string>
+    <string name="title_new_edge_controller">New Connection</string>
 
     <string name="title_rename">Rename</string>
     <string name="title_alarm">Alarm</string>
@@ -159,7 +159,7 @@
     <string name="nav_header_subtitle">mail@jeremyhahn.com</string>
     <string name="nav_header_desc">Navigation header</string>
 
-    <string name="menu_home">Home</string>
+    <string name="menu_home">Connections</string>
     <string name="menu_store">Store</string>
     <string name="menu_community">Community</string>
     <string name="menu_settings">Settings</string>
