@@ -44,7 +44,7 @@ class MicroControllerFragment: Fragment() {
 
         videoUrl = controllerPreferences.getString(CONFIG_ROOM_VIDEO_KEY, "")
 
-        controller = MasterControllerRepository(ctx).get(preferences.currentController())
+        //controller = MasterControllerRepository(ctx).get(preferences.currentController())
         //controller = mainActivity.connection
 
         //fragmentActivity.toolbar.title = controllerPreferences.getString(CONFIG_FARM_NAME_KEY, "undefined")

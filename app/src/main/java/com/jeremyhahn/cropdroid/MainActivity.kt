@@ -199,7 +199,7 @@ class MainActivity : AppCompatActivity() {
             }
             delay(500) // 3 seconds
             job.cancelAndJoin()
-            Error(applicationContext).toast("Timed out contacting serverConnection: ${cropDroidAPI.controller.hostname}")
+            AppError(applicationContext).toast("Timed out contacting serverConnection: ${cropDroidAPI.controller.hostname}")
         }*/
 
         for(i in 10 downTo 0) {
@@ -207,7 +207,7 @@ class MainActivity : AppCompatActivity() {
             if(controllerViewModels.size > 0) break
             if(i == 0) {
                 runOnUiThread(Runnable {
-                    Error(this).alert("Timed out contacting serverConnection: ${this.connection.hostname}", null, null)
+                    AppError(this).alert("Timed out contacting server: ${this.connection.hostname}", null, null)
                 })
                 return
             }

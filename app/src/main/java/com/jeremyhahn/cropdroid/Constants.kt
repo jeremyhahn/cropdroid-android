@@ -160,5 +160,7 @@ class Constants {
         const val SECONDS_IN_WEEK = 604800
         const val SECONDS_IN_MONTH = 2629800
         const val SECONDS_IN_YEAR = 31557600
+
+        const val ErrNoControllerState = "No controller state"
     }
 }

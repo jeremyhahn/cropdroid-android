@@ -54,7 +54,7 @@ class Preferences(context: Context) {
         editor.putInt(CONFIG_ORG_ID_KEY, orgId)
         editor.putLong(CONFIG_FARM_ID_KEY, farmId)
         if(!editor.commit()) {
-            val message = "Error committing controller to DefaultSharedPreferences"
+            val message = "AppError committing controller to DefaultSharedPreferences"
             Log.e(TAG, message)
             throw RuntimeException(message)
         }
@@ -67,7 +67,7 @@ class Preferences(context: Context) {
         editor.remove(PREF_KEY_USER_ID)
         editor.remove(PREF_KEY_JWT)
         if(!editor.commit()) {
-            val message = "Error clearing controller and user keys from DefaultSharedPreferences"
+            val message = "AppError clearing controller and user keys from DefaultSharedPreferences"
             Log.e(TAG, message)
             throw RuntimeException(message)
         }

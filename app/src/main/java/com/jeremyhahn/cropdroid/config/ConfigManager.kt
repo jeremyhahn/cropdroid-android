@@ -18,7 +18,7 @@ import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_PORT_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_RECIPIENT_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_USERNAME_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_TIMEZONE_KEY
-import com.jeremyhahn.cropdroid.Error
+import com.jeremyhahn.cropdroid.AppError
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.model.*
 import okhttp3.Response
@@ -223,6 +223,7 @@ class ConfigManager(val mainActivity: MainActivity, val sharedPreferences: Share
     private fun setEditorValue(key: String, value: Long) {
         editor.putLong(key, value)
     }
+
     override fun onOpen(webSocket: WebSocket, response: Response) {
         val controller =  websockets[webSocket]
         if(controller != null) {
@@ -251,7 +252,7 @@ class ConfigManager(val mainActivity: MainActivity, val sharedPreferences: Share
                 return
             }
             mainActivity.runOnUiThread(Runnable() {
-                Error(mainActivity).alert(e.message.toString(), null, null)
+                AppError(mainActivity).alert(e.message.toString(), null, null)
             })
         }
     }

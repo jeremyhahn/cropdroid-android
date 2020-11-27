@@ -13,6 +13,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener
+import com.jeremyhahn.cropdroid.AppError
+import com.jeremyhahn.cropdroid.Constants
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
@@ -20,6 +22,9 @@ import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.Connection
 import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
 import com.jeremyhahn.cropdroid.utils.Preferences
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.concurrent.timerTask
 
 open class ControllerFragment : Fragment() {
 
@@ -31,6 +36,7 @@ open class ControllerFragment : Fragment() {
     lateinit private var fragmentView: View
     private var recyclerItems = ArrayList<MicroControllerRecyclerModel>()
     private var viewModel: ControllerViewModel? = null
+    private var refreshTimer: Timer? = null
 
     companion object {
         fun newInstance(controllerType: String) : ControllerFragment {
@@ -57,11 +63,19 @@ open class ControllerFragment : Fragment() {
         val hostname = preferences.currentController()
         val mode = controllerPreferences.getString("$controllerType.mode", "virtual")
         val enabled = controllerPreferences.getBoolean("$controllerType.enable", false)
-        val emptyView = fragmentView.findViewById(R.id.controllerDisabledText) as TextView
+        val disabledView = fragmentView.findViewById(R.id.controllerDisabledText) as TextView
+        val noDataView = fragmentView.findViewById(R.id.controllerNoDataText) as TextView
 
         Log.d("ControllerFragment.onCreateView", "controller type=$controllerType, hostname=$hostname, mode=$mode, enabled=$enabled")
 
-        controller = MasterControllerRepository(ctx).get(hostname)
+        val c = MasterControllerRepository(ctx).get(hostname)
+        if(c == null) {
+            mainActivity.logout()
+            mainActivity.navigateToHome()
+            return fragmentView
+        }
+        controller = c
+
         //controller = mainActivity.connection
         cropDroidAPI = CropDroidAPI(controller, controllerPreferences)
 
@@ -77,10 +91,10 @@ open class ControllerFragment : Fragment() {
         //viewModel = mainActivity.getViewModel(controllerType)
         if(!enabled || viewModel == null) {
             Log.d("ControllerFragment.onCreateView", "$controllerType controller disabled!")
-            emptyView.visibility = View.VISIBLE
+            disabledView.visibility = View.VISIBLE
             return fragmentView
         }
-        emptyView.visibility = View.INVISIBLE
+        disabledView.visibility = View.INVISIBLE
 
         if(viewModel!!.metrics.isEmpty() && viewModel!!.channels.isEmpty()) {
             viewModel!!.getState()
@@ -99,10 +113,34 @@ open class ControllerFragment : Fragment() {
 
         viewModel!!.models.observe(viewLifecycleOwner, Observer {
             swipeContainer.setRefreshing(false)
+            val data = viewModel!!.models.value!!
+            if(data.size <= 0) {
+                noDataView.visibility = View.VISIBLE
+                refreshTimer = Timer()
+                refreshTimer!!.scheduleAtFixedRate(timerTask {
+                    viewModel!!.getState()
+                }, 0, 60000)
+            } else {
+                if(refreshTimer != null) {
+                    refreshTimer!!.cancel()
+                    refreshTimer = null
+                }
+                noDataView.visibility = View.INVISIBLE
+            }
             val _adapter = recyclerView.adapter!! as MicroControllerRecyclerAdapter
             _adapter.metricCount = viewModel!!.metrics.size
-            _adapter.setData(viewModel!!.models.value!!)
+            _adapter.setData(data)
             recyclerView.adapter!!.notifyDataSetChanged()
+        })
+
+        viewModel!!.error.observe(viewLifecycleOwner, Observer {
+            val errorMessage = viewModel!!.error.value!!
+            if(errorMessage.contentEquals(Constants.ErrNoControllerState)) {
+                noDataView.visibility = View.VISIBLE
+
+            } else {
+                AppError(mainActivity).alert(errorMessage, null, null)
+            }
         })
 
         return fragmentView

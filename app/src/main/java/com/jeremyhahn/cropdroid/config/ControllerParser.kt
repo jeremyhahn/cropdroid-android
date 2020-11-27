@@ -42,7 +42,7 @@ class ControllerParser {
                     } else {
                         configs.put(k, v)
                     }
-                    Log.i("ControllerParser.parse", "Putting config -- Key: " + k + ", value: " + v)
+                    Log.i("ControllerParser.parse", "Parsing config key: " + k + " = value: " + v)
                 }
 
                 //val hardwareVersion = jsonController.getString("hardwareVersion")

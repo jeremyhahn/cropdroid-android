@@ -75,7 +75,7 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
         return controller
     }
 
-    fun get(hostname: String): Connection {
+    fun get(hostname: String): Connection? {
         val db: SQLiteDatabase = this.getReadableDatabase()
         val cursor: Cursor = db.query(
             TABLE_SERVERS,
@@ -92,6 +92,9 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
             null
         )
         cursor.moveToFirst()
+        if(cursor.count <= 0) {
+            return null
+        }
         var controller  = Connection(
             cursor.getString(0),
             cursor.getString(1).toInt(),

@@ -3,6 +3,7 @@ package com.jeremyhahn.cropdroid.config
 import android.util.Log
 import com.jeremyhahn.cropdroid.model.Condition
 import org.json.JSONArray
+import java.math.BigInteger
 
 class ConditionParser {
 
@@ -20,7 +21,7 @@ class ConditionParser {
 
                 Log.d("ConditionParser.parse", jsonCondition.toString())
 
-                val id = jsonCondition.getLong("id")
+                val id = jsonCondition.getString("id")
                 val controllerType = jsonCondition.getString("controllerType")
                 //val metric = MetricParser.parse(jsonCondition.getJSONObject("metric"))
                 val metricId = jsonCondition.getLong("metricId")

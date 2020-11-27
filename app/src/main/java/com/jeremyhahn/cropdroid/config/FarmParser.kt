@@ -43,6 +43,8 @@ class FarmParser {
                 smtpConfig = SmtpParser.parse(jsonFarm.getJSONObject("smtp"))
             }
 
+            Log.i("FarmParser.parse", "Parsing timezone: " + timezone)
+
             return Farm(id, orgId, mode, name, interval, timezone, smtpConfig, controllers, roles)
         }
 

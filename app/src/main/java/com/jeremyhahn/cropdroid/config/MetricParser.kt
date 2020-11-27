@@ -27,7 +27,7 @@ class MetricParser {
 
         fun parse(jsonMetric: JSONObject): Metric {
             val id = jsonMetric.getLong("id")
-            val controllerId = if(!jsonMetric.isNull("controller_io")) jsonMetric.getLong("controller_id") else 0
+            val controllerId = if(!jsonMetric.isNull("controller_id")) jsonMetric.getLong("controller_id") else jsonMetric.getLong("controllerId")
             val datatype = jsonMetric.getInt("datatype")
             val enabled = jsonMetric.getBoolean("enable")
             val notify = jsonMetric.getBoolean("notify")

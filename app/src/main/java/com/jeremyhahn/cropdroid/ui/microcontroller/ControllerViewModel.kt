@@ -22,6 +22,7 @@ class ControllerViewModel(cropDroidAPI: CropDroidAPI, controllerType: String) : 
     var metrics = ArrayList<Metric>()
     var channels = ArrayList<Channel>()
     val models = MutableLiveData<ArrayList<MicroControllerRecyclerModel>>()
+    val error = MutableLiveData<String>()
 
     init {
         this.cropDroidAPI = cropDroidAPI
@@ -45,11 +46,14 @@ class ControllerViewModel(cropDroidAPI: CropDroidAPI, controllerType: String) : 
 
                 Log.d("ControllerViewModel.getState()", "responseBody: " + responseBody)
 
+                val json = JSONObject(responseBody)
+
                 if (response.code() != 200) {
+                    if(!json.isNull("error") && json.getString("error").isNotEmpty()) {
+                        error.postValue(json.getString("error"))
+                    }
                     return
                 }
-
-                val json = JSONObject(responseBody)
 
                 val jsonMetrics = json.getJSONArray("metrics")
                 metrics = MetricParser.parse(jsonMetrics)
@@ -72,6 +76,21 @@ class ControllerViewModel(cropDroidAPI: CropDroidAPI, controllerType: String) : 
 
     override fun setConfig(controller: Controller) {
         Log.d("ControllerViewModel.updateConfig", controller.toString())
+        // Server doesn't send values with config updates; use current values
+        for(metric in metrics) {
+            for(newMetric in controller.metrics) {
+                if(metric.id == newMetric.id) {
+                    newMetric.value = metric.value
+                }
+            }
+        }
+        for(channel in channels) {
+            for(newChannel in controller.channels) {
+                if(channel.id == newChannel.id) {
+                    newChannel.value = channel.value
+                }
+            }
+        }
         metrics = controller.metrics
         channels = controller.channels
         val _models = ArrayList<MicroControllerRecyclerModel>(controller.metrics.size + controller.channels.size)
@@ -110,6 +129,10 @@ class ControllerViewModel(cropDroidAPI: CropDroidAPI, controllerType: String) : 
     }
 
     override fun setStateDelta(delta: ControllerStateDelta) {
+        var size = 0
+        if(models.value != null && models.value!!.size > 0) {
+            size = models.value!!.size
+        }
         val _models = ArrayList<MicroControllerRecyclerModel>(metrics.size + channels.size)
         for((i, metric) in metrics.withIndex()) {
             for((k, v) in delta.metrics) {

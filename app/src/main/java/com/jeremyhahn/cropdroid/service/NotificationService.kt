@@ -221,7 +221,8 @@ class NotificationService : Service() {
         val newNotification =
             NotificationCompat.Builder(this, "low_priority_channel_id")
                 .setContentTitle(notification.controller)
-                .setContentText(notification.type)
+                .setContentText(notification.message)
+                .setContentInfo(notification.type)
                 .setSmallIcon(R.drawable.ic_sprout)
                 .setGroup(notification.controller)
                 .setGroupSummary(false)

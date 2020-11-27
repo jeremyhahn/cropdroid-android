@@ -40,16 +40,17 @@ class ConditionListRecyclerAdapter(val activity: ConditionListActivity, val crop
         override fun onCreateContextMenu(menu: ContextMenu?, v: View?, menuInfo: ContextMenu.ContextMenuInfo?) {
 
             var condition = itemView.getTag() as Condition
+            var id = condition.id.toBigDecimal().toInt()
 
-            Log.d("onCreateContextMenu", "condition: " + condition)
+            Log.d("onCreateContextMenu", "condition: " + condition + ", id: " + id)
 
-            menu!!.add(0, condition.id.toInt(), 0, "Edit")
+            menu!!.add(0, id, 0, "Edit")
                 .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
                     activity.showConditionDialog(condition)
                     true
                 })
 
-            menu!!.add(0, condition.id.toInt(), 0, "Delete")
+            menu!!.add(0, id, 0, "Delete")
                 .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
                     activity.deleteCondition(ConditionConfig(condition.id))
                     true

@@ -14,6 +14,14 @@
         android:visibility="gone"
         android:text="@string/disabled" />
 
+    <TextView
+        android:id="@+id/controllerNoDataText"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:visibility="gone"
+        android:text="@string/nodata" />
+
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/controllerSwipeRefresh"
         android:layout_width="match_parent"

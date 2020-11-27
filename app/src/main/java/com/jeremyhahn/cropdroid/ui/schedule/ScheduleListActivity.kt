@@ -52,7 +52,7 @@ class ScheduleListActivity : AppCompatActivity(), ScheduleSelectionListener {
 
         setTitle(channelName + " Schedule")
 
-        controller = MasterControllerRepository(this).get(hostname)
+        controller = MasterControllerRepository(this).get(hostname)!!
 
         cropDroidAPI = CropDroidAPI(controller, controllerPreferences)
         viewModel = ViewModelProviders.of(this, ScheduleViewModelFactory(cropDroidAPI, channelId)).get(ScheduleViewModel::class.java)

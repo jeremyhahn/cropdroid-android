@@ -6,6 +6,7 @@
     <string name="doser_fragment">Doser</string>
     <string name="events_fragment">Events</string>
     <string name="disabled">Disabled</string>
+    <string name="nodata">No data</string>
     <string name="minutes">Minutes</string>
 
     <string name="empty_conditions">Add a new condition to switch on/off based on sensor data</string>

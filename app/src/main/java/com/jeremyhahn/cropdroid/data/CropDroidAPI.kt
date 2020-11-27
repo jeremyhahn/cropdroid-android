@@ -11,7 +11,6 @@ import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ORG_ID_KEY
 import com.jeremyhahn.cropdroid.model.*
 import com.jeremyhahn.cropdroid.model.Connection
 import okhttp3.*
-import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
 import java.net.URLEncoder
@@ -143,8 +142,8 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         Log.d("CropDropAPI.createCondition", "condition="+condition)
         var json = JSONObject()
         json.put("id", condition.id)
-        json.put("channel_id", condition.channelId)
-        json.put("metric_id", condition.metricId)
+        json.put("channelId", condition.channelId)
+        json.put("metricId", condition.metricId)
         json.put("comparator", condition.comparator)
         json.put("threshold", condition.threshold)
         doPut(CONDITION_ENDPOINT, json, callback)
@@ -153,7 +152,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
     fun deleteCondition(condition: ConditionConfig, callback: Callback) {
         Log.d("CropDropAPI.deleteCondition", "condition="+condition)
         val args = ArrayList<String>(1)
-        args.add(condition.id.toString())
+        args.add(condition.id)
         doDelete(CONDITION_ENDPOINT, args, callback)
     }
 
@@ -223,6 +222,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         Log.d("CropDropAPI.setMetricConfig", "metric="+metric)
         var json = JSONObject()
         json.put("id", metric.id)
+        json.put("controllerId", metric.controllerId)
         json.put("key", metric.key)
         json.put("name", metric.name)
         json.put("enable", metric.enable)
@@ -247,6 +247,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         Log.d("CropDropAPI.setChannelConfig", "channel="+channel)
         var json = JSONObject()
         json.put("id", channel.id)
+        json.put("controllerId", channel.controllerId)
         json.put("channelId", channel.channelId)
         json.put("name", channel.name)
         json.put("enable", channel.enable)
@@ -469,7 +470,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
             return websocket
         }
         catch(e: java.lang.IllegalArgumentException) {
-            com.jeremyhahn.cropdroid.Error(context).toast(e.message!!)
+            com.jeremyhahn.cropdroid.AppError(context).toast(e.message!!)
         }
         return null
     }

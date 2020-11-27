@@ -7,7 +7,7 @@ import android.view.Gravity
 
 import android.widget.Toast
 
-class Error(context: Context) {
+class AppError(context: Context) {
 
     private val toast: Toast
     private val context: Context

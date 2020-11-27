@@ -53,7 +53,7 @@ class ConditionListActivity : AppCompatActivity(), ConditionDialogHandler {
 
         setTitle(channelName + " Condition")
 
-        controller = MasterControllerRepository(this).get(hostname)
+        controller = MasterControllerRepository(this).get(hostname)!!
 
         cropDroidAPI = CropDroidAPI(controller, controllerSharedPrefs)
 
@@ -104,7 +104,7 @@ class ConditionListActivity : AppCompatActivity(), ConditionDialogHandler {
     }
 
     override fun onConditionDialogApply(condition: ConditionConfig) {
-        if(condition.id == 0L) {
+        if(condition.id.equals("0")) {
             createCondition(condition)
         } else {
             updateCondition(condition)

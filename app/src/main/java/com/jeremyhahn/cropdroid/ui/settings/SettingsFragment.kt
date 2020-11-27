@@ -35,7 +35,7 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
         sharedPreferences = preferences.getControllerPreferences()
         sharedPreferences.registerOnSharedPreferenceChangeListener(this)
 
-        controller = MasterControllerRepository(ctx).get(hostname)
+        controller = MasterControllerRepository(ctx).get(hostname)!!
         cropdroid = CropDroidAPI(controller, sharedPreferences)
 
         Log.d("SettingsActivity.onCreate", "controller=" + controller.toString())
@@ -50,6 +50,11 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
 
     override fun onPause() {
         super.onPause()
+        preferenceScreen.sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
         preferenceScreen.sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
     }
 

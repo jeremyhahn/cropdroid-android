@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.android.billingclient.api.*
-import com.jeremyhahn.cropdroid.Error
+import com.jeremyhahn.cropdroid.AppError
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.MasterControllerRepository
@@ -42,7 +42,7 @@ class StoreFragment : Fragment(), PurchasesUpdatedListener {
         val fragmentView = inflater.inflate(R.layout.activity_store, container, false)
 
         val preferences = Preferences(ctx)
-        val controller = MasterControllerRepository(ctx).get(preferences.currentController())
+        val controller = MasterControllerRepository(ctx).get(preferences.currentController())!!
         cropDroidAPI = CropDroidAPI(controller, preferences.getDefaultPreferences())
 
         recyclerView =  fragmentView.findViewById(R.id.products) as RecyclerView
@@ -63,7 +63,7 @@ class StoreFragment : Fragment(), PurchasesUpdatedListener {
                     loadProducts()
                 } else {
                     println("BILLING | startConnection | RESULT: ${billingResult.responseCode}")
-                    Error(ctx).toast("${billingResult.responseCode}: ${billingResult.debugMessage}")
+                    AppError(ctx).toast("${billingResult.responseCode}: ${billingResult.debugMessage}")
                 }
             }
             override fun onBillingServiceDisconnected() {
@@ -84,12 +84,12 @@ class StoreFragment : Fragment(), PurchasesUpdatedListener {
                     initProductAdapter(skuDetailsList)
                 } else {
                     Log.e("StoreActivity", "Can't querySkuDetailsAsync, responseCode: ${response.responseCode}, debugMessage: ${response.debugMessage}")
-                    Error(ctx).toast("${response.responseCode}: ${response.debugMessage}")
+                    AppError(ctx).toast("${response.responseCode}: ${response.debugMessage}")
                 }
             }
         }
         else {
-            Error(ctx).toast("onLoadProductsClicked() Billing client not ready!")
+            AppError(ctx).toast("onLoadProductsClicked() Billing client not ready!")
         }
     }
 
@@ -128,7 +128,7 @@ class StoreFragment : Fragment(), PurchasesUpdatedListener {
                     if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchaseToken != null) {
                         println("AllowMultiplePurchases success, responseCode: ${billingResult.responseCode}")
 
-                        //Error(ctx).show("${billingResult.responseCode}: ${billingResult.debugMessage}")
+                        //AppError(ctx).show("${billingResult.responseCode}: ${billingResult.debugMessage}")
 
                         cropDroidAPI.verifyPurchase(purchase, object : Callback {
                             override fun onFailure(call: Call, e: IOException) {
@@ -154,7 +154,7 @@ class StoreFragment : Fragment(), PurchasesUpdatedListener {
                                         )
                                     })
                                 } else {
-                                    Error(ctx)
+                                    AppError(ctx)
                                         .alert(
                                             "Unable to verify purchase. Please contact support for further assistance",
                                             null,
@@ -167,7 +167,7 @@ class StoreFragment : Fragment(), PurchasesUpdatedListener {
 
                     } else {
                         println("Can't allowMultiplePurchases, responseCode: ${billingResult.responseCode}")
-                        Error(ctx).toast("${billingResult.responseCode}: ${billingResult.debugMessage}")
+                        AppError(ctx).toast("${billingResult.responseCode}: ${billingResult.debugMessage}")
                     }
                 }
             })
