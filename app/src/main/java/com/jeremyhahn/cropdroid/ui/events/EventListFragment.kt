@@ -116,6 +116,9 @@ class EventListFragment : ControllerFragment() {
 
     fun getEventsPage(page : Int) {
 
+        if(sharedPrefs == null) {
+            return
+        }
         CropDroidAPI(controller!!, sharedPrefs).eventsList(page.toString(), object : Callback {
 
             override fun onFailure(call: Call, e: IOException) {
@@ -144,7 +147,7 @@ class EventListFragment : ControllerFragment() {
                 for (i in 0 until jsonArray.length()) {
                     var jsonEvent = jsonArray.getJSONObject(i)
                     events.add(EventLog(
-                        jsonEvent.getString("controller"),
+                        jsonEvent.getString("device"),
                         jsonEvent.getString("type"),
                         jsonEvent.getString("message"),
                         jsonEvent.getString("timestamp")

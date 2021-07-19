@@ -17,6 +17,7 @@ class Constants {
 
         const val PREF_KEY_CONTROLLER_ID = "controller_id"
         const val PREF_KEY_CONTROLLER_HOSTNAME = "controller_hostname"
+        const val PREF_KEY_CONTROLLER_PUBKEY = "controller_pubkey"
         const val PREF_KEY_USER_ID = "user_id"
         const val PREF_KEY_JWT = "jwt"
         const val API_VERSION = "v1"

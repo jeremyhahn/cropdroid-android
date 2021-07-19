@@ -24,6 +24,8 @@ import com.google.android.gms.common.SignInButton
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
 import com.jeremyhahn.cropdroid.Constants.Companion.APP_SERVER_CLIENT_ID
+import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_CONTROLLER_HOSTNAME
+import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_CONTROLLER_PUBKEY
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
@@ -75,7 +77,11 @@ class LoginFragment() : Fragment(), View.OnClickListener {
 
         preferences = Preferences(fragmentActivity.applicationContext)
         sharedPrefs = preferences.getDefaultPreferences()
-        connection = Connection(args.getString("controller_hostname")!!, 0, "", null)
+        connection = Connection(args.getString(PREF_KEY_CONTROLLER_HOSTNAME)!!,
+            0,
+            "",
+            args.getString(PREF_KEY_CONTROLLER_PUBKEY)!!,
+            null)
 
         Log.d("LoginActivity.onCreate", "controller: " + connection.toString())
 
@@ -128,6 +134,7 @@ class LoginFragment() : Fragment(), View.OnClickListener {
 
         loginViewModel.loginResult.observe(this@LoginFragment, Observer {
             val loginResult = it ?: return@Observer
+            val cropDroidAPI = CropDroidAPI(connection, sharedPrefs)
 
             loading.visibility = View.GONE
             //setResult(Activity.RESULT_OK)
@@ -138,7 +145,7 @@ class LoginFragment() : Fragment(), View.OnClickListener {
 
             if(loginResult.registered) {
                 loginViewModel.login(
-                    CropDroidAPI(connection, sharedPrefs),
+                    cropDroidAPI,
                     username.text.toString(),
                     password.text.toString())
             }
@@ -148,8 +155,9 @@ class LoginFragment() : Fragment(), View.OnClickListener {
                 var user = loginResult.success
 
                 Log.d("LoginActivity token:", user.token)
+                connection.token = user.token
 
-                val jwt = JsonWebToken(requireContext(), user.token)
+                val jwt = JsonWebToken(requireContext(), connection)
                 Log.d("jwt", jwt.claims.toString())
 
                 var organizations = jwt.organizations()

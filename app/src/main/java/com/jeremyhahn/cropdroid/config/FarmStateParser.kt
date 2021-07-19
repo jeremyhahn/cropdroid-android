@@ -15,7 +15,7 @@ class FarmStateParser {
         fun parse(jsonControllers : JSONObject) : FarmState {
 
             var state = HashMap<String, ControllerState>(jsonControllers.length())
-            var jsonControllers = jsonControllers.getJSONObject("controllers")
+            var jsonControllers = jsonControllers.getJSONObject("devices")
 
             //jsonControllers.keys().forEachRemaining { key ->
             for ((i, controllerType) in jsonControllers.keys().withIndex()) {

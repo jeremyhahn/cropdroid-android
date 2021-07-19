@@ -42,18 +42,33 @@ class StoreFragment : Fragment(), PurchasesUpdatedListener {
         val fragmentView = inflater.inflate(R.layout.activity_store, container, false)
 
         val preferences = Preferences(ctx)
-        val controller = MasterControllerRepository(ctx).get(preferences.currentController())!!
+        val currentController = preferences.currentController()
+        if (currentController == "") {
+            AppError(ctx).toast("Controller connection required to use store.")
+            return fragmentView
+        }
+
+        val repo =  MasterControllerRepository(ctx)
+        val controller = repo.get(currentController)!!
         cropDroidAPI = CropDroidAPI(controller, preferences.getDefaultPreferences())
+        billingClient = BillingClient.newBuilder(ctx).setListener(this).enablePendingPurchases().build()
 
         recyclerView =  fragmentView.findViewById(R.id.products) as RecyclerView
         recyclerView.layoutManager = LinearLayoutManager(ctx, RecyclerView.VERTICAL, false)
+        recyclerView.adapter = ProductsAdapter(ctx, ArrayList<SkuDetails>()) {
+            val billingFlowParams = BillingFlowParams
+                .newBuilder()
+                .setSkuDetails(it)
+                .build()
+            val responseCode = billingClient.launchBillingFlow(requireActivity(), billingFlowParams).responseCode
+            println("initProductAdapter responseCode: ${responseCode}")
+            if(responseCode != BillingClient.BillingResponseCode.OK) {
+                val errmsg = "Failed to launch in-app purchase flow"
+                Log.e(TAG, errmsg)
+                AppError(ctx).toast(errmsg)
+            }
+        }
         recyclerView.itemAnimator = DefaultItemAnimator()
-
-        billingClient = BillingClient
-            .newBuilder(ctx)
-            .setListener(this)
-            .enablePendingPurchases()
-            .build()
 
         billingClient.startConnection(object: BillingClientStateListener {
             override fun onBillingSetupFinished(billingResult: BillingResult) {
@@ -93,19 +108,11 @@ class StoreFragment : Fragment(), PurchasesUpdatedListener {
         }
     }
 
-    fun initProductAdapter(skuDetailsList: List<SkuDetails>) {
-        val productsAdapter = ProductsAdapter(ctx, skuDetailsList) {
-            val billingFlowParams = BillingFlowParams
-                .newBuilder()
-                .setSkuDetails(it)
-                .build()
-            billingClient.launchBillingFlow(activity, billingFlowParams)
-        }
-        recyclerView.adapter = productsAdapter
-        recyclerView.adapter!!.notifyDataSetChanged()
+    fun initProductAdapter(skuDetailsList: MutableList<SkuDetails>?) {
+        (recyclerView.adapter as ProductsAdapter).setData(skuDetailsList)
     }
 
-    override fun onPurchasesUpdated(billingResult: BillingResult, purchases: MutableList<Purchase>?) {
+    override fun onPurchasesUpdated(billingResult: BillingResult, purchases: List<Purchase>?) {
         println("onPurchasesUpdated: ${billingResult.debugMessage}")
         if(purchases != null && purchases.size > 0)
         for(purchase in purchases) {
@@ -114,12 +121,11 @@ class StoreFragment : Fragment(), PurchasesUpdatedListener {
         consume(purchases)
     }
 
-    private fun consume(purchases: MutableList<Purchase>?) {
+    private fun consume(purchases: List<Purchase>?) {
         Log.d("consume: ", purchases.toString())
         val purchase = purchases?.first()
         if(purchase != null) {
-            val consumeParams =
-                ConsumeParams.newBuilder().setPurchaseToken(purchase!!.purchaseToken).build()
+            val consumeParams = ConsumeParams.newBuilder().setPurchaseToken(purchase!!.purchaseToken).build()
             billingClient.consumeAsync(consumeParams, object : ConsumeResponseListener {
                 override fun onConsumeResponse(
                     billingResult: BillingResult,

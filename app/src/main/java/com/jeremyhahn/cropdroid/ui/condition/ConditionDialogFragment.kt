@@ -52,7 +52,7 @@ class ConditionDialogFragment(cropDroidAPI: CropDroidAPI, condition: Condition, 
 
         // Populate metric spinner
         val metricArray: MutableList<String> = java.util.ArrayList()
-        val metricAdapter = ArrayAdapter<String>(activity, android.R.layout.simple_spinner_item, metricArray)
+        val metricAdapter = ArrayAdapter<String>(requireActivity(), android.R.layout.simple_spinner_item, metricArray)
         metricAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         val metricSpinner = dialogView.findViewById<View>(R.id.metricSpinner) as Spinner
         metricSpinner.adapter = metricAdapter
@@ -62,7 +62,7 @@ class ConditionDialogFragment(cropDroidAPI: CropDroidAPI, condition: Condition, 
         // Populate controller spinner
         val controllerArray: MutableList<String> = java.util.ArrayList()
         val controllerSpinner = dialogView.findViewById<View>(R.id.controllerSpinner) as Spinner
-        val controllerAdapter = ArrayAdapter<String>(activity, android.R.layout.simple_spinner_item, controllerArray)
+        val controllerAdapter = ArrayAdapter<String>(requireActivity(), android.R.layout.simple_spinner_item, controllerArray)
         controllerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         controllerSpinner.adapter = controllerAdapter
         controllerSpinner.onItemSelectedListener = object: AdapterView.OnItemSelectedListener {
@@ -147,7 +147,7 @@ class ConditionDialogFragment(cropDroidAPI: CropDroidAPI, condition: Condition, 
         operatorArray.add("<")
         operatorArray.add("<=")
         operatorArray.add("=")
-        val operatorAdapter = ArrayAdapter(activity, android.R.layout.simple_spinner_item, operatorArray)
+        val operatorAdapter = ArrayAdapter(requireActivity(), android.R.layout.simple_spinner_item, operatorArray)
         operatorAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         val operatorSpinner = dialogView.findViewById<View>(R.id.operatorSpinner) as Spinner
         operatorSpinner.adapter = operatorAdapter

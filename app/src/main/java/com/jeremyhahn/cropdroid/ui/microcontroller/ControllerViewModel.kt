@@ -92,7 +92,9 @@ class ControllerViewModel(cropDroidAPI: CropDroidAPI, controllerType: String) : 
             }
         }
         metrics = controller.metrics
+        metrics.sortBy { metric -> metric.name }
         channels = controller.channels
+        channels.sortBy { channel -> channel.name }
         val _models = ArrayList<MicroControllerRecyclerModel>(controller.metrics.size + controller.channels.size)
         for(metric in controller.metrics) {
             val metric = Metric(metric.id, metric.controllerId, metric.datatype, metric.key, metric.name, metric.enable, metric.notify, metric.unit, metric.alarmLow, metric.alarmHigh, metric.value)

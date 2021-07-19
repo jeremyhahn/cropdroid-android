@@ -5,13 +5,13 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 29
     defaultConfig {
         applicationId "com.jeremyhahn.cropdroid"
         minSdkVersion 26
-        targetSdkVersion 28
-        versionCode 1
-        versionName "cropdroid-v0.1a"
+        targetSdkVersion 29
+        versionCode 5
+        versionName "cropdroid-v0.0.3a"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -76,7 +76,7 @@ dependencies {
     implementation 'com.appeaser.sublimepickerlibrary:sublimepickerlibrary:2.1.2'
     implementation 'com.github.alamkanak:android-week-view:1.2.6'
 
-    implementation 'com.android.billingclient:billing:2.1.0'
+    implementation 'com.android.billingclient:billing:4.0.0'
     implementation 'com.android.billingclient:billing-ktx:2.1.0'
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.4"
 

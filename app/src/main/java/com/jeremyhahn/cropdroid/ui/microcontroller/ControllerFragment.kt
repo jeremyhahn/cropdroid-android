@@ -15,6 +15,8 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener
 import com.jeremyhahn.cropdroid.AppError
 import com.jeremyhahn.cropdroid.Constants
+import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_MODE_KEY
+import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_MODE_VIRTUAL
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
@@ -61,7 +63,8 @@ open class ControllerFragment : Fragment() {
         val controllerPreferences = preferences.getControllerPreferences()
 
         val hostname = preferences.currentController()
-        val mode = controllerPreferences.getString("$controllerType.mode", "virtual")
+        //val mode = controllerPreferences.getString("$controllerType.mode", CONFIG_MODE_VIRTUAL)!!
+        val mode = controllerPreferences.getString(CONFIG_MODE_KEY, CONFIG_MODE_VIRTUAL)!!
         val enabled = controllerPreferences.getBoolean("$controllerType.enable", false)
         val disabledView = fragmentView.findViewById(R.id.controllerDisabledText) as TextView
         val noDataView = fragmentView.findViewById(R.id.controllerNoDataText) as TextView

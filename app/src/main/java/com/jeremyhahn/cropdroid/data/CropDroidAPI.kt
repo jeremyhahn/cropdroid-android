@@ -16,15 +16,15 @@ import java.io.IOException
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
 
-class CropDroidAPI(private val connection: Connection, preferences: SharedPreferences) {
+class CropDroidAPI(private val connection: Connection, preferences: SharedPreferences?) {
 
-    val orgId: Int
-    val farmId: Long
+    var orgId: Int = 0
+    var farmId: Long = 0
 
     val REST_ENDPOINT: String
     val VERSIONED_ENDPOINT: String
     val ORGANIZATION_ENDPOINT: String
-
+    val PUBKEY_ENDPOINT: String
     val ALGORITHMS_ENDPOINT: String
     val CHANNEL_ENDPOINT: String
     val CONFIG_ENDPOINT: String
@@ -39,14 +39,19 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
     val SCHEDULE_ENDPOINT: String
 
     init {
-        orgId = preferences.getInt(CONFIG_ORG_ID_KEY, 0)
-        farmId = preferences.getLong(CONFIG_FARM_ID_KEY, 0)
+        if(preferences != null) {
+            orgId = preferences.getInt(CONFIG_ORG_ID_KEY, 0)
+            farmId = preferences.getLong(CONFIG_FARM_ID_KEY, 0)
+        }
 
         REST_ENDPOINT = if(connection.secure == 1)
             "https://".plus(connection.hostname)
         else "http://".plus(connection.hostname)
 
         VERSIONED_ENDPOINT = REST_ENDPOINT.plus(API_BASE)
+
+        PUBKEY_ENDPOINT = VERSIONED_ENDPOINT.plus("/pubkey")
+
         ORGANIZATION_ENDPOINT = VERSIONED_ENDPOINT.plus("/organizations/").plus(orgId)
 
         //FARM_ENDPOINT = ORGANIZATION_ENDPOINT.plus("/farms/").plus(farmId)
@@ -70,7 +75,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         Log.d("CropDropAPI.verifyPurchase", "purchase="+purchase)
         var json = JSONObject()
         json.put("orderId", purchase.orderId)
-        json.put("productId", purchase.sku)
+        //json.put("productId", purchase.sku)
         json.put("purchaseToken", purchase.purchaseToken)
         json.put("purchaseTime", purchase.purchaseTime)
         doPost(IAP_ENDPOINT.plus("/verify"), json, callback)
@@ -222,7 +227,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         Log.d("CropDropAPI.setMetricConfig", "metric="+metric)
         var json = JSONObject()
         json.put("id", metric.id)
-        json.put("controllerId", metric.controllerId)
+        json.put("deviceId", metric.controllerId)
         json.put("key", metric.key)
         json.put("name", metric.name)
         json.put("enable", metric.enable)
@@ -247,7 +252,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         Log.d("CropDropAPI.setChannelConfig", "channel="+channel)
         var json = JSONObject()
         json.put("id", channel.id)
-        json.put("controllerId", channel.controllerId)
+        json.put("deviceId", channel.controllerId)
         json.put("channelId", channel.channelId)
         json.put("name", channel.name)
         json.put("enable", channel.enable)
@@ -284,6 +289,11 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
     fun getAlgorithms(callback: Callback) {
         val args = ArrayList<String>()
         doGet(ALGORITHMS_ENDPOINT, args, callback)
+    }
+
+    fun getPublicKey(callback: Callback) {
+        val args = ArrayList<String>()
+        doGet(PUBKEY_ENDPOINT, args, callback)
     }
 
     fun login(username: String, password: String, callback: Callback) {

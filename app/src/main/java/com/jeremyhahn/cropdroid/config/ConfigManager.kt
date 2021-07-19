@@ -69,7 +69,7 @@ class ConfigManager(val mainActivity: MainActivity, val sharedPreferences: Share
     }
 
     fun getString(key: String) : String {
-        return sharedPreferences.getString(key, "")
+        return sharedPreferences.getString(key, "") ?: ""
     }
 
     fun getBoolean(key: String) : Boolean {
@@ -256,6 +256,7 @@ class ConfigManager(val mainActivity: MainActivity, val sharedPreferences: Share
             })
         }
     }
+
 
     override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
         Log.d("ConfigManager.onMessage(bytes)", bytes.hex())

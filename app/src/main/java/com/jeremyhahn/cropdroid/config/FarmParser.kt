@@ -36,7 +36,7 @@ class FarmParser {
             val interval = jsonFarm.getInt("interval")
             val mode = jsonFarm.getString("mode")
             val timezone = jsonFarm.getString("timezone")
-            val controllers = ControllerParser.parse(jsonFarm.getJSONArray("controllers"))
+            val devices = ControllerParser.parse(jsonFarm.getJSONArray("devices"))
 
             var smtpConfig = SmtpConfig()
             if(!jsonFarm.isNull("smtp")) {
@@ -45,7 +45,7 @@ class FarmParser {
 
             Log.i("FarmParser.parse", "Parsing timezone: " + timezone)
 
-            return Farm(id, orgId, mode, name, interval, timezone, smtpConfig, controllers, roles)
+            return Farm(id, orgId, mode, name, interval, timezone, smtpConfig, devices, roles)
         }
 
         fun parse(jsonFarms: JSONArray, orgId: Long, brief: Boolean) : ArrayList<Farm> {

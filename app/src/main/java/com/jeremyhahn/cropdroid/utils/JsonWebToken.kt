@@ -3,23 +3,32 @@ package com.jeremyhahn.cropdroid.utils
 import android.content.Context
 import android.util.Log
 import com.jeremyhahn.cropdroid.config.OrganizationParser
+import com.jeremyhahn.cropdroid.model.Connection
 import com.jeremyhahn.cropdroid.model.Organization
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
 import org.bouncycastle.util.io.pem.PemReader
+import java.io.StringReader
 import java.security.KeyFactory
 import java.security.spec.EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 
-// https://stackoverflow.com/questions/45684632/sign-jwt-with-privatekey-from-android-fingerprint-api
-class JsonWebToken(context: Context, token: String) {
+class JsonWebToken(context: Context, connection: Connection) {
 
-    private val keyfile = "rsa.pub"
     private val algorithm = "RSA"
-    val claims: Claims
+    var claims: Claims
 
     init {
-        var reader = PemReader(context!!.getAssets().open(keyfile).bufferedReader())
+        val pubkey = connection.pubkey.replace("\\n", "\n")
+            .replace("\"", "").trim()
+        //val decoded = Base64.getDecoder().decode(pubkey)
+
+        //val pubkeyFile = File(context.getFilesDir(), "cropdroid.pub")
+        //pubkeyFile.writeText(pubkey)
+        //var reader = PemReader(pubkeyFile.bufferedReader())
+
+        var reader = PemReader(StringReader(pubkey))
+
         val pemObject = reader.readPemObject()
         val content: ByteArray = pemObject.getContent()
         reader.close()
@@ -28,7 +37,7 @@ class JsonWebToken(context: Context, token: String) {
         val keySpec: EncodedKeySpec = X509EncodedKeySpec(content)
         var publicKey = kf.generatePublic(keySpec)
 
-        claims = Jwts.parserBuilder().setSigningKey(publicKey).build().parseClaimsJws(token).body
+        claims = Jwts.parserBuilder().setSigningKey(publicKey).build().parseClaimsJws(connection.token).body
         Log.d("JsonWebToken", claims.toString())
     }
 

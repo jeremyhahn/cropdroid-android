@@ -59,10 +59,10 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
-        val controllerId = parseControllerId(key!!)
+        val controllerId = parseControllerId(key!!)!!
         var value = ""
         try {
-            value = sharedPreferences!!.getString(key, "")
+            value = sharedPreferences!!.getString(key, "")!!
         }
         catch(e: ClassCastException) {
             if (e.message.equals("java.lang.Boolean cannot be cast to java.lang.String")) {

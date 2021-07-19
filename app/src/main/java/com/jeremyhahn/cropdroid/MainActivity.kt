@@ -110,7 +110,8 @@ class MainActivity : AppCompatActivity() {
 
     fun navigateToLogin(controller: Connection) {
         val bundle = Bundle()
-        bundle.putString("controller_hostname", controller.hostname)
+        bundle.putString(Constants.PREF_KEY_CONTROLLER_HOSTNAME, controller.hostname)
+        bundle.putString(Constants.PREF_KEY_CONTROLLER_PUBKEY, controller.pubkey)
         navController.navigate(R.id.nav_login, bundle)
     }
 

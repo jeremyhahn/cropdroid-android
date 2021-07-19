@@ -9,11 +9,12 @@ import com.jeremyhahn.cropdroid.Constants.Companion.DATABASE_NAME
 import com.jeremyhahn.cropdroid.model.Connection
 import com.jeremyhahn.cropdroid.utils.JsonWebToken
 
-private const val DATABASE_VERSION = 1
+private const val DATABASE_VERSION = 2
 private const val TABLE_SERVERS = "servers"
 private const val KEY_HOSTNAME = "hostname"
 private const val KEY_SECURE = "secure"
 private const val KEY_TOKEN = "token"
+private const val KEY_PUBKEY = "pubkey"
 
 class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
@@ -26,9 +27,10 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
     override fun onCreate(db: SQLiteDatabase) {
         val createMasterControllerTableSql =
             ("CREATE TABLE " + TABLE_SERVERS + "("
-                    + KEY_HOSTNAME + " VARCHAR(255) PRIMARY KEY" + ","
-                    + KEY_SECURE + " INT" + ","
-                    + KEY_TOKEN + " TEXT)")
+                + KEY_HOSTNAME + " VARCHAR(255) PRIMARY KEY" + ","
+                + KEY_SECURE + " INT" + ","
+                + KEY_TOKEN + " TEXT" + ","
+                + KEY_PUBKEY + " TEXT)")
         db.execSQL(createMasterControllerTableSql)
     }
 
@@ -66,11 +68,12 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
         values.put(KEY_HOSTNAME, controller.hostname)
         values.put(KEY_SECURE, controller.secure)
         values.put(KEY_TOKEN, controller.token)
+        values.put(KEY_PUBKEY, controller.pubkey)
         db.insert(TABLE_SERVERS, null, values)
         //controller.id = getLastInsertedId(db)
         db.close()
         if (!controller.token.isEmpty()) {
-            controller.jwt = JsonWebToken(context!!, controller.token)
+            controller.jwt = JsonWebToken(context!!, controller)
         }
         return controller
     }
@@ -82,7 +85,8 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
             arrayOf(
                 KEY_HOSTNAME,
                 KEY_SECURE,
-                KEY_TOKEN
+                KEY_TOKEN,
+                KEY_PUBKEY
             ),
             "$KEY_HOSTNAME=?",
             arrayOf(hostname),
@@ -99,10 +103,11 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
             cursor.getString(0),
             cursor.getString(1).toInt(),
             cursor.getString(2),
+            cursor.getString(3),
             null)
         db.close()
         if(controller.token != "") {
-            controller.jwt = JsonWebToken(context!!, controller.token)
+            controller.jwt = JsonWebToken(context!!, controller)
         }
         return controller
     }
@@ -115,7 +120,8 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
             arrayOf(
                 KEY_HOSTNAME,
                 KEY_SECURE,
-                KEY_TOKEN
+                KEY_TOKEN,
+                KEY_PUBKEY
             ),
             "$KEY_HOSTNAME=?",
             arrayOf(hostname),
@@ -130,9 +136,10 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
                 cursor.getString(0),
                 cursor.getString(1).toInt(),
                 cursor.getString(2),
+                cursor.getString(3),
                 null)
             if(controller.token != "") {
-                controller.jwt = JsonWebToken(context!!, controller.token)
+                controller.jwt = JsonWebToken(context!!, controller)
             }
         }
         db.close()
@@ -151,9 +158,10 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
                         cursor.getString(0),
                         cursor.getString(1).toInt(),
                         cursor.getString(2),
+                        cursor.getString(3),
                         null)
                     if(controller.token != "") {
-                        controller.jwt = JsonWebToken(context!!, controller.token)
+                        controller.jwt = JsonWebToken(context!!, controller)
                     }
                     controllerList.add(controller)
                 } while (cursor.moveToNext())
@@ -168,6 +176,7 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
         values.put(KEY_HOSTNAME, controller.hostname)
         values.put(KEY_SECURE, controller.secure)
         values.put(KEY_TOKEN, controller.token)
+        values.put(KEY_PUBKEY, controller.pubkey)
         var response = db.update(
             TABLE_SERVERS,
             values,

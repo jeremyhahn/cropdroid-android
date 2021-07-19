@@ -1,3 +1,4 @@
+
 package com.jeremyhahn.cropdroid.config
 
 import android.util.Log
@@ -45,10 +46,14 @@ class ControllerParser {
                     Log.i("ControllerParser.parse", "Parsing config key: " + k + " = value: " + v)
                 }
 
-                //val hardwareVersion = jsonController.getString("hardwareVersion")
-                //val firmwareVersion = jsonController.getString("firmwareVersion")
-                val hardwareVersion = "TODO"
-                val firmwareVersion = "TODO"
+                var hardwareVersion = jsonController.getString("hwVersion")
+                if(hardwareVersion == "") {
+                    hardwareVersion = "N/A"
+                }
+                var firmwareVersion = jsonController.getString("fwVersion")
+                if(firmwareVersion == "") {
+                    firmwareVersion = "N/A"
+                }
 
                 var parsedMetrics = ArrayList<Metric>()
                 var parsedChannels = ArrayList<Channel>()

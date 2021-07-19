@@ -24,7 +24,7 @@ class Preferences(context: Context) {
     }
 
     fun currentController() : String {
-        return getDefaultPreferences().getString(PREF_KEY_CONTROLLER_HOSTNAME, "")
+        return getDefaultPreferences().getString(PREF_KEY_CONTROLLER_HOSTNAME, "")!!
     }
 
     fun currentServerId() : Long {

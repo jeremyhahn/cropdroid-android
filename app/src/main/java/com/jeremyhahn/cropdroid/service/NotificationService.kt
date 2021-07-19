@@ -145,7 +145,7 @@ class NotificationService : Service() {
     }
 
     fun createWebsocket(controller: Connection) {
-        val jwt = JsonWebToken(applicationContext, controller.token)
+        val jwt = JsonWebToken(applicationContext, controller)
         for(org in jwt.organizations()) {
             for(farm in org.farms) {
                 try {
@@ -254,7 +254,7 @@ class NotificationService : Service() {
         override fun onOpen(webSocket: WebSocket, response: Response) {
             var controller = getControllerByWebSocket(webSocket)
             if(controller != null) {
-                val jws = JsonWebToken(applicationContext, controller.token)
+                val jws = JsonWebToken(applicationContext, controller)
                 var payload = "{\"id\":" + jws.uid().toString() + "}"
                 Log.d("NotificationService.onOpen", "controller="  + controller.hostname + ", payload=" + payload)
                 webSocket.send(payload)
@@ -273,7 +273,7 @@ class NotificationService : Service() {
             Log.d("NotificationService.onMessage(text)", text)
             var json = JSONObject(text)
             var notification = Notification(
-                json.getString("controller"),
+                json.getString("device"),
                 json.getInt("priority"),
                 json.getString("type"),
                 json.getString("message"),
