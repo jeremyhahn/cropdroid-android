@@ -21,7 +21,6 @@ import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
 
-
 class NewEdgeControllerFragment : Fragment() {
 
     private lateinit var controllerView: View

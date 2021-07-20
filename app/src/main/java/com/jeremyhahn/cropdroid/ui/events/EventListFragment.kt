@@ -119,6 +119,10 @@ class EventListFragment : ControllerFragment() {
         if(sharedPrefs == null) {
             return
         }
+        if(controller == null) {
+            return
+        }
+
         CropDroidAPI(controller!!, sharedPrefs).eventsList(page.toString(), object : Callback {
 
             override fun onFailure(call: Call, e: IOException) {
