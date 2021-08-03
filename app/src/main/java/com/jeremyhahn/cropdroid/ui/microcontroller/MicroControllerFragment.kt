@@ -14,7 +14,6 @@ import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ROOM_VIDEO_KEY
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.TabAdapter
-import com.jeremyhahn.cropdroid.db.MasterControllerRepository
 import com.jeremyhahn.cropdroid.model.Connection
 import com.jeremyhahn.cropdroid.utils.Preferences
 import kotlinx.android.synthetic.main.app_bar_navigation.*
@@ -24,11 +23,12 @@ class MicroControllerFragment: Fragment() {
     private val TAG = "MicroControllerFragment"
     private var tabLayout: TabLayout? = null
     private var viewPager: ViewPager? = null
-    private var controller: Connection? = null
+    //private var controller: Connection? = null
     private var videoUrl: String? = null
     private var fragmentView: View? = null
     lateinit private var preferences: Preferences
     lateinit private var controllerPreferences: SharedPreferences
+    private var viewGroupContainer: ViewGroup? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle? ): View? {
         super.onCreateView(inflater, container, savedInstanceState)
@@ -36,6 +36,9 @@ class MicroControllerFragment: Fragment() {
 
         val mainActivity = requireActivity() as MainActivity
         val ctx = mainActivity.applicationContext
+
+        //layoutInflater = inflater
+        viewGroupContainer = container
 
         fragmentView = inflater.inflate(R.layout.fragment_microcontroller_tabs, container, false)
 
@@ -103,6 +106,12 @@ class MicroControllerFragment: Fragment() {
                 }
                 true
             }
+            R.id.action_workflows -> {
+//                var intent = Intent(context, WorkflowExpandableListActivity::class.java)
+//                requireActivity().startActivity(intent)
+                (activity as MainActivity).navigateToWorkflows()
+                true
+            }
             R.id.action_logout -> {
                 (activity as MainActivity).logout()
                 return true
@@ -112,9 +121,10 @@ class MicroControllerFragment: Fragment() {
     }
 
     override fun onResume() {
-        Log.d(TAG, "onResume called!")
-        requireActivity().toolbar.title = controllerPreferences.getString(CONFIG_FARM_NAME_KEY, "undefined farm name")
         super.onResume()
+        Log.d(TAG, "onResume called!")
+        val mainActivity = requireActivity() as MainActivity
+        mainActivity.toolbar.title = controllerPreferences.getString(CONFIG_FARM_NAME_KEY, "undefined farm name")
     }
 
     override fun onDestroy() {

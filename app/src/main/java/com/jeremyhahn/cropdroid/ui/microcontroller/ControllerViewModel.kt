@@ -119,7 +119,7 @@ class ControllerViewModel(cropDroidAPI: CropDroidAPI, controllerType: String) : 
         }
         for(i in state.channels) {
             for(channel in channels) {
-                if(channel.channelId == i) {
+                if(channel.channelId == i.toLong()) {
                     channel.value = i
                     _models.add(MicroControllerRecyclerModel(MicroControllerRecyclerModel.CHANNEL_TYPE, null, channel)
                     )
@@ -147,7 +147,7 @@ class ControllerViewModel(cropDroidAPI: CropDroidAPI, controllerType: String) : 
         }
         for(channel in channels) {
             for((k, v)  in delta.channels) {
-                if(channel.channelId == k) {
+                if(channel.channelId == k.toLong()) {
                     channel.value = v
                     break
                 }

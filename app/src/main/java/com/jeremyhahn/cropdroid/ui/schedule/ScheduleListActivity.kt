@@ -97,16 +97,19 @@ class ScheduleListActivity : AppCompatActivity(), ScheduleSelectionListener {
         }
     }
 
+    /**
+     * Called by the sublime date picker component once a schedule has been configured.
+     */
     override fun onScheduleSelected(schedule: Schedule) {
         schedule.channelId = channelId
         cropDroidAPI.createSchedule(schedule, object: Callback {
             override fun onFailure(call: Call, e: IOException) {
-                Log.d("ConditionListActivity.onFailure", "onFailure response: " + e!!.message)
+                Log.d("ScheduleListActivity.onScheduleSelected", "onFailure response: " + e!!.message)
                 return
             }
             override fun onResponse(call: Call, response: okhttp3.Response) {
                 val responseBody = response.body().string()
-                Log.d("ConditionListActivity.onResponse", responseBody)
+                Log.d("ScheduleListActivity.onScheduleSelected", responseBody)
                 viewModel.getSchedule()
             }
         })
@@ -115,12 +118,12 @@ class ScheduleListActivity : AppCompatActivity(), ScheduleSelectionListener {
     fun deleteSchedule(schedule: Schedule) {
         cropDroidAPI.deleteSchedule(schedule, object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                Log.d("ConditionListActivity.onFailure", "onFailure response: " + e!!.message)
+                Log.d("ScheduleListActivity.deleteSchedule", "onFailure response: " + e!!.message)
                 return
             }
             override fun onResponse(call: Call, response: okhttp3.Response) {
                 val responseBody = response.body().string()
-                Log.d("ConditionListActivity.onResponse", responseBody)
+                Log.d("ScheduleListActivity.deleteSchedule", responseBody)
                 viewModel.getSchedule()
             }
         })

@@ -27,17 +27,10 @@ import java.util.*
 
 class ConditionDialogFragment(cropDroidAPI: CropDroidAPI, condition: Condition, channelId: Long, dialogHandler: ConditionDialogHandler) : DialogFragment() {
 
-    private val handler: ConditionDialogHandler
-    private val condition: Condition
-    private val channelId: Long
-    private val cropDroidAPI: CropDroidAPI
-
-    init {
-        this.handler = dialogHandler
-        this.condition = condition
-        this.channelId = channelId
-        this.cropDroidAPI = cropDroidAPI
-    }
+    private val handler: ConditionDialogHandler = dialogHandler
+    private val condition: Condition = condition
+    private val channelId: Long = channelId
+    private val cropDroidAPI: CropDroidAPI = cropDroidAPI
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         super.onCreateDialog(savedInstanceState)
@@ -51,7 +44,7 @@ class ConditionDialogFragment(cropDroidAPI: CropDroidAPI, condition: Condition, 
         val dialogView: View = inflater.inflate(R.layout.dialog_condition, null)
 
         // Populate metric spinner
-        val metricArray: MutableList<String> = java.util.ArrayList()
+        val metricArray: MutableList<String> = ArrayList()
         val metricAdapter = ArrayAdapter<String>(requireActivity(), android.R.layout.simple_spinner_item, metricArray)
         metricAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         val metricSpinner = dialogView.findViewById<View>(R.id.metricSpinner) as Spinner
@@ -120,14 +113,14 @@ class ConditionDialogFragment(cropDroidAPI: CropDroidAPI, condition: Condition, 
                     val display = controller.type.capitalize()
                     controllerArray.add(display)
                     controllerMap[i.toLong()] = controller
-                    if(condition.controllerType.isEmpty()) {
-                        if(controller.type == condition.controllerType) {
+                    if(condition.deviceType.isEmpty()) {
+                        if(controller.type == condition.deviceType) {
                             activity!!.runOnUiThread{
                                 controllerSpinner.setSelection(controllerAdapter.getPosition(display))
                             }
                         }
                     } else {
-                        if(controller.type == condition.controllerType) {
+                        if(controller.type == condition.deviceType) {
                             activity!!.runOnUiThread{
                                 controllerSpinner.setSelection(controllerAdapter.getPosition(display))
                             }
@@ -172,7 +165,7 @@ class ConditionDialogFragment(cropDroidAPI: CropDroidAPI, condition: Condition, 
             val threshold = _conditionValue.text.toString()
 
             handler.onConditionDialogApply(
-                ConditionConfig(condition.id, selectedMetric!!.id, channelId, comparisonOperator, threshold.toDouble()))
+                ConditionConfig(condition.id, selectedMetric!!.id, 0, channelId, comparisonOperator, threshold.toDouble()))
         }
         d.setNegativeButton("Cancel") { dialogInterface, i ->
         }

@@ -22,7 +22,7 @@ class ScheduleViewModel(cropDroidAPI: CropDroidAPI, channelId: Long) : ViewModel
     }
 
     fun getSchedule() {
-        cropDroidAPI.getSchedule(channelId, object : Callback {
+        cropDroidAPI.getSchedules(channelId, object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 Log.d("ScheduleViewModel.getSchedule()", "onFailure response: " + e!!.message)
                 return

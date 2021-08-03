@@ -33,14 +33,17 @@ import com.jeremyhahn.cropdroid.ui.microcontroller.ControllerFragment
 import com.jeremyhahn.cropdroid.ui.microcontroller.ControllerViewModel
 import com.jeremyhahn.cropdroid.ui.microcontroller.ControllerViewModelFactory
 import com.jeremyhahn.cropdroid.ui.microcontroller.MicroControllerFragment
+import com.jeremyhahn.cropdroid.ui.workflow.WorkflowViewModel
+import com.jeremyhahn.cropdroid.ui.workflow.WorkflowViewModelFactory
 import com.jeremyhahn.cropdroid.utils.Preferences
 import java.util.concurrent.ConcurrentHashMap
 
 class MainActivity : AppCompatActivity() {
 
-    val controllerViewModels: ConcurrentHashMap<String, ControllerViewModel>
-    val controllerFragments: ConcurrentHashMap<String, ControllerFragment>
-    val microcontrollerFragment: MicroControllerFragment
+    var workflowsViewModel: WorkflowViewModel? = null
+    val controllerViewModels: ConcurrentHashMap<String, ControllerViewModel> = ConcurrentHashMap()
+    val controllerFragments: ConcurrentHashMap<String, ControllerFragment> = ConcurrentHashMap()
+    val microcontrollerFragment: MicroControllerFragment = MicroControllerFragment()
 
     lateinit var connection: Connection
     lateinit var cropDroidAPI: CropDroidAPI
@@ -51,12 +54,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var navController: NavController
     private lateinit var drawer: DrawerLayout
     private lateinit var toolbar: Toolbar
-
-    init {
-        controllerViewModels = ConcurrentHashMap()
-        controllerFragments = ConcurrentHashMap()
-        microcontrollerFragment = MicroControllerFragment()
-    }
 
     fun createConstraints() = Constraints.Builder()
         .setRequiredNetworkType(NetworkType.CONNECTED) // other values(NOT_REQUIRED, UNMETERED (if connected to wifi), NOT_ROAMING, METERED)
@@ -126,6 +123,10 @@ class MainActivity : AppCompatActivity() {
         navController.navigate(R.id.nav_microcontroller_tabs)
     }
 
+    fun navigateToWorkflows() {
+        navController.navigate(R.id.nav_workflows)
+    }
+
     fun navigateToHome() {
         navController.navigate(R.id.nav_connections)
     }
@@ -189,19 +190,10 @@ class MainActivity : AppCompatActivity() {
 
         cropDroidAPI = CropDroidAPI(connection, sharedPreferences)
 
+        workflowsViewModel = ViewModelProvider(ViewModelStore(), WorkflowViewModelFactory(cropDroidAPI)).get(WorkflowViewModel::class.java)
+
         configManager = ConfigManager(this, sharedPreferences)
         configManager.listen(farmId)
-        //configManager.sync()
-
-        /*
-        runBlocking {
-            val job = GlobalScope.async {
-                waitForReply(orgId)
-            }
-            delay(500) // 3 seconds
-            job.cancelAndJoin()
-            AppError(applicationContext).toast("Timed out contacting serverConnection: ${cropDroidAPI.controller.hostname}")
-        }*/
 
         for(i in 10 downTo 0) {
             Log.d("MainActivity", "Waiting for configuration reply from serverConnection...")
@@ -254,6 +246,8 @@ class MainActivity : AppCompatActivity() {
         if(redraw && microcontrollerFragment.isAdded) {
             microcontrollerFragment.configureTabs(this)
         }
+
+        workflowsViewModel!!.workflows.postValue(farm.workflows)
     }
 
     @Synchronized fun update(farmState: FarmState) {

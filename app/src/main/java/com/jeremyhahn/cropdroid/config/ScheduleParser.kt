@@ -36,6 +36,7 @@ class ScheduleParser {
                 Log.d("ScheduleParser.parse", jsonSchedule.toString())
 
                 val id = jsonSchedule.getLong("id")
+                val workflowId = if(jsonSchedule.isNull("workflow_id")) jsonSchedule.getLong("workflow_id") else jsonSchedule.getLong("workflow_id")
                 val channelId = if(jsonSchedule.isNull("channel_id")) jsonSchedule.getLong("channelId") else jsonSchedule.getLong("channel_id")
                 val startDate = jsonSchedule.getString("startDate")
                 val endDate = jsonSchedule.getString("endDate")
@@ -69,7 +70,7 @@ class ScheduleParser {
                 }
 
                 schedules.add(
-                    Schedule(id, channelId, startCalendar, endCalendar, frequency, interval, count, days)
+                    Schedule(id, workflowId, channelId, startCalendar, endCalendar, frequency, interval, count, days)
                 )
             }
             return schedules

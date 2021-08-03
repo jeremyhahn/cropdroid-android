@@ -163,5 +163,10 @@ class Constants {
         const val SECONDS_IN_YEAR = 31557600
 
         const val ErrNoControllerState = "No controller state"
+
+        const val WORKFLOW_STATE_READY     = 0
+        const val WORKFLOW_STATE_EXECUTING = 1
+        const val WORKFLOW_STATE_COMPLETED = 2
+        const val WORKFLOW_STATE_ERROR     = 3
     }
 }

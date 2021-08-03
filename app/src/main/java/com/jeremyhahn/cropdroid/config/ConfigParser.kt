@@ -12,6 +12,10 @@ import com.jeremyhahn.cropdroid.model.*
 import com.jeremyhahn.cropdroid.utils.SmtpParser
 import org.json.JSONArray
 import org.json.JSONObject
+import java.lang.StringBuilder
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 class ConfigParser {
 
@@ -100,7 +104,9 @@ class ConfigParser {
                 val roles = ArrayList<String>(0)
                 roles.add("admin")
 
-                farms.add(Farm(id, orgId, mode, name, interval, timezone, smtp, controllers, roles))
+                val workflows = WorkflowParser.parse(jsonFarm.getJSONArray("workflows"))
+
+                farms.add(Farm(id, orgId, mode, name, interval, timezone, smtp, controllers, roles, workflows))
             }
             return farms
         }
@@ -133,8 +139,8 @@ class ConfigParser {
                 //val enabled = jsonChannel.getBoolean("enable")
                 //val notify = jsonChannel.getBoolean("notify")
                 //val uri = jsonChannel.getString("uri")
-                //val hardwareVersion = jsonChannel.getString("hardwareVersion")
-                //val firmwareVersion = jsonChannel.getString("firmwareVersion")
+                val hardwareVersion = jsonChannel.getString("hwVersion")
+                val firmwareVersion = jsonChannel.getString("fwVersion")
                 val metrics =
                     MetricParser.parse(
                         jsonChannel.getJSONArray("metrics")
@@ -143,11 +149,63 @@ class ConfigParser {
                     ChannelParser.parse(
                         jsonChannel.getJSONArray("channels")
                     )
-                //controllers.add(Controller(id, orgId, type, description, enabled, notify, uri, hardwareVersion, firmwareVersion, metrics, channels))
-                //controllers.add(Controller(id, orgId, type, description, hardwareVersion, firmwareVersion, configs, metrics, channels))
-                controllers.add(Controller(id, type, description, "", "", configs, metrics, channels))
+                controllers.add(Controller(id, type, description, hardwareVersion, firmwareVersion, configs, metrics, channels))
             }
             return controllers
         }
+//
+//        fun parseWorkflows(jsonWorkflows: JSONArray): ArrayList<Workflow> {
+//
+//            var workflows = ArrayList<Workflow>(jsonWorkflows.length())
+//            for (i in 0..jsonWorkflows.length() - 1) {
+//
+//                val jsonWorkflow = jsonWorkflows.getJSONObject(i)
+//                Log.d("ConfigParser.parseWorkflows", jsonWorkflows.toString())
+//
+//                val id = jsonWorkflow.getLong("id")
+//                val farmId = jsonWorkflow.getLong("farm_id")
+//                val name = jsonWorkflow.getString("name")
+//                //val conditions = jsonWorkflow.getJSONObject("conditions")
+//                //val schedules = jsonWorkflow.getJSONObject("schedules")
+//                val steps = parseWorkflowSteps(jsonWorkflow.getJSONArray("steps"))
+//
+//                val formatter = SimpleDateFormat(Constants.DATE_FORMAT_RFC3339)
+//                var lastCompletedCalendar: Calendar? = null
+//                if(!jsonWorkflow.isNull("lastCompleted")) {
+//                    val lastCompleted = jsonWorkflow.getString("lastCompleted")
+//                    lastCompletedCalendar = Calendar.getInstance()
+//                    try {
+//                        lastCompletedCalendar.time = formatter.parse(lastCompleted)
+//                    } catch (e: ParseException) {
+//                        Log.e("ConfigParser.parseWorkflows", "lastCompleted=" + lastCompleted + ", error=" + e.message)
+//                    }
+//                }
+//
+//                workflows.add(Workflow(id, farmId, name, ArrayList(), ArrayList(), steps, lastCompletedCalendar))
+//            }
+//            return workflows
+//        }
+//
+//        fun parseWorkflowSteps(jsonWorkflowSteps: JSONArray): ArrayList<WorkflowStep> {
+//
+//            var workflowSteps = ArrayList<WorkflowStep>(jsonWorkflowSteps.length())
+//            for (i in 0..jsonWorkflowSteps.length() - 1) {
+//
+//                val jsonWorkflowStep = jsonWorkflowSteps.getJSONObject(i)
+//                Log.d("ConfigParser.parseWorkflowSteps", jsonWorkflowStep.toString())
+//
+//                val id = jsonWorkflowStep.getLong("id")
+//                val workflowId = jsonWorkflowStep.getLong("workflow_id")
+//                val deviceId = jsonWorkflowStep.getLong("device_id")
+//                val channelId = jsonWorkflowStep.getLong("channel_id")
+//                val webhook = jsonWorkflowStep.getString("webhook")
+//                val duration = jsonWorkflowStep.getInt("duration")
+//                val wait = jsonWorkflowStep.getInt("wait")
+//                val state = jsonWorkflowStep.getInt("state")
+//
+//                workflowSteps.add(WorkflowStep(id, workflowId, deviceId, channelId, webhook, duration, wait, state))
+//            }
+//            return workflowSteps
+//        }
     }
 }

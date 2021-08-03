@@ -37,6 +37,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
     val IAP_ENDPOINT: String
     val METRICS_ENDPOINT: String
     val SCHEDULE_ENDPOINT: String
+    val WORKFLOW_ENDPOINT: String
 
     init {
         if(preferences != null) {
@@ -68,6 +69,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         CHANNEL_ENDPOINT = FARM_ENDPOINT.plus("/channels")
         ALGORITHMS_ENDPOINT = FARM_ENDPOINT.plus("/algorithms")
         //CONTROLLER_ENDPOINT = FARM_ENDPOINT.plus("/servers")
+        WORKFLOW_ENDPOINT = FARM_ENDPOINT.plus("/workflows")
         GOOGLE_ENDPOINT = VERSIONED_ENDPOINT.plus("/google")
     }
 
@@ -99,7 +101,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         doGet(DEVICES_ENDPOINT.plus("/").plus(serverType).plus("/view"), args, callback)
     }
 
-    fun timerSwitch(serverType: String, channelId: Int, seconds: Int, callback: Callback) {
+    fun timerSwitch(serverType: String, channelId: Long, seconds: Int, callback: Callback) {
         val resource = DEVICES_ENDPOINT.plus("/").plus(serverType)
         var args = ArrayList<String>(4)
         args.add("timerSwitch")
@@ -108,7 +110,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         doGet(resource, args, callback)
     }
 
-    fun switch(serverType: String, channelId: Int, state: Boolean, callback: Callback) {
+    fun switch(serverType: String, channelId: Long, state: Boolean, callback: Callback) {
         val resource = DEVICES_ENDPOINT.plus("/").plus(serverType)
         var state = if(state) "1" else "0"
         var args = ArrayList<String>(4)
@@ -136,6 +138,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
     fun createCondition(condition: ConditionConfig, callback: Callback) {
         Log.d("CropDropAPI.createCondition", "condition="+condition)
         var json = JSONObject()
+        json.put("workflow_id", condition.workflowId)
         json.put("channel_id", condition.channelId)
         json.put("metric_id", condition.metricId)
         json.put("comparator", condition.comparator)
@@ -147,6 +150,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         Log.d("CropDropAPI.createCondition", "condition="+condition)
         var json = JSONObject()
         json.put("id", condition.id)
+        json.put("workflow_id", condition.workflowId)
         json.put("channelId", condition.channelId)
         json.put("metricId", condition.metricId)
         json.put("comparator", condition.comparator)
@@ -161,8 +165,8 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         doDelete(CONDITION_ENDPOINT, args, callback)
     }
 
-    fun getSchedule(channelId: Long, callback: Callback) {
-        var args = ArrayList<String>(1)
+    fun getSchedules(channelId: Long, callback: Callback) {
+        var args = ArrayList<String>(2)
         args.add("channel")
         args.add(channelId.toString())
         doGet(SCHEDULE_ENDPOINT, args, callback)
@@ -179,6 +183,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
 
         var json = JSONObject()
         json.put("id", schedule.id)
+        json.put("workflow_id", schedule.workflowId)
         json.put("channel_id", schedule.channelId)
         json.put("startDate", formatter.format(schedule.startDate.time))
         if(schedule.endDate != null) {
@@ -203,6 +208,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
 
         var json = JSONObject()
         json.put("id", schedule.id)
+        json.put("workflow_id", schedule.workflowId)
         json.put("channel_id", schedule.channelId)
         json.put("startDate", formatter.format(schedule.startDate.time))
         if(schedule.endDate != null) {
@@ -221,6 +227,95 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         val args = ArrayList<String>(1)
         args.add(schedule.id.toString())
         doDelete(SCHEDULE_ENDPOINT, args, callback)
+    }
+
+    fun getWorkflows(callback: Callback) {
+        var args = ArrayList<String>(0)
+        doGet(WORKFLOW_ENDPOINT, args, callback)
+    }
+
+    fun getWorkflowsView(callback: Callback) {
+        var args = ArrayList<String>(0)
+        args.add("view")
+        doGet(WORKFLOW_ENDPOINT, args, callback)
+    }
+
+    fun createWorkflow(workflow: Workflow, callback: Callback) {
+        Log.d("CropDropAPI.createWorkflow", "workflow="+workflow)
+        var json = JSONObject()
+        json.put("farm_id", workflow.farmId)
+        json.put("name", workflow.name)
+        //json.put("conditions", workflow.conditions)
+        //json.put("schedules", workflow.schedules)
+        json.put("steps", workflow.steps)
+        doPost(WORKFLOW_ENDPOINT, json, callback)
+    }
+
+    fun updateWorkflow(workflow: Workflow, callback: Callback) {
+        Log.d("CropDropAPI.createWorkflow", "workflow="+workflow)
+        var json = JSONObject()
+        json.put("id", workflow.id)
+        json.put("farm_id", workflow.farmId)
+        json.put("name", workflow.name)
+        //json.put("conditions", workflow.conditions)
+        //json.put("schedules", workflow.schedules)
+        //json.put("steps", workflow.steps)
+        doPut(WORKFLOW_ENDPOINT.plus("/").plus(workflow.id), json, callback)
+    }
+
+    fun deleteWorkflow(workflow: Workflow, callback: Callback) {
+        Log.d("CropDropAPI.deleteWorkflow", "workflow="+workflow)
+        val args = ArrayList<String>(1)
+        args.add(workflow.id.toString())
+        doDelete(WORKFLOW_ENDPOINT, args, callback)
+    }
+
+    fun createWorkflowStep(workflowStep: WorkflowStep, callback: Callback) {
+        Log.d("CropDropAPI.createWorkflowStep", "workflowStep="+workflowStep)
+        var json = JSONObject()
+        json.put("workflow_id", workflowStep.workflowId)
+        json.put("device_id", workflowStep.deviceId)
+        json.put("channel_id", workflowStep.channelId)
+        json.put("webhook", workflowStep.webhook)
+        json.put("duration", workflowStep.duration)
+        json.put("wait", workflowStep.wait)
+        val createEndpoint = WORKFLOW_ENDPOINT.plus("/").
+            plus(workflowStep.workflowId).plus("/steps")
+        doPost(createEndpoint, json, callback)
+    }
+
+    fun updateWorkflowStep(workflowStep: WorkflowStep, callback: Callback) {
+        Log.d("CropDropAPI.createWorkflowStep", "workflowStep="+workflowStep)
+        var json = JSONObject()
+        json.put("id", workflowStep.id)
+        json.put("workflow_id", workflowStep.workflowId)
+        json.put("device_id", workflowStep.deviceId)
+        json.put("channel_id", workflowStep.channelId)
+        json.put("webhook", workflowStep.webhook)
+        json.put("duration", workflowStep.duration)
+        json.put("wait", workflowStep.wait)
+        //json.put("conditions", workflow.conditions)
+        //json.put("schedules", workflow.schedules)
+        //json.put("steps", workflow.steps)
+        val updateEndpoint = WORKFLOW_ENDPOINT.plus("/").
+            plus(workflowStep.workflowId).plus("/steps/").plus(workflowStep.id)
+        doPut(updateEndpoint, json, callback)
+    }
+
+    fun deleteWorkflowStep(workflowStep: WorkflowStep, callback: Callback) {
+        Log.d("CropDropAPI.deleteWorkflowStep", "workflowStep="+workflowStep)
+        val args = ArrayList<String>(0)
+        val deleteEndpoint = WORKFLOW_ENDPOINT.plus("/")
+            .plus(workflowStep.workflowId).plus("/steps/").plus(workflowStep.id)
+        doDelete(deleteEndpoint, args, callback)
+    }
+
+    fun runWorkflow(workflow: Workflow, callback: Callback) {
+        Log.d("CropDropAPI.runWorkflow", "workflow="+workflow)
+        val args = ArrayList<String>(0)
+        args.add(workflow.id.toString())
+        args.add("run")
+        doGet(WORKFLOW_ENDPOINT, args, callback)
     }
 
     fun setMetricConfig(metric: Metric, callback: Callback) {
@@ -280,8 +375,14 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         doGet(DEVICES_ENDPOINT, args, callback)
     }
 
-    fun getMetrics(serverId: Long, callback: Callback) {
-        val endpoint = METRICS_ENDPOINT.plus("/").plus(serverId)
+    fun getMetrics(deviceId: Long, callback: Callback) {
+        val endpoint = METRICS_ENDPOINT.plus("/").plus(deviceId)
+        val args = ArrayList<String>()
+        doGet(endpoint, args, callback)
+    }
+
+    fun getChannels(deviceId: Long, callback: Callback) {
+        val endpoint = CHANNEL_ENDPOINT.plus("/").plus(deviceId)
         val args = ArrayList<String>()
         doGet(endpoint, args, callback)
     }

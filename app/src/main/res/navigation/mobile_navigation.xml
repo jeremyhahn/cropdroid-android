@@ -47,6 +47,13 @@
     </fragment>
 
     <fragment
+        android:id="@+id/nav_workflows"
+        android:name="com.jeremyhahn.cropdroid.ui.workflow.WorkflowsFragment"
+        android:label="@string/menu_workflows"
+        tools:layout="@layout/fragment_workflows">
+    </fragment>
+
+    <fragment
         android:id="@+id/nav_quit"
         android:name="com.jeremyhahn.cropdroid.QuitFragment"
         android:label="@string/menu_quit"
