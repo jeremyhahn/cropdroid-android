@@ -31,8 +31,8 @@ class Preferences(context: Context) {
         return getDefaultPreferences().getLong("controller_server", 0L)
     }
 
-    fun currentOrgId() : Int {
-        return getDefaultPreferences().getInt(CONFIG_ORG_ID_KEY, 0)
+    fun currentOrgId() : Long {
+        return getDefaultPreferences().getLong(CONFIG_ORG_ID_KEY, 0)
     }
 
     fun currentFarmId() : Long {
@@ -43,7 +43,7 @@ class Preferences(context: Context) {
         return PreferenceManager.getDefaultSharedPreferences(context)
     }
 
-    fun set(controller: Connection, user: User?, orgId: Int, farmId: Long) {
+    fun set(controller: Connection, user: User?, orgId: Long, farmId: Long) {
         val prefs = getDefaultPreferences()
         val editor = prefs.edit()
         editor.putString(PREF_KEY_CONTROLLER_HOSTNAME, controller.hostname)
@@ -51,7 +51,7 @@ class Preferences(context: Context) {
             editor.putString(PREF_KEY_USER_ID, user.id)
             editor.putString(PREF_KEY_JWT, user.token)
         }
-        editor.putInt(CONFIG_ORG_ID_KEY, orgId)
+        editor.putLong(CONFIG_ORG_ID_KEY, orgId)
         editor.putLong(CONFIG_FARM_ID_KEY, farmId)
         if(!editor.commit()) {
             val message = "AppError committing controller to DefaultSharedPreferences"

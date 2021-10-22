@@ -20,7 +20,7 @@ class AlgorithmParser {
 
                 Log.d("AlgorithmParser.parse", jsonAlgorithm.toString())
 
-                val id = jsonAlgorithm.getInt("id")
+                val id = jsonAlgorithm.getLong("id")
                 val name = jsonAlgorithm.getString("name")
                 algorithms.add(Algorithm(id, name))
             }

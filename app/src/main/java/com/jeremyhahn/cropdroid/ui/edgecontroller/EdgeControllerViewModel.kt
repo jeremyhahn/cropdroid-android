@@ -3,12 +3,12 @@ package com.jeremyhahn.cropdroid.ui.room
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.jeremyhahn.cropdroid.db.MasterControllerRepository
+import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
 import com.jeremyhahn.cropdroid.model.Connection
 
-class EdgeControllerViewModel(repository: MasterControllerRepository) : ViewModel() {
+class EdgeControllerViewModel(repository: EdgeDeviceRepository) : ViewModel() {
 
-    private val repository: MasterControllerRepository
+    private val repository: EdgeDeviceRepository
     val controllers = MutableLiveData<ArrayList<Connection>>()
 
     init {

@@ -58,10 +58,11 @@ class ConfigManager(val mainActivity: MainActivity, val sharedPreferences: Share
     }
     */
 
-    fun listen(farmId: Long) {
+    fun listen(farmId: Long) : WebSocket? {
         this.farmId = farmId
         val websocket = mainActivity.cropDroidAPI.createWebsocket(mainActivity, "/farmticker/$farmId", this)
         if(websocket != null) websockets[websocket] = mainActivity.connection
+        return websocket
     }
 
     fun getPreferences() : SharedPreferences {

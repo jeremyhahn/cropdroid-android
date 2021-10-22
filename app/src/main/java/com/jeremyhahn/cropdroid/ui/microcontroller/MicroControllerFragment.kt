@@ -14,7 +14,6 @@ import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ROOM_VIDEO_KEY
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.TabAdapter
-import com.jeremyhahn.cropdroid.model.Connection
 import com.jeremyhahn.cropdroid.utils.Preferences
 import kotlinx.android.synthetic.main.app_bar_navigation.*
 
@@ -47,7 +46,7 @@ class MicroControllerFragment: Fragment() {
 
         videoUrl = controllerPreferences.getString(CONFIG_ROOM_VIDEO_KEY, "")
 
-        //controller = MasterControllerRepository(ctx).get(preferences.currentController())
+        //controller = EdgeDeviceRepository(ctx).get(preferences.currentController())
         //controller = mainActivity.connection
 
         //fragmentActivity.toolbar.title = controllerPreferences.getString(CONFIG_FARM_NAME_KEY, "undefined")

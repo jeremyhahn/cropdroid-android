@@ -7,7 +7,7 @@ import androidx.preference.PreferenceFragmentCompat
 import com.jeremyhahn.cropdroid.Constants
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
-import com.jeremyhahn.cropdroid.db.MasterControllerRepository
+import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
 import com.jeremyhahn.cropdroid.model.Connection
 import com.jeremyhahn.cropdroid.utils.Preferences
 import okhttp3.Call
@@ -35,7 +35,7 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
         sharedPreferences = preferences.getControllerPreferences()
         sharedPreferences.registerOnSharedPreferenceChangeListener(this)
 
-        controller = MasterControllerRepository(ctx).get(hostname)!!
+        controller = EdgeDeviceRepository(ctx).get(hostname)!!
         cropdroid = CropDroidAPI(controller, sharedPreferences)
 
         Log.d("SettingsActivity.onCreate", "controller=" + controller.toString())

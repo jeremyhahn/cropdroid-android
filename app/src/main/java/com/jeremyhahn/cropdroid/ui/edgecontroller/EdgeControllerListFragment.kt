@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
-import com.jeremyhahn.cropdroid.db.MasterControllerRepository
+import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
 import com.jeremyhahn.cropdroid.model.Connection
 import com.jeremyhahn.cropdroid.ui.edgecontroller.EdgeControllerRecyclerAdapter.OnMasterListener
 import com.jeremyhahn.cropdroid.ui.room.EdgeControllerViewModel
@@ -37,7 +37,7 @@ class EdgeControllerListFragment : Fragment(), OnMasterListener {
             (activity as MainActivity).navigateToNewEdgeController()
         }
 
-        val repository = MasterControllerRepository(fragmentActivity.applicationContext)
+        val repository = EdgeDeviceRepository(fragmentActivity.applicationContext)
         viewModel = ViewModelProviders.of(this, EdgeControllerViewModelFactory(repository)).get(EdgeControllerViewModel::class.java)
 
         adapter = EdgeControllerRecyclerAdapter(controllers, this, fragmentActivity, repository, viewModel)

@@ -15,7 +15,7 @@ import com.android.billingclient.api.*
 import com.jeremyhahn.cropdroid.AppError
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
-import com.jeremyhahn.cropdroid.db.MasterControllerRepository
+import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
 import com.jeremyhahn.cropdroid.utils.Preferences
 import okhttp3.Call
 import okhttp3.Callback
@@ -39,7 +39,7 @@ class StoreFragment : Fragment(), PurchasesUpdatedListener {
 
         ctx = requireActivity().applicationContext
         
-        val fragmentView = inflater.inflate(R.layout.activity_store, container, false)
+        val fragmentView = inflater.inflate(R.layout.fragment_store, container, false)
 
         val preferences = Preferences(ctx)
         val currentController = preferences.currentController()
@@ -48,7 +48,7 @@ class StoreFragment : Fragment(), PurchasesUpdatedListener {
             return fragmentView
         }
 
-        val repo =  MasterControllerRepository(ctx)
+        val repo =  EdgeDeviceRepository(ctx)
         val controller = repo.get(currentController)!!
         cropDroidAPI = CropDroidAPI(controller, preferences.getDefaultPreferences())
         billingClient = BillingClient.newBuilder(ctx).setListener(this).enablePendingPurchases().build()

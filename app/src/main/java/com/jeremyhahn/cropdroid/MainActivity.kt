@@ -25,7 +25,7 @@ import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.material.navigation.NavigationView
 import com.jeremyhahn.cropdroid.config.ConfigManager
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
-import com.jeremyhahn.cropdroid.db.MasterControllerRepository
+import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
 import com.jeremyhahn.cropdroid.model.*
 import com.jeremyhahn.cropdroid.service.NotificationService
 import com.jeremyhahn.cropdroid.ui.events.EventListFragment
@@ -36,6 +36,7 @@ import com.jeremyhahn.cropdroid.ui.microcontroller.MicroControllerFragment
 import com.jeremyhahn.cropdroid.ui.workflow.WorkflowViewModel
 import com.jeremyhahn.cropdroid.ui.workflow.WorkflowViewModelFactory
 import com.jeremyhahn.cropdroid.utils.Preferences
+import okhttp3.WebSocket
 import java.util.concurrent.ConcurrentHashMap
 
 class MainActivity : AppCompatActivity() {
@@ -44,6 +45,9 @@ class MainActivity : AppCompatActivity() {
     val controllerViewModels: ConcurrentHashMap<String, ControllerViewModel> = ConcurrentHashMap()
     val controllerFragments: ConcurrentHashMap<String, ControllerFragment> = ConcurrentHashMap()
     val microcontrollerFragment: MicroControllerFragment = MicroControllerFragment()
+    var farmWebSocket: WebSocket? = null
+    var orgId: Long = 0L
+    var user: User? = null
 
     lateinit var connection: Connection
     lateinit var cropDroidAPI: CropDroidAPI
@@ -66,6 +70,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         createConstraints()
+        preferences = Preferences(applicationContext)
 
         val googleAvail = GoogleApiAvailability.getInstance()
         val playServicesAvail = googleAvail.isGooglePlayServicesAvailable(this)
@@ -123,6 +128,22 @@ class MainActivity : AppCompatActivity() {
         navController.navigate(R.id.nav_microcontroller_tabs)
     }
 
+    fun navigateToFarms(connection: Connection, user: User, orgId: Long) {
+        this.connection = connection
+        this.user = user
+        this.orgId = orgId
+        preferences.set(connection, user, orgId, 0L)
+        navController.popBackStack()
+        navController.navigate(R.id.nav_farms)
+    }
+
+    fun navigateToFarms(connection: Connection) {
+        this.connection = connection
+        preferences.set(connection, user, orgId, 0L)
+        navController.popBackStack()
+        navController.navigate(R.id.nav_farms)
+    }
+
     fun navigateToWorkflows() {
         navController.navigate(R.id.nav_workflows)
     }
@@ -156,7 +177,7 @@ class MainActivity : AppCompatActivity() {
 
     fun logout() {
         connection.token = ""
-        MasterControllerRepository(this).updateController(connection)
+        EdgeDeviceRepository(this).updateController(connection)
 
         val editor = preferences.getControllerPreferences().edit()
         editor.remove("controller_id")
@@ -172,8 +193,78 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    fun login(connection: Connection) {
+//    fun login(connection: Connection) {
+//
+//        if(controllerFragments != null) {
+//            controllerFragments.clear()
+//        }
+//        if(controllerViewModels != null) {
+//            controllerViewModels.clear()
+//        }
+//
+//        this.connection = connection
+//        preferences = Preferences(applicationContext)
+//        val sharedPreferences = preferences.getDefaultPreferences()
+//
+//        val orgId = sharedPreferences.getLong(Constants.CONFIG_ORG_ID_KEY, 0)
+//        val farmId = sharedPreferences.getLong(Constants.CONFIG_FARM_ID_KEY, 0)
+//
+//        cropDroidAPI = CropDroidAPI(connection, sharedPreferences)
+//
+//        workflowsViewModel = ViewModelProvider(ViewModelStore(), WorkflowViewModelFactory(cropDroidAPI)).get(WorkflowViewModel::class.java)
+//
+//        configManager = ConfigManager(this, sharedPreferences)
+//        configManager.listen(farmId)
+//
+//        for(i in 10 downTo 0) {
+//            Log.d("MainActivity", "Waiting for configuration reply from serverConnection...")
+//            if(controllerViewModels.size > 0) break
+//            if(i == 0) {
+//                runOnUiThread(Runnable {
+//                    AppError(this).alert("Timed out contacting server: ${this.connection.hostname}", null, null)
+//                })
+//                return
+//            }
+//            Thread.sleep(500L)
+//        }
+//
+//        runOnUiThread(Runnable {
+//            if(orgId == 0L) {
+//                navigateToFarms(connection)
+//                //navigateToMicrocontroller()
+//            } else {
+//                navigateToOrganizations()
+//            }
+//        })
+//    }
 
+//    fun login(connection: Connection) {
+//
+//        this.connection = connection
+//        preferences = Preferences(applicationContext)
+//
+//        for(i in 10 downTo 0) {
+//            Log.d("MainActivity", "Waiting for configuration reply from serverConnection...")
+//            if(controllerViewModels.size > 0) break
+//            if(i == 0) {
+//                runOnUiThread(Runnable {
+//                    AppError(this).alert("Timed out contacting server: ${this.connection.hostname}", null, null)
+//                })
+//                return
+//            }
+//            Thread.sleep(500L)
+//        }
+//
+//        navigateToFarms()
+//    }
+
+    fun onSelectFarm(orgId: Long, farmId: Long) {
+        this.orgId = orgId
+
+        if(farmWebSocket != null) {
+            farmWebSocket!!.cancel()
+            farmWebSocket = null
+        }
         if(controllerFragments != null) {
             controllerFragments.clear()
         }
@@ -181,19 +272,15 @@ class MainActivity : AppCompatActivity() {
             controllerViewModels.clear()
         }
 
-        this.connection = connection
-        preferences = Preferences(applicationContext)
+        preferences.set(connection, user, orgId, farmId)
         val sharedPreferences = preferences.getDefaultPreferences()
-
-        val orgId = sharedPreferences.getInt(Constants.CONFIG_ORG_ID_KEY, 0)
-        val farmId = sharedPreferences.getLong(Constants.CONFIG_FARM_ID_KEY, 0)
 
         cropDroidAPI = CropDroidAPI(connection, sharedPreferences)
 
         workflowsViewModel = ViewModelProvider(ViewModelStore(), WorkflowViewModelFactory(cropDroidAPI)).get(WorkflowViewModel::class.java)
 
         configManager = ConfigManager(this, sharedPreferences)
-        configManager.listen(farmId)
+        farmWebSocket = configManager.listen(farmId)
 
         for(i in 10 downTo 0) {
             Log.d("MainActivity", "Waiting for configuration reply from serverConnection...")
@@ -208,7 +295,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         runOnUiThread(Runnable {
-            if(orgId == 0) {
+            if(orgId == 0L) {
                 navigateToMicrocontroller()
             } else {
                 navigateToOrganizations()
@@ -250,37 +337,37 @@ class MainActivity : AppCompatActivity() {
         workflowsViewModel!!.workflows.postValue(farm.workflows)
     }
 
-    @Synchronized fun update(farmState: FarmState) {
-        var redraw = false
-        for((controllerType, controllerState) in farmState.controllers) {
-            if(controllerType == "serverConnection") continue
-            var viewModel = controllerViewModels[controllerType]
-            if(viewModel == null) {
-                controllerFragments[controllerType] = ControllerFragment.newInstance(controllerType)
-                controllerViewModels[controllerType] = ViewModelProvider(ViewModelStore(), ControllerViewModelFactory(cropDroidAPI, controllerType)).get(ControllerViewModel::class.java)
-                redraw = true
-            }
-            viewModel!!.setState(controllerState)
-        }
-        if(redraw && microcontrollerFragment.isAdded) {
-            microcontrollerFragment.configureTabs(this)
-        }
-    }
-
-    @Synchronized fun update(controllerState: ControllerState) {
-        var redraw = false
-       if(controllerState.type == "serverConnection") return
-        var viewModel = controllerViewModels[controllerState.type]
-        if(viewModel == null) {
-            controllerFragments[controllerState.type] = ControllerFragment.newInstance(controllerState.type)
-            controllerViewModels[controllerState.type] = ViewModelProvider(ViewModelStore(), ControllerViewModelFactory(cropDroidAPI, controllerState.type)).get(ControllerViewModel::class.java)
-            redraw = true
-        }
-        viewModel!!.setState(controllerState)
-        if(redraw && microcontrollerFragment.isAdded) {
-            microcontrollerFragment.configureTabs(this)
-        }
-    }
+//    @Synchronized fun update(farmState: FarmState) {
+//        var redraw = false
+//        for((controllerType, controllerState) in farmState.controllers) {
+//            if(controllerType == "serverConnection") continue
+//            var viewModel = controllerViewModels[controllerType]
+//            if(viewModel == null) {
+//                controllerFragments[controllerType] = ControllerFragment.newInstance(controllerType)
+//                controllerViewModels[controllerType] = ViewModelProvider(ViewModelStore(), ControllerViewModelFactory(cropDroidAPI, controllerType)).get(ControllerViewModel::class.java)
+//                redraw = true
+//            }
+//            viewModel!!.setState(controllerState)
+//        }
+//        if(redraw && microcontrollerFragment.isAdded) {
+//            microcontrollerFragment.configureTabs(this)
+//        }
+//    }
+//
+//    @Synchronized fun update(controllerState: ControllerState) {
+//        var redraw = false
+//       if(controllerState.type == "serverConnection") return
+//        var viewModel = controllerViewModels[controllerState.type]
+//        if(viewModel == null) {
+//            controllerFragments[controllerState.type] = ControllerFragment.newInstance(controllerState.type)
+//            controllerViewModels[controllerState.type] = ViewModelProvider(ViewModelStore(), ControllerViewModelFactory(cropDroidAPI, controllerState.type)).get(ControllerViewModel::class.java)
+//            redraw = true
+//        }
+//        viewModel!!.setState(controllerState)
+//        if(redraw && microcontrollerFragment.isAdded) {
+//            microcontrollerFragment.configureTabs(this)
+//        }
+//    }
 
     @Synchronized fun updateDelta(controllerState: ControllerStateDelta) {
         var redraw = false

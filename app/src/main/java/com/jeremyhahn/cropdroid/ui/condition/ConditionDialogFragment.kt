@@ -165,7 +165,7 @@ class ConditionDialogFragment(cropDroidAPI: CropDroidAPI, condition: Condition, 
             val threshold = _conditionValue.text.toString()
 
             handler.onConditionDialogApply(
-                ConditionConfig(condition.id, selectedMetric!!.id, 0, channelId, comparisonOperator, threshold.toDouble()))
+                ConditionConfig(condition.id.toLong(), selectedMetric!!.id, 0, channelId, comparisonOperator, threshold.toDouble()))
         }
         d.setNegativeButton("Cancel") { dialogInterface, i ->
         }

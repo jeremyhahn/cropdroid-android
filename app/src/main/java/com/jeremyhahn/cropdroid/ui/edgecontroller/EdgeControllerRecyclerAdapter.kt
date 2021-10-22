@@ -9,17 +9,17 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.jeremyhahn.cropdroid.R
-import com.jeremyhahn.cropdroid.db.MasterControllerRepository
+import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
 import com.jeremyhahn.cropdroid.model.Connection
 import com.jeremyhahn.cropdroid.ui.room.EdgeControllerViewModel
 
 class EdgeControllerRecyclerAdapter(val controllers: ArrayList<Connection>,
-                                    val onMasterListener: OnMasterListener, val context: Context, val repository : MasterControllerRepository,
+                                    val onMasterListener: OnMasterListener, val context: Context, val repository : EdgeDeviceRepository,
                                     val viewModel: EdgeControllerViewModel) : RecyclerView.Adapter<EdgeControllerRecyclerAdapter.ViewHolder>() {
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val v = LayoutInflater.from(parent.context).inflate(R.layout.master_cardview, parent, false)
+        val v = LayoutInflater.from(parent.context).inflate(R.layout.edgedevice_cardview, parent, false)
         return ViewHolder(v, onMasterListener)
     }
 

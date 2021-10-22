@@ -16,7 +16,7 @@ import com.jeremyhahn.cropdroid.Constants
 import com.jeremyhahn.cropdroid.Constants.Companion.API_BASE
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
-import com.jeremyhahn.cropdroid.db.MasterControllerRepository
+import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
 import com.jeremyhahn.cropdroid.model.Connection
 import com.jeremyhahn.cropdroid.model.Notification
 import com.jeremyhahn.cropdroid.utils.JsonWebToken
@@ -99,7 +99,7 @@ class NotificationService : Service() {
     }
 
     fun startListeners() : Boolean {
-        var controllers = MasterControllerRepository(this).allControllers
+        var controllers = EdgeDeviceRepository(this).allControllers
 
         if(controllers.size <= 0) {
             Log.d("NotificationService.onStartCommand", "No controllers configured, aborting...")
@@ -135,7 +135,7 @@ class NotificationService : Service() {
     }
 
     fun stopService() {
-        var controllers = MasterControllerRepository(this).allControllers
+        var controllers = EdgeDeviceRepository(this).allControllers
         for(controller in controllers) {
             websockets[controller]!!.close(NORMAL_CLOSURE_STATUS, "EVENT_APP_CLOSE")
             websockets.remove(controller)
@@ -146,6 +146,13 @@ class NotificationService : Service() {
 
     fun createWebsocket(controller: Connection) {
         val jwt = JsonWebToken(applicationContext, controller)
+        jwt.parse()
+//        try {
+//            jwt.parse()
+//        }
+//        catch(e: MalformedJwtException) {
+//            return
+//        }
         for(org in jwt.organizations()) {
             for(farm in org.farms) {
                 try {
@@ -324,7 +331,7 @@ class NotificationService : Service() {
                 webSocket.cancel()
 
                 // Get latest controller config; may have changed since service started running
-                var controllers = MasterControllerRepository(applicationContext).allControllers
+                var controllers = EdgeDeviceRepository(applicationContext).allControllers
                 if(controllers.size <= 0) {
                     return
                 }

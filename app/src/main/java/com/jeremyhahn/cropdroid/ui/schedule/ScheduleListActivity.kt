@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
-import com.jeremyhahn.cropdroid.db.MasterControllerRepository
+import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
 import com.jeremyhahn.cropdroid.model.Connection
 import com.jeremyhahn.cropdroid.model.Schedule
 import com.jeremyhahn.cropdroid.utils.Preferences
@@ -52,7 +52,7 @@ class ScheduleListActivity : AppCompatActivity(), ScheduleSelectionListener {
 
         setTitle(channelName + " Schedule")
 
-        controller = MasterControllerRepository(this).get(hostname)!!
+        controller = EdgeDeviceRepository(this).get(hostname)!!
 
         cropDroidAPI = CropDroidAPI(controller, controllerPreferences)
         viewModel = ViewModelProviders.of(this, ScheduleViewModelFactory(cropDroidAPI, channelId)).get(ScheduleViewModel::class.java)

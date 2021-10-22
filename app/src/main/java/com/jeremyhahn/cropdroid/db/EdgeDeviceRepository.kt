@@ -5,9 +5,11 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import android.util.Log
 import com.jeremyhahn.cropdroid.Constants.Companion.DATABASE_NAME
 import com.jeremyhahn.cropdroid.model.Connection
 import com.jeremyhahn.cropdroid.utils.JsonWebToken
+import io.jsonwebtoken.MalformedJwtException
 
 private const val DATABASE_VERSION = 2
 private const val TABLE_SERVERS = "servers"
@@ -16,7 +18,7 @@ private const val KEY_SECURE = "secure"
 private const val KEY_TOKEN = "token"
 private const val KEY_PUBKEY = "pubkey"
 
-class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+class EdgeDeviceRepository(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
     var context : Context? = null
 
@@ -162,6 +164,14 @@ class MasterControllerRepository(context: Context) : SQLiteOpenHelper(context, D
                         null)
                     if(controller.token != "") {
                         controller.jwt = JsonWebToken(context!!, controller)
+//                        try {
+//                            controller.jwt = JsonWebToken(context!!, controller)
+//                        }
+//                        catch(e: MalformedJwtException) {
+//                            Log.e("EdgeDeviceRepository", e.message)
+//                            controller.token = ""
+//                            updateController(controller)
+//                        }
                     }
                     controllerList.add(controller)
                 } while (cursor.moveToNext())

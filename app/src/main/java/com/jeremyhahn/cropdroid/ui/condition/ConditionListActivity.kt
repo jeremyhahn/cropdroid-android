@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
-import com.jeremyhahn.cropdroid.db.MasterControllerRepository
+import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
 import com.jeremyhahn.cropdroid.model.Condition
 import com.jeremyhahn.cropdroid.model.ConditionConfig
 import com.jeremyhahn.cropdroid.model.Connection
@@ -53,7 +53,7 @@ class ConditionListActivity : AppCompatActivity(), ConditionDialogHandler {
 
         setTitle(channelName + " Condition")
 
-        controller = MasterControllerRepository(this).get(hostname)!!
+        controller = EdgeDeviceRepository(this).get(hostname)!!
 
         cropDroidAPI = CropDroidAPI(controller, controllerSharedPrefs)
 

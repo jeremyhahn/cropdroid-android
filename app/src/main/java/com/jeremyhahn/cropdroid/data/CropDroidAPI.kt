@@ -18,7 +18,7 @@ import java.text.SimpleDateFormat
 
 class CropDroidAPI(private val connection: Connection, preferences: SharedPreferences?) {
 
-    var orgId: Int = 0
+    var orgId: Long = 0
     var farmId: Long = 0
 
     val REST_ENDPOINT: String
@@ -32,16 +32,20 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
     //val CONTROLLER_ENDPOINT: String
     val DEVICES_ENDPOINT: String
     val EVENTS_ENDPOINT: String
+    val FARMS_ENDPOINT: String
     val FARM_ENDPOINT: String
     val GOOGLE_ENDPOINT: String
     val IAP_ENDPOINT: String
     val METRICS_ENDPOINT: String
     val SCHEDULE_ENDPOINT: String
     val WORKFLOW_ENDPOINT: String
+    val PROVISIONER_ENDPOINT : String
+    val PROVISION_ENDPOINT: String
+    val DEPROVISION_ENDPOINT: String
 
     init {
         if(preferences != null) {
-            orgId = preferences.getInt(CONFIG_ORG_ID_KEY, 0)
+            orgId = preferences.getLong(CONFIG_ORG_ID_KEY, 0)
             farmId = preferences.getLong(CONFIG_FARM_ID_KEY, 0)
         }
 
@@ -55,8 +59,8 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
 
         ORGANIZATION_ENDPOINT = VERSIONED_ENDPOINT.plus("/organizations/").plus(orgId)
 
-        //FARM_ENDPOINT = ORGANIZATION_ENDPOINT.plus("/farms/").plus(farmId)
-        FARM_ENDPOINT = VERSIONED_ENDPOINT.plus("/farms/").plus(farmId)
+        FARMS_ENDPOINT = VERSIONED_ENDPOINT.plus("/farms")
+        FARM_ENDPOINT = FARMS_ENDPOINT.plus("/").plus(farmId)
         DEVICES_ENDPOINT = FARM_ENDPOINT.plus("/devices")
 
         METRICS_ENDPOINT = FARM_ENDPOINT.plus("/metrics")
@@ -71,6 +75,9 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         //CONTROLLER_ENDPOINT = FARM_ENDPOINT.plus("/servers")
         WORKFLOW_ENDPOINT = FARM_ENDPOINT.plus("/workflows")
         GOOGLE_ENDPOINT = VERSIONED_ENDPOINT.plus("/google")
+        PROVISIONER_ENDPOINT = VERSIONED_ENDPOINT.plus("/provisioner")
+        PROVISION_ENDPOINT = PROVISIONER_ENDPOINT.plus("/provision")
+        DEPROVISION_ENDPOINT = PROVISIONER_ENDPOINT.plus("/deprovision")
     }
 
     fun verifyPurchase(purchase: Purchase, callback: Callback) {
@@ -161,7 +168,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
     fun deleteCondition(condition: ConditionConfig, callback: Callback) {
         Log.d("CropDropAPI.deleteCondition", "condition="+condition)
         val args = ArrayList<String>(1)
-        args.add(condition.id)
+        args.add(condition.id.toString())
         doDelete(CONDITION_ENDPOINT, args, callback)
     }
 
@@ -360,15 +367,34 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         doPut(CHANNEL_ENDPOINT, json, callback)
     }
 
-    fun getFarm(callback: Callback) {
+    fun getFarms(callback: Callback) {
         val args = ArrayList<String>()
-        doGet(FARM_ENDPOINT, args, callback)
+        doGet(FARMS_ENDPOINT, args, callback)
     }
 
-    fun getConfig(callback: Callback) {
-        val args = ArrayList<String>()
-        doGet(CONFIG_ENDPOINT, args, callback)
+    fun provision(orgId: Long, callback: Callback) {
+        Log.d("CropDropAPI.provision", "orgId="+orgId)
+        var json = JSONObject()
+        json.put("orgId", orgId)
+        doPost(PROVISION_ENDPOINT, json, callback)
     }
+
+    fun deprovision(farmId: Long, callback: Callback) {
+        Log.d("CropDropAPI.deprovision", "farmId="+farmId)
+        val args = ArrayList<String>(0)
+        args.add(farmId.toString())
+        doDelete(DEPROVISION_ENDPOINT, args, callback)
+    }
+
+//    fun getFarm(callback: Callback) {
+//        val args = ArrayList<String>()
+//        doGet(FARM_ENDPOINT, args, callback)
+//    }
+//
+//    fun getConfig(callback: Callback) {
+//        val args = ArrayList<String>()
+//        doGet(CONFIG_ENDPOINT, args, callback)
+//    }
 
     fun getDevices(callback: Callback) {
         val args = ArrayList<String>()
@@ -397,14 +423,20 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         doGet(PUBKEY_ENDPOINT, args, callback)
     }
 
-    fun login(username: String, password: String, callback: Callback) {
+    fun login(organizationName: String, username: String, password: String, callback: Callback) {
         if(username.isEmpty()) return fail(callback, "Username required")
         if(password.isEmpty()) return fail(callback, "Password required")
         var json = JSONObject()
+        json.put("orgName", organizationName)
         json.put("email", username)
         json.put("password", password)
         json.put("authType", 0)
         doPost(VERSIONED_ENDPOINT.plus("/login"), json, callback)
+    }
+
+    fun refreshToken(userId: Long, callback: Callback) {
+        var args = ArrayList<String>()
+        doGet(VERSIONED_ENDPOINT.plus("/login/refresh"), args, callback)
     }
 
     fun googleLogin(idToken: String, serverAuthCode: String, callback: Callback) {
@@ -415,10 +447,12 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         doPost(GOOGLE_ENDPOINT.plus("/login"), json, callback)
     }
 
-    fun register(username: String, password: String, callback: Callback) {
+    fun register(organizationName: String, username: String, password: String, callback: Callback) {
         if(username.isEmpty()) return fail(callback, "Username required")
         if(password.isEmpty()) return fail(callback, "Password required")
         var json = JSONObject()
+        //json.put("orgId", FNV.fnv1a_64(organizationName.toByteArray(Charsets.UTF_8)))
+        json.put("orgName", organizationName)
         json.put("email", username)
         json.put("password", password)
         doPost(VERSIONED_ENDPOINT.plus("/register"), json, callback)
@@ -528,12 +562,12 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         if(connection.hostname.isEmpty()) return fail(callback, "Hostname required")
         //var endpoint = REST_ENDPOINT.plus(resource)
         var endpoint = endpoint
-        Log.d("CropDroidAPI.doDelete", "endpoint: " + endpoint)
         if(args.size > 0) {
             for(arg in args) {
                 endpoint = endpoint.plus("/").plus(arg)
             }
         }
+        Log.d("CropDroidAPI.doDelete", "endpoint: " + endpoint)
         var client = OkHttpClient()
         var request: Request? = null
         if(connection.token.isEmpty()) {

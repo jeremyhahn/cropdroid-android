@@ -104,7 +104,9 @@ class SwitchTypeViewHolder(adapter: MicroControllerRecyclerAdapter, itemView: Vi
                         cropDroidAPI.switch(controllerType, channel.channelId, newState, object: Callback {
                             override fun onFailure(call: Call, e: IOException) {
                                 Log.d("MicroControllerRecyclerAdapter.onSwitchState", "onFailure response: " + e!!.message)
-                                _itemView.channelValue.setChecked(!newState)
+                                _adapter.activity.runOnUiThread(Runnable() {
+                                    _itemView.channelValue.setChecked(!newState)
+                                })
                                 return
                             }
                             override fun onResponse(call: Call, response: okhttp3.Response) {

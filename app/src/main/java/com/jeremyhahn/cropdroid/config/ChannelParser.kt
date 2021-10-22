@@ -34,7 +34,7 @@ class ChannelParser {
             val duration = jsonChannel.getInt("duration")
             val debounce = jsonChannel.getInt("debounce")
             val backoff = jsonChannel.getInt("backoff")
-            val algorithmId = if(jsonChannel.isNull("algorithm_id")) jsonChannel.getInt("algorithmId") else jsonChannel.getInt("algorithm_id")
+            val algorithmId = if(jsonChannel.isNull("algorithm_id")) jsonChannel.getLong("algorithmId") else jsonChannel.getLong("algorithm_id")
             val value = if(!jsonChannel.isNull("value")) jsonChannel.getInt("value") else 0
             return Channel(id, controllerId, channelId, name, enable, notify, duration, debounce, backoff, algorithmId, value)
         }

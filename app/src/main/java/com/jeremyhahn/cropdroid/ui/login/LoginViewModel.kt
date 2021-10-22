@@ -61,9 +61,9 @@ class LoginViewModel() : ViewModel() {
         })
     }
 
-    fun login(cropdroid: CropDroidAPI, username: String, password: String) {
+    fun login(cropdroid: CropDroidAPI, organizationName: String, username: String, password: String) {
 
-        cropdroid.login(username, password, object : Callback {
+        cropdroid.login(organizationName, username, password, object : Callback {
 
             override fun onFailure(call: Call?, e: IOException?) {
                 Log.d("LoginViewModel.login", "onFailure response: " + e!!.message)
@@ -84,6 +84,11 @@ class LoginViewModel() : ViewModel() {
                     return
                 }
 
+                if(!json.isNull("success") && !json.getBoolean("success")) {
+                    _loginResult.postValue(LoginResult(error = json.getString("error")))
+                    return
+                }
+
                 //var user : LoggedInUserView? = LoggedInUserView(displayName = username)
                 var token = json.getString("token")
                 _loginResult.postValue(LoginResult(User("0", username, "", token, "", "")))
@@ -91,9 +96,9 @@ class LoginViewModel() : ViewModel() {
         })
     }
 
-    fun register(cropdroid: CropDroidAPI, username: String, password: String) {
+    fun register(cropdroid: CropDroidAPI, organizationName: String, username: String, password: String) {
 
-        cropdroid.register(username, password, object : Callback {
+        cropdroid.register(organizationName, username, password, object : Callback {
 
             override fun onFailure(call: Call?, e: IOException?) {
                 Log.d("LoginViewModel.register", "onFailure response: " + e!!.message)
@@ -118,6 +123,9 @@ class LoginViewModel() : ViewModel() {
                 if(json.getBoolean("success")) {
                     _loginResult.postValue(LoginResult(registered = true))
                     return
+                } else if(!json.getBoolean("success")) {
+                    _loginResult.postValue(LoginResult(error = json.getString("error")))
+                    return
                 }
 
                 _loginResult.postValue(LoginResult(error = "Unexpected error"))
@@ -126,15 +134,15 @@ class LoginViewModel() : ViewModel() {
     }
 
 
-    fun loginDataChanged(username: String, password: String) {
-        if (!isUserNameValid(username)) {
-            _loginForm.value = LoginFormState(usernameError = R.string.invalid_username)
-        } else if (!isPasswordValid(password)) {
-            _loginForm.value = LoginFormState(passwordError = R.string.invalid_password)
-        } else {
-            _loginForm.value = LoginFormState(isDataValid = true)
-        }
-    }
+//    fun loginDataChanged(username: String, password: String) {
+//        if (!isUserNameValid(username)) {
+//            _loginForm.value = LoginFormState(usernameError = R.string.invalid_username)
+//        } else if (!isPasswordValid(password)) {
+//            _loginForm.value = LoginFormState(passwordError = R.string.invalid_password)
+//        } else {
+//            _loginForm.value = LoginFormState(isDataValid = true)
+//        }
+//    }
 
 
     // A placeholder username validation check

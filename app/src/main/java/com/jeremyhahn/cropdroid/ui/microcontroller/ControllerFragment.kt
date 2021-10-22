@@ -20,11 +20,10 @@ import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_MODE_VIRTUAL
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
-import com.jeremyhahn.cropdroid.db.MasterControllerRepository
+import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
 import com.jeremyhahn.cropdroid.model.Connection
 import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
 import com.jeremyhahn.cropdroid.utils.Preferences
-import kotlinx.android.synthetic.main.app_bar_navigation.*
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.concurrent.timerTask
@@ -74,7 +73,7 @@ open class ControllerFragment : Fragment() {
 
         Log.d("ControllerFragment.onCreateView", "controller type=$controllerType, hostname=$hostname, mode=$mode, enabled=$enabled")
 
-        val c = MasterControllerRepository(ctx).get(hostname)
+        val c = EdgeDeviceRepository(ctx).get(hostname)
         if(c == null) {
             mainActivity.logout()
             mainActivity.navigateToHome()

@@ -10,6 +10,7 @@
     <string name="nodata">No data</string>
     <string name="minutes">Minutes</string>
 
+    <string name="empty_farms">Add a new farm to get started!</string>
     <string name="empty_workflows">Add a new workflow to automate a manual task.</string>
     <string name="empty_conditions">Add a new condition to switch on/off based on sensor data</string>
     <string name="empty_schedule">Add a new schedule that specifies when to switch on/off</string>
@@ -70,6 +71,8 @@
     <string name="prompt_password">Password</string>
     <string name="prompt_value">Value</string>
     <string name="prompt_seconds">Seconds</string>
+
+    <string name="hint_org_optional">Organization (Optional)</string>
 
     <string name="schedule_on">Start</string>
     <string name="schedule_off">Stop</string>
@@ -176,6 +179,7 @@
     <string name="menu_store">Store</string>
     <string name="menu_community">Community</string>
     <string name="menu_settings">Settings</string>
+    <string name="menu_farms">Farms</string>
     <string name="menu_workflows">Workflows</string>
     <string name="menu_quit">Quit</string>
     <!-- TODO: Remove or change this placeholder text -->

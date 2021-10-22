@@ -1,55 +1,66 @@
 package com.jeremyhahn.cropdroid.ui.farm
 
+import android.app.AlertDialog
+import android.content.DialogInterface
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
-import com.jeremyhahn.cropdroid.db.MasterControllerRepository
+import com.jeremyhahn.cropdroid.data.CropDroidAPI
+import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
 import com.jeremyhahn.cropdroid.model.Connection
-import com.jeremyhahn.cropdroid.ui.edgecontroller.EdgeControllerRecyclerAdapter.OnMasterListener
-import com.jeremyhahn.cropdroid.ui.room.EdgeControllerViewModel
+import com.jeremyhahn.cropdroid.model.Farm
 import com.jeremyhahn.cropdroid.utils.Preferences
-import kotlinx.android.synthetic.main.fragment_edge_controller_list.view.*
+import kotlinx.android.synthetic.main.fragment_farms.view.*
+import okhttp3.Call
+import okhttp3.Callback
+import java.io.IOException
 
+class FarmListFragment : Fragment(), FarmListener {
 
-class FarmListFragment : Fragment(), OnMasterListener {
-
-    private var controllers = ArrayList<Connection>()
-    private lateinit var adapter: FarmRecyclerAdapter
+    private val TAG = "FarmListFragment"
+    lateinit private var connection : Connection
+    lateinit private var cropDroidAPI: CropDroidAPI
+    private var recyclerItems = ArrayList<Farm>()
+    private var recyclerView: RecyclerView? = null
     private var swipeContainer: SwipeRefreshLayout? = null
-    lateinit private var viewModel: EdgeControllerViewModel
+    lateinit private var viewModel: FarmViewModel
+    //private var workflows = java.util.ArrayList<Workflow>()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         super.onCreateView(inflater, container, savedInstanceState)
 
         var fragmentActivity = requireActivity()
-        var fragmentView = inflater.inflate(R.layout.fragment_edge_controller_list, container, false)
+        var fragmentView = inflater.inflate(R.layout.fragment_farms, container, false)
+        val mainActivity = (activity as MainActivity)
 
-        fragmentView.fab.setOnClickListener { view ->
-            (activity as MainActivity).navigateToNewEdgeController()
-        }
+        val preferences = Preferences(fragmentActivity)
+        val controllerSharedPrefs = preferences.getControllerPreferences()
+        val hostname = preferences.currentController()
 
-        val repository = MasterControllerRepository(fragmentActivity.applicationContext)
-        viewModel = ViewModelProviders.of(this, FarmViewModelFactory(repository)).get(EdgeControllerViewModel::class.java)
+        connection = EdgeDeviceRepository(fragmentActivity).get(hostname)!!
+        cropDroidAPI = CropDroidAPI(connection, controllerSharedPrefs)
 
-        adapter = FarmRecyclerAdapter(controllers, fragmentActivity, repository, viewModel)
+        viewModel = ViewModelProviders.of(this, FarmViewModelFactory(cropDroidAPI, 0L)).get(FarmViewModel::class.java)
 
-        var recyclerView = fragmentView.findViewById(R.id.mastersRecyclerView) as RecyclerView
+        val recyclerView = fragmentView.findViewById(R.id.farmsRecyclerView) as RecyclerView
         recyclerView.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
-        recyclerView.adapter = adapter
 
-        swipeContainer = fragmentView.findViewById(R.id.mastersSwipeRefresh) as SwipeRefreshLayout
-        swipeContainer?.setOnRefreshListener(SwipeRefreshLayout.OnRefreshListener {
-            viewModel.getMasterControllers()
-        })
+        swipeContainer = fragmentView.findViewById(R.id.farmsSwipeRefresh) as SwipeRefreshLayout
+        swipeContainer?.setOnRefreshListener {
+            viewModel.getFarms()
+            swipeContainer!!.isRefreshing = false
+        }
         swipeContainer?.setColorSchemeResources(
             R.color.holo_blue_bright,
             R.color.holo_green_light,
@@ -57,43 +68,118 @@ class FarmListFragment : Fragment(), OnMasterListener {
             R.color.holo_red_light
         )
 
-        viewModel.controllers.observe(this@FarmListFragment, Observer {
-            swipeContainer!!.setRefreshing(false)
-            val _adapter = recyclerView.adapter!! as FarmRecyclerAdapter
-            val controllers = viewModel.controllers.value!!
-            _adapter.setControllers(controllers)
+        viewModel.farms.observe(viewLifecycleOwner, Observer {
+            swipeContainer!!.isRefreshing = false
+            recyclerItems = viewModel.farms.value!!
+
+            recyclerView.itemAnimator = DefaultItemAnimator()
+            recyclerView.adapter = FarmRecyclerAdapter(recyclerItems, fragmentActivity.applicationContext, this)
             recyclerView.adapter!!.notifyDataSetChanged()
 
-            if(controllers.size <= 0) {
-                fragmentView.edgeListEmptyText.visibility = View.VISIBLE
+            if(recyclerItems.size <= 0) {
+                fragmentView.farmListEmptyText.visibility = View.VISIBLE
             } else {
-                fragmentView.edgeListEmptyText.visibility = View.GONE
+                fragmentView.farmListEmptyText.visibility = View.GONE
             }
         })
 
-        viewModel.getMasterControllers()
+        fragmentView.fab.setOnClickListener { view ->
+            cropDroidAPI.provision(mainActivity.orgId, object: Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    Log.d("FarmListFragment.provision", "onFailure response: " + e!!.message)
+                    return
+                }
+                override fun onResponse(call: Call, response: okhttp3.Response) {
+                    val responseBody = response.body().string()
+                    Log.d("FarmListFragment.provision", responseBody)
+                    viewModel.getFarms()
+//                    fragmentActivity.runOnUiThread{
+//                        recyclerView.adapter!!.notifyDataSetChanged()
+//                    }
+                }
+            })
+        }
+
+        viewModel.getFarms()
 
         return fragmentView
     }
 
-    override fun onMasterClick(position: Int) {
-        // buggy ui when users move fast after a delete
-        /*
-        if(controllers.get(position) == null) {
-            getMasterControllers()
-            return
-        }*/
+    override fun showContextMenu(position: Int) {
+        val farms = viewModel.farms.value!!
+        val items = arrayOf<CharSequence>("Delete")
+        val builder = AlertDialog.Builder(context)
+        builder.setTitle("Action")
+        builder.setItems(items,
+            DialogInterface.OnClickListener { dialog, item ->
+               cropDroidAPI.deprovision(farms[position].id, object: Callback {
+                   override fun onFailure(call: Call, e: IOException) {
+                       Log.d("FarmListFragment.deprovision", "onFailure response: " + e!!.message)
+                       return
+                   }
+                   override fun onResponse(call: Call, response: okhttp3.Response) {
+                       val responseBody = response.body().string()
+                       Log.d("FarmListFragment.deprovision", responseBody)
+                       val newFarms = viewModel.farms.value!!
+                           newFarms.remove(farms[position])
+                           viewModel.farms.postValue(newFarms)
+                       val mainActivity = (requireActivity() as MainActivity)
 
+
+                   }
+               })
+            })
+        builder.show()
+    }
+
+    override fun onFarmClick(position: Int) {
         val fragmentActivity = requireActivity()
         val prefs = Preferences(fragmentActivity)
-
-        val orgId = prefs.currentOrgId()
-        val farmId = prefs.currentFarmId()
-
-        val selected = controllers.get(position)
-
-        prefs.set(selected, null, orgId, farmId)
-
-        (activity as MainActivity).navigateToLogin(selected)
+        val mainActivity = (activity as MainActivity)
+        val selected = viewModel.farms.value!![position]
+        prefs.set(connection, null, selected.orgId, selected.id)
+        mainActivity.onSelectFarm(selected.orgId, selected.id)
     }
+
+    override fun getFarms() : ArrayList<Farm> {
+        return viewModel.farms.value!!
+    }
+
+    override fun clear() {
+        viewModel.farms.value!!.clear()
+    }
+
+    override fun size() : Int {
+        val value = viewModel.farms.value
+        if(value == null) return 0
+        return value.size
+    }
+//
+//    override fun createFarm(orgId: Long) {
+//        cropDroidAPI.provision(orgId, object: Callback {
+//            override fun onFailure(call: Call, e: IOException) {
+//                Log.d("FarmListFragment.createFarm", "onFailure response: " + e!!.message)
+//                return
+//            }
+//            override fun onResponse(call: Call, response: okhttp3.Response) {
+//                val responseBody = response.body().string()
+//                Log.d("FarmListFragment.createFarm", responseBody)
+//                //viewModel.getWorkflows()
+//            }
+//        })
+//    }
+//
+//    override fun deleteFarm(farmId: Long) {
+//        cropDroidAPI.deprovision(farmId, object : Callback {
+//            override fun onFailure(call: Call, e: IOException) {
+//                Log.d("FarmListFragment.deleteFarm", "onFailure response: " + e.message)
+//                return
+//            }
+//            override fun onResponse(call: Call, response: okhttp3.Response) {
+//                val responseBody = response.body().string()
+//                Log.d("FarmListFragment.deleteFarm", responseBody)
+//                viewModel.getFarms()
+//            }
+//        })
+//    }
 }

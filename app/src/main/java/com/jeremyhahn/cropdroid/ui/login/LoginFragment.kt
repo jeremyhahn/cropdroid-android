@@ -3,7 +3,9 @@ package com.jeremyhahn.cropdroid.ui.login
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.text.TextUtils
 import android.util.Log
+import android.util.Patterns
 import android.view.LayoutInflater
 import android.view.View
 import android.view.View.GONE
@@ -11,7 +13,6 @@ import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.*
-import androidx.annotation.StringRes
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -23,23 +24,32 @@ import com.google.android.gms.cast.CastStatusCodes.*
 import com.google.android.gms.common.SignInButton
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
+import com.jeremyhahn.cropdroid.AppError
 import com.jeremyhahn.cropdroid.Constants.Companion.APP_SERVER_CLIENT_ID
 import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_CONTROLLER_HOSTNAME
 import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_CONTROLLER_PUBKEY
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
-import com.jeremyhahn.cropdroid.db.MasterControllerRepository
+import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
 import com.jeremyhahn.cropdroid.model.Connection
 import com.jeremyhahn.cropdroid.utils.JsonWebToken
 import com.jeremyhahn.cropdroid.utils.Preferences
 import io.jsonwebtoken.ExpiredJwtException
 import kotlinx.android.synthetic.main.activity_login.*
+import kotlinx.android.synthetic.main.activity_login.password
+import kotlinx.android.synthetic.main.activity_login.useSSL
+import kotlinx.android.synthetic.main.activity_login.username
+import kotlinx.android.synthetic.main.fragment_login.*
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.Response
+import java.io.IOException
 
 
 class LoginFragment() : Fragment(), View.OnClickListener {
 
-    private lateinit var repository: MasterControllerRepository
+    private lateinit var repository: EdgeDeviceRepository
     private lateinit var preferences: Preferences
     private lateinit var sharedPrefs: SharedPreferences
     private lateinit var loginViewModel: LoginViewModel
@@ -52,10 +62,10 @@ class LoginFragment() : Fragment(), View.OnClickListener {
         super.onCreateView(inflater, container, savedInstanceState)
 
         val fragmentActivity = requireActivity()
-        val mainActivity = (fragmentActivity as MainActivity)
-        repository = MasterControllerRepository(fragmentActivity.applicationContext)
+        repository = EdgeDeviceRepository(fragmentActivity.applicationContext)
 
         var fragmentView = inflater.inflate(R.layout.fragment_login, container, false)
+        val mainActivity = (activity as MainActivity)
         val args = requireArguments()
         val username = fragmentView.findViewById<EditText>(R.id.username)
         val password = fragmentView.findViewById<EditText>(R.id.password)
@@ -91,6 +101,7 @@ class LoginFragment() : Fragment(), View.OnClickListener {
             checkSslFlag()
             loginViewModel.login(
                 CropDroidAPI(connection, sharedPrefs),
+                organizationName.text.toString(),
                 username.text.toString(),
                 password.text.toString()
             )
@@ -104,7 +115,48 @@ class LoginFragment() : Fragment(), View.OnClickListener {
 
             if(selectedController != null && !selectedController.token.isEmpty() ) {
                 Log.d("LoginActivity.onCreate", "token not empty, sending to mainActivity.login(selectedController)...")
-                (activity as MainActivity).login(selectedController)
+
+                mainActivity.connection = selectedController
+                val cropDroidAPI = CropDroidAPI(selectedController, sharedPrefs)
+
+                if(selectedController.jwt!!.claims == null) {
+                    mainActivity.logout()
+                    return fragmentView
+                }
+
+                cropDroidAPI.refreshToken(selectedController.jwt!!.uid(), object : Callback {
+                    override fun onFailure(call: Call?, e: IOException?) {
+                        Log.d("LoginViewModel.login", "onFailure response: " + e!!.message)
+                        showLoginFailed(e.message.toString())
+                        mainActivity.logout()
+                    }
+                    override fun onResponse(call: Call, response: Response) {
+                        Log.d("refreshToken", "refreshToken response: " + response)
+                        var responseBody = response.body().string()
+                        Log.d("refreshToken", "responseBody: " + responseBody)
+
+                        val jwt = JsonWebToken(requireContext(), selectedController)
+                        jwt.parse()
+                        Log.d("jwt", jwt.claims.toString())
+
+                        var organizations = jwt.organizations()
+
+                        Log.d("uid", jwt.uid().toString())
+                        Log.d("email", jwt.email())
+                        Log.d("organizations", organizations.toString())
+                        Log.d("exp", jwt.exp().toString())
+                        Log.d("iat", jwt.iat().toString())
+                        Log.d("iss", jwt.iss())
+
+                        selectedController.token = jwt.claims.toString()
+                        repository.updateController(selectedController)
+
+                        fragmentActivity.runOnUiThread {
+                            mainActivity.navigateToFarms(selectedController)
+                        }
+                    }
+                })
+                //mainActivity.navigateToFarms(selectedController)
                 return fragmentView
             }
         }
@@ -118,7 +170,7 @@ class LoginFragment() : Fragment(), View.OnClickListener {
             Log.d("LoginActivity.onCreate", "registered controller: " + controller!!.toString())
         }
 
-        loginViewModel.loginFormState.observe(this@LoginFragment, Observer {
+        loginViewModel.loginFormState.observe(viewLifecycleOwner, Observer {
             val loginState = it ?: return@Observer
 
             // disable login button unless both username / password is valid
@@ -132,7 +184,7 @@ class LoginFragment() : Fragment(), View.OnClickListener {
             }
         })
 
-        loginViewModel.loginResult.observe(this@LoginFragment, Observer {
+        loginViewModel.loginResult.observe(viewLifecycleOwner, Observer {
             val loginResult = it ?: return@Observer
             val cropDroidAPI = CropDroidAPI(connection, sharedPrefs)
 
@@ -144,20 +196,23 @@ class LoginFragment() : Fragment(), View.OnClickListener {
             }
 
             if(loginResult.registered) {
-                loginViewModel.login(
-                    cropDroidAPI,
-                    username.text.toString(),
-                    password.text.toString())
+                showSuccessfulRegistration()
+//                loginViewModel.login(
+//                    cropDroidAPI,
+//                    organizationName.text.toString(),
+//                    username.text.toString(),
+//                    password.text.toString())
             }
 
-            if(loginResult.success != null) {
+            if(loginResult.user != null) {
 
-                var user = loginResult.success
+                var user = loginResult.user
 
                 Log.d("LoginActivity token:", user.token)
                 connection.token = user.token
 
                 val jwt = JsonWebToken(requireContext(), connection)
+                jwt.parse()
                 Log.d("jwt", jwt.claims.toString())
 
                 var organizations = jwt.organizations()
@@ -169,12 +224,17 @@ class LoginFragment() : Fragment(), View.OnClickListener {
                 Log.d("iat", jwt.iat().toString())
                 Log.d("iss", jwt.iss())
 
+                // TODO: Refactor to support users belonging to multiple organizations
                 if(organizations.size == 1 && organizations[0].id == 0L) {
 
-                    val farmId = organizations[0].farms[0].id
+                    val orgId = organizations[0].id
+                    var farmId = 0L
+                    if(organizations[0].farms.size > 0) {
+                        farmId = organizations[0].farms[0].id
+                    }
 
                     user.id = jwt.uid().toString()
-                    user.orgId = "0"
+                    user.orgId = orgId.toString()
 
                     connection.secure = if (useSSL.isChecked) 1 else 0
                     connection.token = user.token
@@ -187,9 +247,8 @@ class LoginFragment() : Fragment(), View.OnClickListener {
                     }
                     Log.i("LoginActivity.loginResult.token", "Successfully authenticated")
 
-                    preferences.set(connection, user, 0, farmId)
-
-                    (activity as MainActivity).login(connection)
+                    //(activity as MainActivity).login(connection)
+                    (activity as MainActivity).navigateToFarms(connection, user, orgId)
                 }
             }
         })
@@ -216,6 +275,7 @@ class LoginFragment() : Fragment(), View.OnClickListener {
                     EditorInfo.IME_ACTION_DONE ->
                         loginViewModel.login(
                             CropDroidAPI(connection, sharedPrefs),
+                            organizationName.text.toString(),
                             username.text.toString(),
                             password.text.toString()
                         )
@@ -231,7 +291,9 @@ class LoginFragment() : Fragment(), View.OnClickListener {
         val account = GoogleSignIn.getLastSignedInAccount(fragmentActivity)
         if(account != null && !connection.token.isEmpty()) {
             Log.d("LoginFragment.onCreate", "Google session already established, bypassing login...")
-           (activity as MainActivity).login(connection)
+
+            //(activity as MainActivity).login(connection)
+            (activity as MainActivity).navigateToFarms(connection)
         }
 
         return fragmentView
@@ -300,9 +362,15 @@ class LoginFragment() : Fragment(), View.OnClickListener {
 
     fun onRegister(v: View) {
         checkSslFlag()
+        val email = username.text.toString()
+        if(email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            AppError(requireActivity()).alert("Invalid email address", null, null)
+            return
+        }
         loginViewModel.register(
             CropDroidAPI(connection, sharedPrefs),
-            username.text.toString(),
+            organizationName.text.toString(),
+            email,
             password.text.toString()
         )
     }
@@ -315,12 +383,22 @@ class LoginFragment() : Fragment(), View.OnClickListener {
         }
     }
 
-    private fun showLoginFailed(@StringRes errorString: Int) {
-        Toast.makeText(requireActivity().applicationContext, errorString, Toast.LENGTH_SHORT).show()
-    }
+//    private fun showLoginFailed(@StringRes errorString: Int) {
+//        Toast.makeText(requireActivity().applicationContext, errorString, Toast.LENGTH_SHORT).show()
+//    }
 
     private fun showLoginFailed(errorString: String) {
-        Toast.makeText(activity as MainActivity, errorString, Toast.LENGTH_SHORT).show()
+        val mainActivity = (activity as MainActivity)
+        requireActivity().runOnUiThread({
+            Toast.makeText(mainActivity, errorString, Toast.LENGTH_SHORT).show()
+        })
+    }
+
+    private fun showSuccessfulRegistration() {
+        requireActivity().runOnUiThread({
+            val mainActivity = (activity as MainActivity)
+            Toast.makeText(mainActivity, "Registration successful, check your inbox for an activation email!", Toast.LENGTH_SHORT).show()
+        })
     }
 
 }

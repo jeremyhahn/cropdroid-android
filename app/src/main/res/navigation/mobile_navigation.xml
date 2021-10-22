@@ -26,6 +26,13 @@
         tools:layout="@layout/fragment_login" />
 
     <fragment
+        android:id="@+id/nav_farms"
+        android:name="com.jeremyhahn.cropdroid.ui.farm.FarmListFragment"
+        android:label="@string/menu_farms"
+        tools:layout="@layout/fragment_farms">
+    </fragment>
+
+    <fragment
         android:id="@+id/nav_microcontroller_tabs"
         android:name="com.jeremyhahn.cropdroid.ui.microcontroller.MicroControllerFragment"
         android:label="@string/title_activity_microcontrollers"
@@ -36,7 +43,7 @@
         android:id="@+id/nav_store"
         android:name="com.jeremyhahn.cropdroid.ui.iap.StoreFragment"
         android:label="@string/menu_store"
-        tools:layout="@layout/activity_store">
+        tools:layout="@layout/fragment_store">
     </fragment>
 
     <fragment

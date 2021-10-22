@@ -52,7 +52,7 @@ class ConditionListRecyclerAdapter(val activity: ConditionListActivity, val crop
 
             menu!!.add(0, id, 0, "Delete")
                 .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
-                    activity.deleteCondition(ConditionConfig(condition.id))
+                    activity.deleteCondition(ConditionConfig(condition.id.toLong()))
                     true
                 })
         }

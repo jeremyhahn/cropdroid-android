@@ -16,7 +16,7 @@ import com.jeremyhahn.cropdroid.AppError
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
-import com.jeremyhahn.cropdroid.db.MasterControllerRepository
+import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
 import com.jeremyhahn.cropdroid.model.Connection
 import com.jeremyhahn.cropdroid.model.Workflow
 import com.jeremyhahn.cropdroid.model.WorkflowStep
@@ -38,8 +38,6 @@ class WorkflowsFragment : Fragment(), NewWorkflowDialogHandler, NewWorkflowStepD
     private val TAG = "WorkflowsFragment"
     lateinit private var controller : Connection
     lateinit private var cropDroidAPI: CropDroidAPI
-    private lateinit var repository: MasterControllerRepository
-    private lateinit var preferences: Preferences
     private var swipeContainer: SwipeRefreshLayout? = null
     lateinit private var viewModel: WorkflowViewModel
     private var workflows = ArrayList<Workflow>()
@@ -48,7 +46,6 @@ class WorkflowsFragment : Fragment(), NewWorkflowDialogHandler, NewWorkflowStepD
 
         val fragmentActivity = requireActivity()
         val mainActivity = (fragmentActivity as MainActivity)
-        repository = MasterControllerRepository(fragmentActivity.applicationContext)
 
         var fragmentView = inflater.inflate(R.layout.fragment_workflows, container, false)
 
@@ -56,7 +53,7 @@ class WorkflowsFragment : Fragment(), NewWorkflowDialogHandler, NewWorkflowStepD
         val controllerSharedPrefs = preferences.getControllerPreferences()
         val hostname = preferences.currentController()
 
-        controller = MasterControllerRepository(fragmentActivity).get(hostname)!!
+        controller = EdgeDeviceRepository(fragmentActivity).get(hostname)!!
         cropDroidAPI = CropDroidAPI(controller, controllerSharedPrefs)
         viewModel = mainActivity.workflowsViewModel!!
 

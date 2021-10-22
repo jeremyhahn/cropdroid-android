@@ -15,7 +15,7 @@ import com.jeremyhahn.cropdroid.AppError
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
-import com.jeremyhahn.cropdroid.db.MasterControllerRepository
+import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
 import com.jeremyhahn.cropdroid.model.Connection
 import okhttp3.Call
 import okhttp3.Callback
@@ -40,7 +40,7 @@ class NewEdgeControllerFragment : Fragment() {
         var hostnameText = controllerView.findViewById(R.id.hostname) as EditText
         var hostname = hostnameText.text.toString()
 
-        val repository = MasterControllerRepository(requireContext())
+        val repository = EdgeDeviceRepository(requireContext())
         var controller = repository.getByHostname(hostname)
         if(controller != null) {
             Toast.makeText(requireContext(), "Connection already exists!", Toast.LENGTH_SHORT).show()

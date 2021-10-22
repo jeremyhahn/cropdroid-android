@@ -14,7 +14,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
-import com.jeremyhahn.cropdroid.db.MasterControllerRepository
+import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
 import com.jeremyhahn.cropdroid.model.EventLog
 import com.jeremyhahn.cropdroid.model.EventsPage
 import com.jeremyhahn.cropdroid.model.Connection
@@ -55,7 +55,7 @@ class EventListFragment : ControllerFragment() {
 
         val hostname = preferences.currentController()
         Log.d("EventListFragment.onCreate", "controller_hostname: " + hostname)
-        controller = MasterControllerRepository(ctx).get(hostname)
+        controller = EdgeDeviceRepository(ctx).get(hostname)
 
         var fragmentView = inflater.inflate(R.layout.fragment_events, container, false)
 
