@@ -4,8 +4,6 @@ import android.util.Log
 import com.jeremyhahn.cropdroid.model.Farm
 import com.jeremyhahn.cropdroid.model.SmtpConfig
 import com.jeremyhahn.cropdroid.model.Workflow
-import com.jeremyhahn.cropdroid.utils.RoleParser
-import com.jeremyhahn.cropdroid.utils.SmtpParser
 import org.json.JSONArray
 import org.json.JSONObject
 import java.lang.StringBuilder
@@ -27,7 +25,7 @@ class FarmParser {
             var workflows = ArrayList<Workflow>(0)
 
             if(!jsonFarm.isNull("roles")) {
-                roles = RoleParser.parse(jsonFarm.getJSONArray("roles"))
+                roles = RoleParser.parseStrings(jsonFarm.getJSONArray("roles"))
             }
 
             if(!jsonFarm.isNull("orgId")) {

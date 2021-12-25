@@ -13,7 +13,7 @@ class FarmRecyclerAdapter(val farms: ArrayList<Farm>, val context: Context, val 
     : RecyclerView.Adapter<FarmRecyclerAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val v = LayoutInflater.from(parent.context).inflate(R.layout.farm_cardview, parent, false)
+        val v = LayoutInflater.from(parent.context).inflate(R.layout.cardview_farm, parent, false)
         return ViewHolder(v)
     }
 

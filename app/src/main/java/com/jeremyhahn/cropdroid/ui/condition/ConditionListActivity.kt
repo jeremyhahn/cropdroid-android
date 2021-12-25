@@ -31,11 +31,9 @@ class ConditionListActivity : AppCompatActivity(), ConditionDialogHandler {
     lateinit private var controller : Connection
     private var channelId = 0L
     private var channelName = ""
-    private var channelDuration = 0
     private var recyclerItems = ArrayList<Condition>()
     lateinit private var viewModel: ConditionViewModel
     lateinit private var cropDroidAPI: CropDroidAPI
-    private var conditionFragment: ConditionDialogFragment? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,7 +77,7 @@ class ConditionListActivity : AppCompatActivity(), ConditionDialogHandler {
             recyclerItems = viewModel.conditions.value!!
 
             recyclerView.itemAnimator = DefaultItemAnimator()
-            recyclerView.adapter = ConditionListRecyclerAdapter(this, cropDroidAPI, recyclerItems)
+            recyclerView.adapter = ConditionListRecyclerAdapter(this, recyclerItems)
             recyclerView.adapter!!.notifyDataSetChanged()
 
             if(recyclerItems.size <= 0) {

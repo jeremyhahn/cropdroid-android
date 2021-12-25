@@ -134,6 +134,8 @@ class ScheduleListRecyclerAdapter(val activity: ScheduleListActivity, val cropDr
 
             Log.d("onCreateContextMenu", "schedule: " + schedule)
 
+            menu!!.setHeaderTitle(R.string.menu_header_schedule_options)
+
             menu!!.add(0, schedule.id.toInt(), 0, "Edit")
                 .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
 

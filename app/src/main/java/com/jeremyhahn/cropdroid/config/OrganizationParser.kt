@@ -2,7 +2,6 @@ package com.jeremyhahn.cropdroid.config
 
 import android.util.Log
 import com.jeremyhahn.cropdroid.model.Organization
-import com.jeremyhahn.cropdroid.utils.RoleParser
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -22,7 +21,7 @@ class OrganizationParser {
             val name = jsonOrg.getString("name")
             val farms = FarmParser.parse(jsonOrg.getJSONArray("farms"), orgId, brief)
             var roles =
-                RoleParser.parse(
+                RoleParser.parseStrings(
                     jsonOrg.getJSONArray("roles")
                 )
             return Organization(orgId, name, farms, "", roles)

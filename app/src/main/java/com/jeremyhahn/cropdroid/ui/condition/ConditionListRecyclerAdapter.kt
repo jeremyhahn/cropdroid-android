@@ -10,21 +10,38 @@ import com.jeremyhahn.cropdroid.model.ConditionConfig
 import kotlinx.android.synthetic.main.microcontroller_condition_cardview.view.*
 import java.util.*
 
-class ConditionListRecyclerAdapter(val activity: ConditionListActivity, val cropDroidAPI: CropDroidAPI, var recyclerItems: ArrayList<Condition>) :
+class ConditionListRecyclerAdapter(val activity: ConditionListActivity, var recyclerItems: ArrayList<Condition>) :
     RecyclerView.Adapter<ConditionListRecyclerAdapter.ViewHolder>() {
 
-    class ViewHolder(adapter: ConditionListRecyclerAdapter, activity: ConditionListActivity, cropDroidAPI: CropDroidAPI,
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ConditionListRecyclerAdapter.ViewHolder {
+        val v = LayoutInflater.from(parent.context).inflate(R.layout.microcontroller_condition_cardview, parent, false)
+        return ViewHolder(this, activity, v)
+    }
+
+    override fun onBindViewHolder(holder: ConditionListRecyclerAdapter.ViewHolder, position: Int) {
+        if(recyclerItems.size < position) {
+            return
+        }
+        holder.bind(recyclerItems.get(position))
+    }
+
+    override fun getItemCount(): Int {
+        return recyclerItems.size
+    }
+
+    fun clear() {
+        recyclerItems.clear()
+        notifyDataSetChanged()
+    }
+
+    class ViewHolder(adapter: ConditionListRecyclerAdapter, activity: ConditionListActivity,
                      itemView: View) : RecyclerView.ViewHolder(itemView), View.OnCreateContextMenuListener {
 
         private val TAG = "ConditionListRecyclerAdapter"
-        private val adapter: ConditionListRecyclerAdapter
-        private val activity: ConditionListActivity
-        private val cropDroidAPI: CropDroidAPI
+        private val adapter: ConditionListRecyclerAdapter = adapter
+        private val activity: ConditionListActivity = activity
 
         init {
-            this.adapter = adapter
-            this.activity = activity
-            this.cropDroidAPI = cropDroidAPI
             itemView.setOnCreateContextMenuListener(this)
         }
 
@@ -44,6 +61,8 @@ class ConditionListRecyclerAdapter(val activity: ConditionListActivity, val crop
 
             Log.d("onCreateContextMenu", "condition: " + condition + ", id: " + id)
 
+            menu!!.setHeaderTitle(R.string.menu_header_condition_options)
+
             menu!!.add(0, id, 0, "Edit")
                 .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
                     activity.showConditionDialog(condition)
@@ -56,31 +75,5 @@ class ConditionListRecyclerAdapter(val activity: ConditionListActivity, val crop
                     true
                 })
         }
-    }
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ConditionListRecyclerAdapter.ViewHolder {
-        val v = LayoutInflater.from(parent.context).inflate(R.layout.microcontroller_condition_cardview, parent, false)
-        return ViewHolder(this, activity, cropDroidAPI, v)
-    }
-
-    override fun onBindViewHolder(holder: ConditionListRecyclerAdapter.ViewHolder, position: Int) {
-        if(recyclerItems.size < position) {
-            return
-        }
-        holder.bind(recyclerItems.get(position))
-    }
-
-    override fun getItemCount(): Int {
-        return recyclerItems.size
-    }
-
-    fun clear() {
-        recyclerItems.clear()
-        notifyDataSetChanged()
-    }
-
-    fun setData(data: ArrayList<Condition>) {
-        recyclerItems = data
-        notifyDataSetChanged()
     }
 }

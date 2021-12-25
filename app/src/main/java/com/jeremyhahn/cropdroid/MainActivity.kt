@@ -6,7 +6,7 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.drawerlayout.widget.DrawerLayout
@@ -18,6 +18,8 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
+import androidx.preference.Preference
+import androidx.preference.PreferenceFragmentCompat
 import androidx.work.Constraints
 import androidx.work.NetworkType
 import com.google.android.gms.common.ConnectionResult.*
@@ -39,7 +41,8 @@ import com.jeremyhahn.cropdroid.utils.Preferences
 import okhttp3.WebSocket
 import java.util.concurrent.ConcurrentHashMap
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(),
+    PreferenceFragmentCompat.OnPreferenceStartFragmentCallback {
 
     var workflowsViewModel: WorkflowViewModel? = null
     val controllerViewModels: ConcurrentHashMap<String, ControllerViewModel> = ConcurrentHashMap()
@@ -47,23 +50,35 @@ class MainActivity : AppCompatActivity() {
     val microcontrollerFragment: MicroControllerFragment = MicroControllerFragment()
     var farmWebSocket: WebSocket? = null
     var orgId: Long = 0L
+    var farmId: Long = 0L
     var user: User? = null
+    //lateinit var farm: Farm
 
     lateinit var connection: Connection
     lateinit var cropDroidAPI: CropDroidAPI
     lateinit var configManager: ConfigManager
     lateinit var preferences: Preferences
-    lateinit var farm: Farm
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var navController: NavController
     private lateinit var drawer: DrawerLayout
     private lateinit var toolbar: Toolbar
+    private var navUserName: TextView? = null
+    //private lateinit var navHeader:
 
     fun createConstraints() = Constraints.Builder()
         .setRequiredNetworkType(NetworkType.CONNECTED) // other values(NOT_REQUIRED, UNMETERED (if connected to wifi), NOT_ROAMING, METERED)
         .setRequiresBatteryNotLow(true)
         //.setRequiresStorageNotLow(true)
         .build()
+
+    override fun onPreferenceStartFragment(caller: PreferenceFragmentCompat,  pref: Preference): Boolean {
+        if (pref.key.equals("user_management_settings")) {
+            navController.navigate(R.id.nav_user_management_settings)
+        } else if (pref.key.equals("fragment_b")) {
+            navController.navigate(R.id.nav_microcontroller_settings)
+        }
+        return true
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -104,6 +119,15 @@ class MainActivity : AppCompatActivity() {
         //startService(intent)
     }
 
+    fun setLoggedInUser(user: User) {
+        navUserName = findViewById(R.id.navUserName) as TextView
+        navUserName!!.text = user.username
+    }
+
+    fun setActionBarTitle(title: String) {
+        supportActionBar!!.title = title
+    }
+
     fun setToolbarTitle(title: String) {
         runOnUiThread(Runnable() {
             toolbar.title = title
@@ -117,14 +141,17 @@ class MainActivity : AppCompatActivity() {
         navController.navigate(R.id.nav_login, bundle)
     }
 
-    fun navigateToOrganizations() {
-        Toast.makeText(applicationContext, "Organizations not yet implemented!", Toast.LENGTH_LONG)
-        //navController.popBackStack()
-        //navController.navigate(R.id.nav_organizations)
+    fun navigateToOrganizations(connection: Connection, user: User?) {
+        this.connection = connection
+        this.user = user
+        this.orgId = orgId
+        preferences.set(connection, user, 0L, 0L)
+        navController.popBackStack()
+        navController.navigate(R.id.nav_organizations)
     }
 
     fun navigateToMicrocontroller() {
-        navController.popBackStack()
+        // navController.popBackStack()
         navController.navigate(R.id.nav_microcontroller_tabs)
     }
 
@@ -170,12 +197,15 @@ class MainActivity : AppCompatActivity() {
             if(orgId == 0) {
                 navigateToMicrocontroller()
             } else {
-                navigateToOrganizations()
+                navigateToOrganizations(connection, user)
             }
         })
     }
 
     fun logout() {
+        if(navUserName != null) {
+            navUserName!!.text = "Logged Out"
+        }
         connection.token = ""
         EdgeDeviceRepository(this).updateController(connection)
 
@@ -258,8 +288,13 @@ class MainActivity : AppCompatActivity() {
 //        navigateToFarms()
 //    }
 
+    fun onSelectOrganization(orgId: Long) {
+        this.orgId = orgId
+    }
+
     fun onSelectFarm(orgId: Long, farmId: Long) {
         this.orgId = orgId
+        this.farmId = farmId
 
         if(farmWebSocket != null) {
             farmWebSocket!!.cancel()
@@ -298,7 +333,7 @@ class MainActivity : AppCompatActivity() {
             if(orgId == 0L) {
                 navigateToMicrocontroller()
             } else {
-                navigateToOrganizations()
+                navigateToOrganizations(connection, user)
             }
         })
     }
@@ -314,9 +349,9 @@ class MainActivity : AppCompatActivity() {
 
     @Synchronized fun update(farmConfig: Farm) {
         var redraw = false
-        farm = farmConfig
-        setToolbarTitle(farm.name)
-        for(controller in farm.controllers) {
+        //farm = farmConfig
+        setToolbarTitle(farmConfig.name)
+        for(controller in farmConfig.controllers) {
             if(controller.type == "server") continue
             var viewModel = controllerViewModels[controller.type]
             if(viewModel == null) {
@@ -333,8 +368,7 @@ class MainActivity : AppCompatActivity() {
         if(redraw && microcontrollerFragment.isAdded) {
             microcontrollerFragment.configureTabs(this)
         }
-
-        workflowsViewModel!!.workflows.postValue(farm.workflows)
+        workflowsViewModel!!.workflows.postValue(farmConfig.workflows)
     }
 
 //    @Synchronized fun update(farmState: FarmState) {

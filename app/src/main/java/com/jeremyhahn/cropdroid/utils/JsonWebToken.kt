@@ -2,8 +2,10 @@ package com.jeremyhahn.cropdroid.utils
 
 import android.content.Context
 import android.util.Log
+import com.jeremyhahn.cropdroid.config.FarmParser
 import com.jeremyhahn.cropdroid.config.OrganizationParser
 import com.jeremyhahn.cropdroid.model.Connection
+import com.jeremyhahn.cropdroid.model.Farm
 import com.jeremyhahn.cropdroid.model.Organization
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
@@ -56,11 +58,10 @@ class JsonWebToken(context: Context, connection: Connection) {
 
     fun organizations(): List<Organization> {
         return OrganizationParser.parse(claims!!.get("organizations", String::class.java).toString(), true)
-        /*
-        val orgs = claims.get("organizations", List::class.java)
-        Log.d("organizations:", orgs.toString())
-        return ArrayList<Organization>(0)
-         */
+    }
+
+    fun farms(): List<Farm> {
+        return FarmParser.parse(claims!!.get("farms", String::class.java), 0, true)
     }
 
     fun exp(): Int {

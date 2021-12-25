@@ -46,7 +46,6 @@ import okhttp3.Callback
 import okhttp3.Response
 import java.io.IOException
 
-
 class LoginFragment() : Fragment(), View.OnClickListener {
 
     private lateinit var repository: EdgeDeviceRepository
@@ -139,11 +138,13 @@ class LoginFragment() : Fragment(), View.OnClickListener {
                         jwt.parse()
                         Log.d("jwt", jwt.claims.toString())
 
-                        var organizations = jwt.organizations()
+                        val organizations = jwt.organizations()
+                        val farms = jwt.farms()
 
                         Log.d("uid", jwt.uid().toString())
                         Log.d("email", jwt.email())
                         Log.d("organizations", organizations.toString())
+                        Log.d("farms", farms.toString())
                         Log.d("exp", jwt.exp().toString())
                         Log.d("iat", jwt.iat().toString())
                         Log.d("iss", jwt.iss())
@@ -186,7 +187,7 @@ class LoginFragment() : Fragment(), View.OnClickListener {
 
         loginViewModel.loginResult.observe(viewLifecycleOwner, Observer {
             val loginResult = it ?: return@Observer
-            val cropDroidAPI = CropDroidAPI(connection, sharedPrefs)
+            //val cropDroidAPI = CropDroidAPI(connection, sharedPrefs)
 
             loading.visibility = View.GONE
             //setResult(Activity.RESULT_OK)
@@ -216,40 +217,47 @@ class LoginFragment() : Fragment(), View.OnClickListener {
                 Log.d("jwt", jwt.claims.toString())
 
                 var organizations = jwt.organizations()
+                var farms = jwt.farms()
 
                 Log.d("uid", jwt.uid().toString())
                 Log.d("email", jwt.email())
                 Log.d("organizations", organizations.toString())
+                Log.d("farms", farms.toString())
                 Log.d("exp", jwt.exp().toString())
                 Log.d("iat", jwt.iat().toString())
                 Log.d("iss", jwt.iss())
 
-                // TODO: Refactor to support users belonging to multiple organizations
-                if(organizations.size == 1 && organizations[0].id == 0L) {
+                user.id = jwt.uid().toString()
+                user.username = jwt.email()
 
-                    val orgId = organizations[0].id
-                    var farmId = 0L
-                    if(organizations[0].farms.size > 0) {
-                        farmId = organizations[0].farms[0].id
-                    }
+                connection.secure = if (useSSL.isChecked) 1 else 0
+                connection.token = user.token
+                connection.jwt = jwt
 
-                    user.id = jwt.uid().toString()
-                    user.orgId = orgId.toString()
-
-                    connection.secure = if (useSSL.isChecked) 1 else 0
-                    connection.token = user.token
-                    connection.jwt = jwt
-
-                    var rowsUpdated = repository.updateController(connection)
-                    if (rowsUpdated != 1) {
-                        Log.e("LoginActivity.loginResult.token", "Unexpected number of rows effected: " + rowsUpdated.toString())
-                        return@Observer
-                    }
-                    Log.i("LoginActivity.loginResult.token", "Successfully authenticated")
-
-                    //(activity as MainActivity).login(connection)
-                    (activity as MainActivity).navigateToFarms(connection, user, orgId)
+                var rowsUpdated = repository.updateController(connection)
+                if (rowsUpdated != 1) {
+                    Log.e("LoginActivity.loginResult.token", "Unexpected number of rows effected: " + rowsUpdated.toString())
+                    return@Observer
                 }
+                Log.i("LoginActivity.loginResult.token", "Successfully authenticated")
+
+                // TODO: Refactor to support users belonging to multiple organizations
+//                if(organizations.isNotEmpty()) {
+//                    for (organization in organizations) {
+//                        val orgId = organization.id
+//                        if (organizations[0].farms.size > 0) {
+//                            farmId = organizations[0].farms[0].id
+//                        }
+//                        user.id = jwt.uid().toString()
+//                        user.orgId = orgId.toString()
+//
+//                        mainActivity.navigateToOrganizations(connection, user)
+//                        return
+//                    }
+//                }
+                //mainActivity.login(connection)
+                mainActivity.setLoggedInUser(user)
+                mainActivity.navigateToFarms(connection, user, 0)
             }
         })
 /*

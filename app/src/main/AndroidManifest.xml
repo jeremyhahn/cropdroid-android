@@ -29,7 +29,6 @@
         <activity android:name=".ui.condition.ConditionListActivity" />
         <activity android:name=".ui.schedule.ScheduleActivity" />
         <activity android:name=".ui.microcontroller.MetricDetailActivity" />
-        <activity android:name=".ui.workflow.WorkflowListActivity" />
 <!--        <activity android:name=".ui.workflow.WorkflowExpandableListActivity" />-->
         <!--
         <activity

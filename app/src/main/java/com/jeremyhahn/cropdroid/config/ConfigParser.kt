@@ -9,11 +9,8 @@ import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ORGS_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_SMTP_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_TIMEZONE_KEY
 import com.jeremyhahn.cropdroid.model.*
-import com.jeremyhahn.cropdroid.utils.SmtpParser
 import org.json.JSONArray
 import org.json.JSONObject
-import java.lang.StringBuilder
-import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 

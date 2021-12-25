@@ -3,8 +3,12 @@ package com.jeremyhahn.cropdroid.ui.settings
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
+import androidx.navigation.NavController
+import androidx.navigation.fragment.NavHostFragment
+import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import com.jeremyhahn.cropdroid.Constants
+import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
@@ -14,7 +18,8 @@ import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
 
-class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedPreferenceChangeListener {
+class SettingsFragment : PreferenceFragmentCompat(),
+    SharedPreferences.OnSharedPreferenceChangeListener {
 
     lateinit private var controller : Connection
     lateinit private var cropdroid: CropDroidAPI
@@ -25,9 +30,9 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         //super.onCreatePreferences(savedInstanceState)
 
-        val ctx = requireActivity().applicationContext
+        val fragmentActivity = requireActivity()
 
-        preferences = Preferences(ctx)
+        preferences = Preferences(fragmentActivity)
 
         val hostname = preferences.currentController()
         farmId = preferences.currentFarmId()
@@ -35,10 +40,10 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
         sharedPreferences = preferences.getControllerPreferences()
         sharedPreferences.registerOnSharedPreferenceChangeListener(this)
 
-        controller = EdgeDeviceRepository(ctx).get(hostname)!!
+        controller = EdgeDeviceRepository(fragmentActivity).get(hostname)!!
         cropdroid = CropDroidAPI(controller, sharedPreferences)
 
-        Log.d("SettingsActivity.onCreate", "controller=" + controller.toString())
+        Log.d("SettingsFragment.onCreatePreferences", "controller=" + controller.toString())
 
         setPreferencesFromResource(R.xml.root_preferences, rootKey)
     }
@@ -95,6 +100,15 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
 
         return true
     }*/
+
+//    override fun onSupportNavigateUp(): Boolean {
+//        val mainActivity = (activity as MainActivity)
+//        val fragmentActivity = requireActivity()
+//        if (fragmentActivity.supportFragmentManager.popBackStackImmediate()) {
+//            return true
+//        }
+//        return mainActivity.onSupportNavigateUp()
+//    }
 
     private fun parseControllerId(key: String) : String {
         val pieces = key.split(".")

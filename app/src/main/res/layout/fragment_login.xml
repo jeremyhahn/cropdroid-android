@@ -31,14 +31,14 @@
         android:layout_marginStart="24dp"
         android:layout_marginTop="40dp"
         android:layout_marginEnd="24dp"
-        android:inputType="text"
         android:hint="@string/hint_org_optional"
+        android:inputType="text"
         android:minHeight="48dp"
         android:selectAllOnFocus="true"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/cropdroidLogo" />
-
+        app:layout_constraintTop_toBottomOf="@+id/cropdroidLogo"
+        android:autofillHints="" />
 
     <EditText
         android:id="@+id/username"
@@ -54,7 +54,8 @@
         android:text="admin"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/organizationName" />
+        app:layout_constraintTop_toBottomOf="@+id/organizationName"
+        android:autofillHints="" />
 
     <EditText
         android:id="@+id/password"
@@ -72,7 +73,8 @@
         android:text="cropdroid"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/username" />
+        app:layout_constraintTop_toBottomOf="@+id/username"
+        android:autofillHints="" />
 
     <CheckBox
         android:id="@+id/useSSL"

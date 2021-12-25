@@ -148,7 +148,7 @@ class SwitchTypeViewHolder(adapter: MicroControllerRecyclerAdapter, itemView: Vi
 
         Log.d("onCreateContextMenu", "channel: " + channel)
 
-        menu!!.setHeaderTitle("Switch Options")
+        menu!!.setHeaderTitle(R.string.menu_header_switch_options)
 
         ChannelEnableMenuItem(menu!!, channel, cropDroidAPI, adapter)
 

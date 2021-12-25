@@ -15,15 +15,11 @@ import java.io.IOException
 
 class FarmViewModel(cropDroidAPI: CropDroidAPI, orgId: Long) : ViewModel() {
 
-    private val cropDroidAPI: CropDroidAPI
-    private val orgId: Long
+    private var cropDroidAPI: CropDroidAPI = cropDroidAPI
+    private val orgId: Long = orgId
     private val brief = true // Shallow population of Farm object (org id, farm id, farm name)
     val farms = MutableLiveData<ArrayList<Farm>>()
 
-    init {
-        this.cropDroidAPI = cropDroidAPI
-        this.orgId = orgId
-    }
 
     fun getFarms() {
         cropDroidAPI.getFarms(object : Callback {
@@ -42,5 +38,7 @@ class FarmViewModel(cropDroidAPI: CropDroidAPI, orgId: Long) : ViewModel() {
         })
     }
 
-
+    fun update(cropDroidAPI: CropDroidAPI) {
+        this.cropDroidAPI = cropDroidAPI
+    }
 }

@@ -24,16 +24,18 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
     val REST_ENDPOINT: String
     val VERSIONED_ENDPOINT: String
     val ORGANIZATION_ENDPOINT: String
+    val ORGANIZATIONS_ENDPOINT: String
+    val ORG_USERS_ENDPOINT: String
     val PUBKEY_ENDPOINT: String
     val ALGORITHMS_ENDPOINT: String
     val CHANNEL_ENDPOINT: String
     val CONFIG_ENDPOINT: String
     val CONDITION_ENDPOINT: String
-    //val CONTROLLER_ENDPOINT: String
     val DEVICES_ENDPOINT: String
     val EVENTS_ENDPOINT: String
     val FARMS_ENDPOINT: String
     val FARM_ENDPOINT: String
+    val FARM_USERS_ENDPOINT: String
     val GOOGLE_ENDPOINT: String
     val IAP_ENDPOINT: String
     val METRICS_ENDPOINT: String
@@ -42,6 +44,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
     val PROVISIONER_ENDPOINT : String
     val PROVISION_ENDPOINT: String
     val DEPROVISION_ENDPOINT: String
+    val ROLES_ENDPOINT: String
 
     init {
         if(preferences != null) {
@@ -50,34 +53,36 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         }
 
         REST_ENDPOINT = if(connection.secure == 1)
-            "https://".plus(connection.hostname)
-        else "http://".plus(connection.hostname)
+            "https://${connection.hostname}"
+        else "http://${connection.hostname}"
 
         VERSIONED_ENDPOINT = REST_ENDPOINT.plus(API_BASE)
 
         PUBKEY_ENDPOINT = VERSIONED_ENDPOINT.plus("/pubkey")
 
-        ORGANIZATION_ENDPOINT = VERSIONED_ENDPOINT.plus("/organizations/").plus(orgId)
+        ORGANIZATIONS_ENDPOINT = VERSIONED_ENDPOINT.plus("/organizations")
+        ORGANIZATION_ENDPOINT = ORGANIZATIONS_ENDPOINT.plus(orgId)
+        ORG_USERS_ENDPOINT = ORGANIZATIONS_ENDPOINT.plus("/users")
 
         FARMS_ENDPOINT = VERSIONED_ENDPOINT.plus("/farms")
         FARM_ENDPOINT = FARMS_ENDPOINT.plus("/").plus(farmId)
-        DEVICES_ENDPOINT = FARM_ENDPOINT.plus("/devices")
+        FARM_USERS_ENDPOINT = FARM_ENDPOINT.plus("/users")
 
+        DEVICES_ENDPOINT = FARM_ENDPOINT.plus("/devices")
         METRICS_ENDPOINT = FARM_ENDPOINT.plus("/metrics")
         IAP_ENDPOINT = FARM_ENDPOINT.plus("/iap")
-
         EVENTS_ENDPOINT = FARM_ENDPOINT.plus("/events")
         CONFIG_ENDPOINT = FARM_ENDPOINT.plus("/config")
         CONDITION_ENDPOINT = FARM_ENDPOINT.plus("/conditions")
         SCHEDULE_ENDPOINT = FARM_ENDPOINT.plus("/schedule")
         CHANNEL_ENDPOINT = FARM_ENDPOINT.plus("/channels")
         ALGORITHMS_ENDPOINT = FARM_ENDPOINT.plus("/algorithms")
-        //CONTROLLER_ENDPOINT = FARM_ENDPOINT.plus("/servers")
         WORKFLOW_ENDPOINT = FARM_ENDPOINT.plus("/workflows")
         GOOGLE_ENDPOINT = VERSIONED_ENDPOINT.plus("/google")
         PROVISIONER_ENDPOINT = VERSIONED_ENDPOINT.plus("/provisioner")
         PROVISION_ENDPOINT = PROVISIONER_ENDPOINT.plus("/provision")
         DEPROVISION_ENDPOINT = PROVISIONER_ENDPOINT.plus("/deprovision")
+        ROLES_ENDPOINT = VERSIONED_ENDPOINT.plus("/roles")
     }
 
     fun verifyPurchase(purchase: Purchase, callback: Callback) {
@@ -100,16 +105,16 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         var args = ArrayList<String>(2)
         args.add("history")
         args.add(metric)
-        doGet(DEVICES_ENDPOINT.plus("/").plus(serverType), args, callback)
+        doGet(DEVICES_ENDPOINT.plus("/${serverType}"), args, callback)
     }
 
     fun getState(serverType: String, callback: Callback) {
         var args = ArrayList<String>(0)
-        doGet(DEVICES_ENDPOINT.plus("/").plus(serverType).plus("/view"), args, callback)
+        doGet(DEVICES_ENDPOINT.plus("/${serverType}/view"), args, callback)
     }
 
     fun timerSwitch(serverType: String, channelId: Long, seconds: Int, callback: Callback) {
-        val resource = DEVICES_ENDPOINT.plus("/").plus(serverType)
+        val resource = DEVICES_ENDPOINT.plus("/${serverType}")
         var args = ArrayList<String>(4)
         args.add("timerSwitch")
         args.add(channelId.toString())
@@ -118,7 +123,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
     }
 
     fun switch(serverType: String, channelId: Long, state: Boolean, callback: Callback) {
-        val resource = DEVICES_ENDPOINT.plus("/").plus(serverType)
+        val resource = DEVICES_ENDPOINT.plus("/${serverType}")
         var state = if(state) "1" else "0"
         var args = ArrayList<String>(4)
         args.add("switch")
@@ -267,7 +272,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         //json.put("conditions", workflow.conditions)
         //json.put("schedules", workflow.schedules)
         //json.put("steps", workflow.steps)
-        doPut(WORKFLOW_ENDPOINT.plus("/").plus(workflow.id), json, callback)
+        doPut(WORKFLOW_ENDPOINT.plus("/${workflow.id}"), json, callback)
     }
 
     fun deleteWorkflow(workflow: Workflow, callback: Callback) {
@@ -286,8 +291,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         json.put("webhook", workflowStep.webhook)
         json.put("duration", workflowStep.duration)
         json.put("wait", workflowStep.wait)
-        val createEndpoint = WORKFLOW_ENDPOINT.plus("/").
-            plus(workflowStep.workflowId).plus("/steps")
+        val createEndpoint = WORKFLOW_ENDPOINT.plus("/${workflowStep.workflowId}/steps")
         doPost(createEndpoint, json, callback)
     }
 
@@ -304,16 +308,14 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         //json.put("conditions", workflow.conditions)
         //json.put("schedules", workflow.schedules)
         //json.put("steps", workflow.steps)
-        val updateEndpoint = WORKFLOW_ENDPOINT.plus("/").
-            plus(workflowStep.workflowId).plus("/steps/").plus(workflowStep.id)
+        val updateEndpoint = WORKFLOW_ENDPOINT.plus("/${workflowStep.workflowId}/steps/${workflowStep.id}")
         doPut(updateEndpoint, json, callback)
     }
 
     fun deleteWorkflowStep(workflowStep: WorkflowStep, callback: Callback) {
         Log.d("CropDropAPI.deleteWorkflowStep", "workflowStep="+workflowStep)
         val args = ArrayList<String>(0)
-        val deleteEndpoint = WORKFLOW_ENDPOINT.plus("/")
-            .plus(workflowStep.workflowId).plus("/steps/").plus(workflowStep.id)
+        val deleteEndpoint = WORKFLOW_ENDPOINT.plus("/${workflowStep.workflowId}/steps/${workflowStep.id}")
         doDelete(deleteEndpoint, args, callback)
     }
 
@@ -367,16 +369,10 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         doPut(CHANNEL_ENDPOINT, json, callback)
     }
 
-    fun getFarms(callback: Callback) {
-        val args = ArrayList<String>()
-        doGet(FARMS_ENDPOINT, args, callback)
-    }
-
     fun provision(orgId: Long, callback: Callback) {
         Log.d("CropDropAPI.provision", "orgId="+orgId)
         var json = JSONObject()
-        json.put("orgId", orgId)
-        doPost(PROVISION_ENDPOINT, json, callback)
+        doPost(PROVISION_ENDPOINT.plus("/${orgId}"), json, callback)
     }
 
     fun deprovision(farmId: Long, callback: Callback) {
@@ -386,15 +382,15 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         doDelete(DEPROVISION_ENDPOINT, args, callback)
     }
 
-//    fun getFarm(callback: Callback) {
-//        val args = ArrayList<String>()
-//        doGet(FARM_ENDPOINT, args, callback)
-//    }
-//
-//    fun getConfig(callback: Callback) {
-//        val args = ArrayList<String>()
-//        doGet(CONFIG_ENDPOINT, args, callback)
-//    }
+    fun getOrganizations(callback: Callback) {
+        val args = ArrayList<String>()
+        doGet(ORGANIZATIONS_ENDPOINT, args, callback)
+    }
+
+    fun getFarms(callback: Callback) {
+        val args = ArrayList<String>()
+        doGet(FARMS_ENDPOINT, args, callback)
+    }
 
     fun getDevices(callback: Callback) {
         val args = ArrayList<String>()
@@ -402,13 +398,13 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
     }
 
     fun getMetrics(deviceId: Long, callback: Callback) {
-        val endpoint = METRICS_ENDPOINT.plus("/").plus(deviceId)
+        val endpoint = METRICS_ENDPOINT.plus("/${deviceId}")
         val args = ArrayList<String>()
         doGet(endpoint, args, callback)
     }
 
     fun getChannels(deviceId: Long, callback: Callback) {
-        val endpoint = CHANNEL_ENDPOINT.plus("/").plus(deviceId)
+        val endpoint = CHANNEL_ENDPOINT.plus("/${deviceId}")
         val args = ArrayList<String>()
         doGet(endpoint, args, callback)
     }
@@ -421,6 +417,54 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
     fun getPublicKey(callback: Callback) {
         val args = ArrayList<String>()
         doGet(PUBKEY_ENDPOINT, args, callback)
+    }
+
+    fun getRoles(callback: Callback) {
+        val args = ArrayList<String>()
+        doGet(ROLES_ENDPOINT, args, callback)
+    }
+
+    fun getOrganizationUsers(callback: Callback) {
+        val args = ArrayList<String>()
+        doGet(ORG_USERS_ENDPOINT, args, callback)
+    }
+
+    fun setFarmRole(orgId: Long, farmId: Long, userId: Long, role: RoleConfig, callback: Callback) {
+        var json = JSONObject()
+        json.put("orgId", orgId)
+        json.put("farmId", farmId)
+        json.put("userId", userId)
+        json.put("roleId", role.id)
+        val endpoint = FARM_USERS_ENDPOINT.plus("/${userId}/role")
+        doPost(endpoint, json, callback)
+    }
+
+    fun getFarmUsers(callback: Callback) {
+        val args = ArrayList<String>()
+        doGet(FARM_USERS_ENDPOINT, args, callback)
+    }
+
+//    Use the registration process instead creating users directly
+//
+//    fun createUser(user: UserConfig, callback: Callback) {
+//        var json = JSONObject()
+//        json.put("id", user.id.toString())
+//        json.put("email", user.email)
+//        json.put("password", user.password)
+//        doPost(FARM_USERS_ENDPOINT, json, callback)
+//    }
+
+    fun deleteFarmUser(userId: Long, callback: Callback) {
+        val args = ArrayList<String>()
+        args.add(userId.toString())
+        doDelete(FARM_USERS_ENDPOINT, args, callback)
+    }
+
+    fun resetPassword(user: UserConfig, callback: Callback) {
+        var json = JSONObject()
+        json.put("email", user.email)
+        json.put("password", user.password)
+        doPost(FARM_USERS_ENDPOINT.plus("/${user.id}"), json, callback)
     }
 
     fun login(organizationName: String, username: String, password: String, callback: Callback) {
@@ -464,7 +508,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         var endpoint = endpoint
         if(args.size > 0) {
             for(arg in args) {
-                endpoint = endpoint.plus("/").plus(arg)
+                endpoint = endpoint.plus("/${arg}")
             }
         }
         Log.d("CropDroidAPI.doGet", "endpoint: " + endpoint)

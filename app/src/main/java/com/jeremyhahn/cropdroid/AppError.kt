@@ -6,6 +6,7 @@ import android.content.DialogInterface
 import android.view.Gravity
 
 import android.widget.Toast
+import com.jeremyhahn.cropdroid.model.APIResponse
 
 class AppError(context: Context) {
 
@@ -30,6 +31,34 @@ class AppError(context: Context) {
             .setMessage(message)
             .setPositiveButton(android.R.string.yes, yesListener)
             .setNegativeButton(android.R.string.no, noListener)
+            .setIcon(android.R.drawable.ic_dialog_alert)
+            .show()
+    }
+
+    fun error(message: String) {
+        AlertDialog.Builder(context)
+            .setTitle("Error")
+            .setMessage(message)
+            .setIcon(android.R.drawable.ic_dialog_alert)
+            .show()
+    }
+
+    fun exception(e: Exception) {
+        AlertDialog.Builder(context)
+            .setTitle("Exception")
+            .setMessage(e.message)
+            .setPositiveButton(android.R.string.ok, null)
+            .setIcon(android.R.drawable.ic_dialog_alert)
+            .show()
+    }
+
+    fun apiAlert(response: APIResponse) {
+        val code = response.code
+        val error = response.error
+        AlertDialog.Builder(context)
+            .setTitle("API Error")
+            .setMessage("Status $code: $error")
+            .setPositiveButton(android.R.string.ok, null)
             .setIcon(android.R.drawable.ic_dialog_alert)
             .show()
     }

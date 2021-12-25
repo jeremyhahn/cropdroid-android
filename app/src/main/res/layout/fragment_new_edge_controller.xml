@@ -2,46 +2,42 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/newControllerContainer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/newControllerContainer"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingBottom="@dimen/activity_vertical_margin"
     tools:context=".ui.edgecontroller.NewEdgeControllerFragment">
 
-    <!--
-    <EditText
-        android:id="@+id/name"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="96dp"
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="328dp"
+        android:layout_height="34dp"
+        android:layout_marginTop="28dp"
         android:layout_marginEnd="24dp"
-        android:hint="@string/prompt_name"
-        android:inputType="text"
-        android:selectAllOnFocus="true"
+        android:text="@string/action_add_controller_textview"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-    -->
 
     <EditText
         android:id="@+id/hostname"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="22dp"
         android:layout_marginEnd="24dp"
         android:hint="@string/prompt_hostname"
         android:imeOptions="actionDone"
         android:inputType="text"
+        android:minHeight="48dp"
         android:selectAllOnFocus="true"
         android:text="192.168.0.71:8091"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-        <!-- app:layout_constraintTop_toBottomOf="@+id/name" -->
+        app:layout_constraintHorizontal_bias="0.218"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView2" />
 
     <Button
         android:id="@+id/addController"

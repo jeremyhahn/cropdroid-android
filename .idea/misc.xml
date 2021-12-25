@@ -12,7 +12,16 @@
         <entry key="app/src/main/res/drawable/ic_menu_gallery.xml" value="0.3770833333333333" />
         <entry key="app/src/main/res/drawable/ic_menu_slideshow.xml" value="0.3770833333333333" />
         <entry key="app/src/main/res/drawable/side_nav_bar.xml" value="0.3770833333333333" />
+        <entry key="app/src/main/res/layout/activity_settings.xml" value="0.1828125" />
         <entry key="app/src/main/res/layout/activity_store.xml" value="0.37916666666666665" />
+        <entry key="app/src/main/res/layout/cardview_organization.xml" value="0.22447916666666667" />
+        <entry key="app/src/main/res/layout/cardview_useraccount.xml" value="0.3786231884057971" />
+        <entry key="app/src/main/res/layout/dialog_condition.xml" value="0.37817028985507245" />
+        <entry key="app/src/main/res/layout/dialog_edit_decimal.xml" value="0.365036231884058" />
+        <entry key="app/src/main/res/layout/dialog_number_picker.xml" value="0.37817028985507245" />
+        <entry key="app/src/main/res/layout/dialog_reset_password.xml" value="0.365036231884058" />
+        <entry key="app/src/main/res/layout/dialog_roles.xml" value="0.37817028985507245" />
+        <entry key="app/src/main/res/layout/dialog_workflow_step.xml" value="0.365036231884058" />
         <entry key="app/src/main/res/layout/doser_switch_cardview.xml" value="0.3609375" />
         <entry key="app/src/main/res/layout/edgedevice_cardview.xml" value="0.37916666666666665" />
         <entry key="app/src/main/res/layout/farm_cardview.xml" value="0.37916666666666665" />
@@ -21,16 +30,24 @@
         <entry key="app/src/main/res/layout/fragment_farms.xml" value="0.37916666666666665" />
         <entry key="app/src/main/res/layout/fragment_login.xml" value="0.37916666666666665" />
         <entry key="app/src/main/res/layout/fragment_microcontroller.xml" value="0.3609375" />
+        <entry key="app/src/main/res/layout/fragment_new_edge_controller.xml" value="0.348731884057971" />
+        <entry key="app/src/main/res/layout/fragment_organizations.xml" value="0.2947916666666667" />
         <entry key="app/src/main/res/layout/fragment_progressbar.xml" value="0.3609375" />
         <entry key="app/src/main/res/layout/fragment_quit.xml" value="0.17135416666666667" />
         <entry key="app/src/main/res/layout/fragment_reservoir.xml" value="0.3609375" />
         <entry key="app/src/main/res/layout/fragment_room.xml" value="0.3609375" />
+        <entry key="app/src/main/res/layout/fragment_settings.xml" value="0.348731884057971" />
+        <entry key="app/src/main/res/layout/fragment_settings_useraccounts.xml" value="0.3786231884057971" />
+        <entry key="app/src/main/res/layout/fragment_store.xml" value="0.23020833333333332" />
+        <entry key="app/src/main/res/layout/fragment_useraccounts.xml" value="0.37817028985507245" />
         <entry key="app/src/main/res/layout/fragment_workflows.xml" value="0.3609375" />
         <entry key="app/src/main/res/layout/master_cardview.xml" value="0.37916666666666665" />
         <entry key="app/src/main/res/layout/microcontroller_tabs.xml" value="0.3609375" />
+        <entry key="app/src/main/res/layout/nav_header_navigation.xml" value="0.37916666666666665" />
         <entry key="app/src/main/res/layout/workflow_list_group.xml" value="0.20572916666666666" />
         <entry key="app/src/main/res/layout/workflow_list_item.xml" value="0.3609375" />
         <entry key="app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.3953125" />
+        <entry key="app/src/main/res/xml/user_preferences.xml" value="0.37916666666666665" />
       </map>
     </option>
   </component>
