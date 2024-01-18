@@ -31,17 +31,17 @@ class ControllerParser {
                 //val uri = jsonController.getString("uri")
                 //val configs = jsonController.getJSONObject("configs")
 
-                val jsonConfigs = jsonController.getJSONObject("configs")
-                val configs = HashMap<String, Any>(jsonConfigs.length())
+                val jsonConfigMap = jsonController.getJSONObject("configMap")
+                val configs = HashMap<String, Any>(jsonConfigMap.length())
 
-                for ((i, k) in jsonConfigs.keys().withIndex()) {
-                    val v = jsonConfigs.getString(k)
-                    if (v.toLowerCase().equals("true") || v.toLowerCase().equals("false")) {
-                        configs.put(k, v.toBoolean())
+                for ((i, k) in jsonConfigMap.keys().withIndex()) {
+                    val v = jsonConfigMap.getString(k)
+                    if (v.lowercase() == "true" || v.lowercase() == "false") {
+                        configs[k] = v.toBoolean()
                     //} else if(k.equals("integer") && v.matches("^[+-]?\\d+$".toRegex())) {
                     //    configs.put(k, v.toInt())
                     } else {
-                        configs.put(k, v)
+                        configs[k] = v
                     }
                     Log.i("ControllerParser.parse", "Parsing config key: " + k + " = value: " + v)
                 }

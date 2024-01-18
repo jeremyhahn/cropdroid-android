@@ -84,20 +84,20 @@ class OrganizationListFragment : Fragment(), OrganizationListener {
         })
 
         fragmentView.fab.setOnClickListener { view ->
-            cropDroidAPI.provision(mainActivity.orgId, object: Callback {
-                override fun onFailure(call: Call, e: IOException) {
-                    Log.d("UserAccountsListFragment.provision", "onFailure response: " + e!!.message)
-                    return
-                }
-                override fun onResponse(call: Call, response: okhttp3.Response) {
-                    val responseBody = response.body().string()
-                    Log.d("UserAccountsListFragment.provision", responseBody)
-                    viewModel.getOrganizations()
-//                    fragmentActivity.runOnUiThread{
-//                        recyclerView.adapter!!.notifyDataSetChanged()
-//                    }
-                }
-            })
+//            cropDroidAPI.provision(mainActivity.orgId, object: Callback {
+//                override fun onFailure(call: Call, e: IOException) {
+//                    Log.d("UserAccountsListFragment.provision", "onFailure response: " + e!!.message)
+//                    return
+//                }
+//                override fun onResponse(call: Call, response: okhttp3.Response) {
+//                    val responseBody = response.body().string()
+//                    Log.d("UserAccountsListFragment.provision", responseBody)
+//                    viewModel.getOrganizations()
+////                    fragmentActivity.runOnUiThread{
+////                        recyclerView.adapter!!.notifyDataSetChanged()
+////                    }
+//                }
+//            })
         }
 
         viewModel.getOrganizations()

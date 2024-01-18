@@ -12,12 +12,14 @@
         <entry key="app/src/main/res/drawable/ic_menu_gallery.xml" value="0.3770833333333333" />
         <entry key="app/src/main/res/drawable/ic_menu_slideshow.xml" value="0.3770833333333333" />
         <entry key="app/src/main/res/drawable/side_nav_bar.xml" value="0.3770833333333333" />
+        <entry key="app/src/main/res/layout/activity_login.xml" value="0.24635416666666668" />
         <entry key="app/src/main/res/layout/activity_settings.xml" value="0.1828125" />
         <entry key="app/src/main/res/layout/activity_store.xml" value="0.37916666666666665" />
         <entry key="app/src/main/res/layout/cardview_organization.xml" value="0.22447916666666667" />
         <entry key="app/src/main/res/layout/cardview_useraccount.xml" value="0.3786231884057971" />
         <entry key="app/src/main/res/layout/dialog_condition.xml" value="0.37817028985507245" />
         <entry key="app/src/main/res/layout/dialog_edit_decimal.xml" value="0.365036231884058" />
+        <entry key="app/src/main/res/layout/dialog_edit_text.xml" value="0.37916666666666665" />
         <entry key="app/src/main/res/layout/dialog_number_picker.xml" value="0.37817028985507245" />
         <entry key="app/src/main/res/layout/dialog_reset_password.xml" value="0.365036231884058" />
         <entry key="app/src/main/res/layout/dialog_roles.xml" value="0.37817028985507245" />
@@ -27,6 +29,7 @@
         <entry key="app/src/main/res/layout/farm_cardview.xml" value="0.37916666666666665" />
         <entry key="app/src/main/res/layout/fragment_community.xml" value="0.3609375" />
         <entry key="app/src/main/res/layout/fragment_edge_controller_list.xml" value="0.37916666666666665" />
+        <entry key="app/src/main/res/layout/fragment_events.xml" value="0.13125" />
         <entry key="app/src/main/res/layout/fragment_farms.xml" value="0.37916666666666665" />
         <entry key="app/src/main/res/layout/fragment_login.xml" value="0.37916666666666665" />
         <entry key="app/src/main/res/layout/fragment_microcontroller.xml" value="0.3609375" />

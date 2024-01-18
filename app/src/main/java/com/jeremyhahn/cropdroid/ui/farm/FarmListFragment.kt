@@ -7,6 +7,9 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ProgressBar
+import android.widget.TextView
+
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -14,6 +17,7 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.config.TokenParser
@@ -28,7 +32,8 @@ import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
 
-class FarmListFragment : Fragment(), FarmListener {
+
+class FarmListFragment : Fragment(), FarmListener, NewFarmDialogHandler {
 
     private val TAG = "UserAccountsListFragment"
     lateinit private var connection : Connection
@@ -37,6 +42,9 @@ class FarmListFragment : Fragment(), FarmListener {
     private var recyclerView: RecyclerView? = null
     private var swipeContainer: SwipeRefreshLayout? = null
     lateinit private var viewModel: FarmViewModel
+    lateinit private var progressBar: ProgressBar
+    lateinit private var farmListTextView: TextView
+    lateinit private var fab: FloatingActionButton
     //private var workflows = java.util.ArrayList<Workflow>()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -45,6 +53,9 @@ class FarmListFragment : Fragment(), FarmListener {
         var fragmentActivity = requireActivity()
         var fragmentView = inflater.inflate(R.layout.fragment_farms, container, false)
         val mainActivity = (activity as MainActivity)
+
+        farmListTextView = fragmentView.farmListText
+        fab = fragmentView.fab
 
         val preferences = Preferences(fragmentActivity)
         val controllerSharedPrefs = preferences.getControllerPreferences()
@@ -61,6 +72,7 @@ class FarmListFragment : Fragment(), FarmListener {
 
         swipeContainer = fragmentView.findViewById(R.id.farmsSwipeRefresh) as SwipeRefreshLayout
         swipeContainer?.setOnRefreshListener {
+            refreshToken()
             viewModel.getFarms()
             swipeContainer!!.isRefreshing = false
         }
@@ -80,67 +92,79 @@ class FarmListFragment : Fragment(), FarmListener {
             recyclerView.adapter!!.notifyDataSetChanged()
 
             if(recyclerItems.size <= 0) {
-                fragmentView.farmListEmptyText.visibility = View.VISIBLE
+                farmListTextView.text = getString(R.string.empty_farms)
+                farmListTextView.visibility = View.VISIBLE
             } else {
-                fragmentView.farmListEmptyText.visibility = View.GONE
+                farmListTextView.visibility = View.GONE
             }
         })
 
-        fragmentView.fab.setOnClickListener { view ->
-            cropDroidAPI.provision(mainActivity.orgId, object: Callback {
-                override fun onFailure(call: Call, e: IOException) {
-                    Log.d("UserAccountsListFragment.provision", "onFailure response: " + e!!.message)
-                    return
-                }
-                override fun onResponse(call: Call, response: okhttp3.Response) {
-                    val responseBody = response.body().string()
-                    Log.d("UserAccountsListFragment.provision", responseBody)
-
-                    // Get a new JWT with the newly provisioned farm
-                    cropDroidAPI.refreshToken(mainActivity.user!!.id.toLong(), object: Callback {
-                            override fun onFailure(call: Call, e: IOException) {
-                                Log.d("UserAccountsListFragment.refreshToken", "onFailure response: " + e!!.message)
-                                return
-                            }
-                            override fun onResponse(call: Call, response: okhttp3.Response) {
-                                val responseBody = response.body().string()
-                                Log.d("UserAccountsListFragment.refreshToken", responseBody)
-
-                                val responseToken = TokenParser.parse(responseBody)
-                                connection.token = responseToken.token
-
-                                // This is just for debugging
-                                val jwt = JsonWebToken(requireContext(), connection)
-                                jwt.parse()
-                                Log.d("jwt", jwt.claims.toString())
-
-                                val organizations = jwt.organizations()
-                                val farms = jwt.farms()
-
-                                Log.d("uid", jwt.uid().toString())
-                                Log.d("email", jwt.email())
-                                Log.d("organizations", organizations.toString())
-                                Log.d("farms", farms.toString())
-                                Log.d("exp", jwt.exp().toString())
-                                Log.d("iat", jwt.iat().toString())
-                                Log.d("iss", jwt.iss())
-                                // end debugging
-
-                                val repository = EdgeDeviceRepository(fragmentActivity.applicationContext)
-                                repository.updateController(connection)
-
-                                cropDroidAPI = CropDroidAPI(connection, controllerSharedPrefs)
-                                viewModel.update(cropDroidAPI)
-                                viewModel.getFarms()
-                            }
-                    })
-                }
-            })
+        fab.setOnClickListener { view ->
+            showNewFarmDialog();
+//            cropDroidAPI.provision(mainActivity.orgId, object: Callback {
+//                override fun onFailure(call: Call, e: IOException) {
+//                    Log.d("UserAccountsListFragment.provision", "onFailure response: " + e!!.message)
+//                    return
+//                }
+//                override fun onResponse(call: Call, response: okhttp3.Response) {
+//                    val responseBody = response.body().string()
+//                    Log.d("UserAccountsListFragment.provision", responseBody)
+//
+//                    refreshToken()
+//                }
+//            })
         }
+
+        progressBar = fragmentView.findViewById<ProgressBar>(R.id.progressBar)
 
         viewModel.getFarms()
 
         return fragmentView
+    }
+
+    // Get a new JWT
+    fun refreshToken() {
+        val mainActivity = (activity as MainActivity)
+        var fragmentActivity = requireActivity()
+        val preferences = Preferences(fragmentActivity)
+        val controllerSharedPrefs = preferences.getControllerPreferences()
+        cropDroidAPI.refreshToken(mainActivity.user!!.id.toLong(), object: Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.d("UserAccountsListFragment.refreshToken", "onFailure response: " + e!!.message)
+                return
+            }
+            override fun onResponse(call: Call, response: okhttp3.Response) {
+                val responseBody = response.body().string()
+                Log.d("UserAccountsListFragment.refreshToken", responseBody)
+
+                val responseToken = TokenParser.parse(responseBody)
+                connection.token = responseToken.token
+
+                // This is just for debugging
+                val jwt = JsonWebToken(requireContext(), connection)
+                jwt.parse()
+                Log.d("jwt", jwt.claims.toString())
+
+                val organizations = jwt.organizations()
+                val farms = jwt.farms()
+
+                Log.d("uid", jwt.uid().toString())
+                Log.d("email", jwt.email())
+                Log.d("organizations", organizations.toString())
+                Log.d("farms", farms.toString())
+                Log.d("exp", jwt.exp().toString())
+                Log.d("iat", jwt.iat().toString())
+                Log.d("iss", jwt.iss())
+                // end debugging
+
+                val repository = EdgeDeviceRepository(fragmentActivity.applicationContext)
+                repository.updateController(connection)
+
+                cropDroidAPI = CropDroidAPI(connection, controllerSharedPrefs)
+                viewModel.update(cropDroidAPI)
+                viewModel.getFarms()
+            }
+        })
     }
 
     override fun showContextMenu(position: Int) {
@@ -189,6 +213,44 @@ class FarmListFragment : Fragment(), FarmListener {
         val value = viewModel.farms.value
         if(value == null) return 0
         return value.size
+    }
+
+    fun showNewFarmDialog() {
+        val bundle = Bundle()
+        val workflowFragment = NewFarmDialogFragment(cropDroidAPI, this)
+        workflowFragment.arguments = bundle
+        workflowFragment.isCancelable = true
+        workflowFragment.show(requireActivity().supportFragmentManager,TAG)
+    }
+
+    override fun onNewFarmDialogApply(farmName: String) {
+        val mainActivity = (activity as MainActivity)
+
+        fab.isEnabled = false
+
+        farmListTextView.text = getString(R.string.action_creating_farm)
+        farmListTextView.visibility = View.VISIBLE
+
+        progressBar.visibility = View.VISIBLE
+
+        cropDroidAPI.provision(mainActivity.orgId, farmName, object: Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                mainActivity.runOnUiThread(Runnable {
+                    progressBar.visibility = View.GONE
+                    fab.isEnabled = true
+                })
+                Log.d("UserAccountsListFragment.onNewFarmDialogApply", "onFailure response: " + e.message)
+            }
+            override fun onResponse(call: Call, response: okhttp3.Response) {
+                mainActivity.runOnUiThread(Runnable {
+                    progressBar.visibility = View.GONE
+                    fab.isEnabled = true
+                })
+                val responseBody = response.body().string()
+                Log.d("UserAccountsListFragment.onNewFarmDialogApply", responseBody)
+                refreshToken()
+            }
+        })
     }
 //
 //    override fun createFarm(orgId: Long) {

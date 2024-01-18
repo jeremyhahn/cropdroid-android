@@ -40,6 +40,7 @@
     <string name="title_backoff">Backoff</string>
     <string name="title_history">History</string>
     <string name="title_algorithm">Algorithm</string>
+    <string name="title_new_farm">New Crop</string>
     <string name="title_workflow">Workflow</string>
     <string name="title_run_workflow">Run Workflow</string>
     <string name="title_new_workflow">New Workflow</string>
@@ -49,6 +50,7 @@
     <string name="title_role">Role Assignment</string>
     <string name="title_roles">Roles</string>
 
+    <string name="action_creating_farm">Creating Farm...</string>
     <string name="action_sign_in">Sign in</string>
     <string name="action_register">Register</string>
     <string name="action_add_controller">Create</string>
@@ -118,6 +120,7 @@
     <string name="dialog_message_metric_value">Enter the new sensor value</string>
     <string name="dialog_message_algorithm">Select the algorithm</string>
     <string name="dialog_message_workflow">Enter the new workflow name</string>
+    <string name="dialog_message_farm">Enter the new crop name</string>
     <string name="dialog_message_workflow_step">Enter the new workflow step configuration</string>
     <string name="dialog_message_reset_password">Enter the new password</string>
     <string name="dialog_message_roles">Choose the role you want assigned to %1$s.</string>

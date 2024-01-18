@@ -146,13 +146,13 @@ class NotificationService : Service() {
 
     fun createWebsocket(controller: Connection) {
         val jwt = JsonWebToken(applicationContext, controller)
-        jwt.parse()
-//        try {
-//            jwt.parse()
-//        }
-//        catch(e: MalformedJwtException) {
-//            return
-//        }
+        try {
+            jwt.parse()
+        }
+        catch(e: Exception) {
+            Log.e("NotificationService.createWebsocket", e.message)
+            return
+        }
         for(org in jwt.organizations()) {
             for(farm in org.farms) {
                 try {

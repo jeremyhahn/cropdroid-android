@@ -15,6 +15,8 @@ import org.json.JSONObject
 import java.io.IOException
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
+import java.util.concurrent.TimeUnit
+
 
 class CropDroidAPI(private val connection: Connection, preferences: SharedPreferences?) {
 
@@ -369,10 +371,10 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         doPut(CHANNEL_ENDPOINT, json, callback)
     }
 
-    fun provision(orgId: Long, callback: Callback) {
+    fun provision(orgId: Long, farmName: String, callback: Callback) {
         Log.d("CropDropAPI.provision", "orgId="+orgId)
         var json = JSONObject()
-        doPost(PROVISION_ENDPOINT.plus("/${orgId}"), json, callback)
+        doPost(PROVISION_ENDPOINT.plus("/${orgId}/${farmName}"), json, callback)
     }
 
     fun deprovision(farmId: Long, callback: Callback) {
@@ -540,7 +542,12 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         if(connection.hostname.isEmpty()) return fail(callback, "Hostname required")
         //var endpoint = REST_ENDPOINT.plus(resource)
         Log.d("CropDroidAPI.doPost", "endpoint: " + endpoint)
-        var client = OkHttpClient()
+        var client = OkHttpClient.Builder()
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .writeTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
+            .build()
         var JSON = MediaType.parse("application/json; charset=utf-8")
         var body = RequestBody.create(JSON, json.toString())
         var request: Request? = null
