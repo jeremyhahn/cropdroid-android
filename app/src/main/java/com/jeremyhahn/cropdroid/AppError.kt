@@ -43,6 +43,14 @@ class AppError(context: Context) {
             .show()
     }
 
+    fun error(e: Exception) {
+        AlertDialog.Builder(context)
+            .setTitle("Error")
+            .setMessage(e.message)
+            .setIcon(android.R.drawable.ic_dialog_alert)
+            .show()
+    }
+
     fun exception(e: Exception) {
         AlertDialog.Builder(context)
             .setTitle("Exception")

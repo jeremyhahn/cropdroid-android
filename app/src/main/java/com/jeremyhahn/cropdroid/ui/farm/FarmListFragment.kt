@@ -18,8 +18,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.jeremyhahn.cropdroid.AppError
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
+import com.jeremyhahn.cropdroid.config.APIResponseParser
 import com.jeremyhahn.cropdroid.config.TokenParser
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
@@ -177,11 +179,17 @@ class FarmListFragment : Fragment(), FarmListener, NewFarmDialogHandler {
                cropDroidAPI.deprovision(farms[position].id, object: Callback {
                    override fun onFailure(call: Call, e: IOException) {
                        Log.d("UserAccountsListFragment.deprovision", "onFailure response: " + e!!.message)
+                       AppError(requireActivity()).error(e)
                        return
                    }
                    override fun onResponse(call: Call, response: okhttp3.Response) {
-                       val responseBody = response.body().string()
-                       Log.d("UserAccountsListFragment.deprovision", responseBody)
+                       val apiResponse = APIResponseParser.parse(response)
+                       if (!apiResponse.success) {
+                           requireActivity().runOnUiThread {
+                             AppError(requireActivity()).apiAlert(apiResponse)
+                           }
+                           return
+                       }
                        val newFarms = viewModel.farms.value!!
                            newFarms.remove(farms[position])
                            viewModel.farms.postValue(newFarms)

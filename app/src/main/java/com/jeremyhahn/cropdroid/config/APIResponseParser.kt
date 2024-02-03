@@ -11,15 +11,17 @@ class APIResponseParser {
         fun parse(response: Response) : APIResponse {
             val responseBody = response.body().string()
             Log.d("APIResponseParser.parse", "response.body(): " + responseBody)
-            try {
+            return try {
                 val jsonResponse = JSONObject(responseBody)
+                val errcode = jsonResponse.getInt("code")
                 val error = jsonResponse.getString("error")
                 val success = jsonResponse.getBoolean("success")
                 val payload = jsonResponse.get("payload")
-                return APIResponse(response.code(), error, success, payload)
-            }
-            catch(e: JSONException) {
-                return APIResponse(response.code(), responseBody, false, "")
+
+                var displayCode = if(errcode > 0) errcode else response.code()
+                APIResponse(displayCode, error, success, payload)
+            } catch(e: JSONException) {
+                APIResponse(response.code(), responseBody, false, "")
             }
         }
     }

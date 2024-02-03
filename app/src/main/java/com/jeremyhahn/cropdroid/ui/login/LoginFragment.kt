@@ -3,7 +3,6 @@ package com.jeremyhahn.cropdroid.ui.login
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.text.TextUtils
 import android.util.Log
 import android.util.Patterns
 import android.view.LayoutInflater
@@ -20,6 +19,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.cast.CastRemoteDisplayLocalService.startService
 import com.google.android.gms.cast.CastStatusCodes.*
 import com.google.android.gms.common.SignInButton
 import com.google.android.gms.common.api.ApiException
@@ -33,10 +33,10 @@ import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
 import com.jeremyhahn.cropdroid.model.Connection
+import com.jeremyhahn.cropdroid.service.NotificationService
 import com.jeremyhahn.cropdroid.utils.JsonWebToken
 import com.jeremyhahn.cropdroid.utils.Preferences
 import io.jsonwebtoken.ExpiredJwtException
-import kotlinx.android.synthetic.main.activity_login.*
 import kotlinx.android.synthetic.main.activity_login.password
 import kotlinx.android.synthetic.main.activity_login.useSSL
 import kotlinx.android.synthetic.main.activity_login.username
@@ -45,6 +45,7 @@ import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Response
 import java.io.IOException
+
 
 class LoginFragment() : Fragment(), View.OnClickListener {
 
@@ -212,52 +213,64 @@ class LoginFragment() : Fragment(), View.OnClickListener {
                 Log.d("LoginActivity token:", user.token)
                 connection.token = user.token
 
-                val jwt = JsonWebToken(requireContext(), connection)
-                jwt.parse()
-                Log.d("jwt", jwt.claims.toString())
+                try {
+                    val jwt = JsonWebToken(requireContext(), connection)
+                    jwt.parse()
+                    Log.d("jwt", jwt.claims.toString())
 
-                var organizations = jwt.organizations()
-                var farms = jwt.farms()
+                    var organizations = jwt.organizations()
+                    var farms = jwt.farms()
 
-                Log.d("uid", jwt.uid().toString())
-                Log.d("email", jwt.email())
-                Log.d("organizations", organizations.toString())
-                Log.d("farms", farms.toString())
-                Log.d("exp", jwt.exp().toString())
-                Log.d("iat", jwt.iat().toString())
-                Log.d("iss", jwt.iss())
+                    Log.d("uid", jwt.uid().toString())
+                    Log.d("email", jwt.email())
+                    Log.d("organizations", organizations.toString())
+                    Log.d("farms", farms.toString())
+                    Log.d("exp", jwt.exp().toString())
+                    Log.d("iat", jwt.iat().toString())
+                    Log.d("iss", jwt.iss())
 
-                user.id = jwt.uid().toString()
-                user.username = jwt.email()
+                    user.id = jwt.uid().toString()
+                    user.username = jwt.email()
 
-                connection.secure = if (useSSL.isChecked) 1 else 0
-                connection.token = user.token
-                connection.jwt = jwt
+                    connection.secure = if (useSSL.isChecked) 1 else 0
+                    connection.token = user.token
+                    connection.jwt = jwt
 
-                var rowsUpdated = repository.updateController(connection)
-                if (rowsUpdated != 1) {
-                    Log.e("LoginActivity.loginResult.token", "Unexpected number of rows effected: " + rowsUpdated.toString())
-                    return@Observer
+                    var rowsUpdated = repository.updateController(connection)
+                    if (rowsUpdated != 1) {
+                        Log.e(
+                            "LoginActivity.loginResult.token",
+                            "Unexpected number of rows effected: " + rowsUpdated.toString()
+                        )
+                        return@Observer
+                    }
+                    Log.i("LoginActivity.loginResult.token", "Successfully authenticated")
+
+//                    val serviceIntent = Intent(context, NotificationService::class.java)
+//                    mainActivity.startService(serviceIntent)
+
+                    // TODO: Refactor to support users belonging to multiple organizations
+                    //                if(organizations.isNotEmpty()) {
+                    //                    for (organization in organizations) {
+                    //                        val orgId = organization.id
+                    //                        if (organizations[0].farms.size > 0) {
+                    //                            farmId = organizations[0].farms[0].id
+                    //                        }
+                    //                        user.id = jwt.uid().toString()
+                    //                        user.orgId = orgId.toString()
+                    //
+                    //                        mainActivity.navigateToOrganizations(connection, user)
+                    //                        return
+                    //                    }
+                    //                }
+
+                    //mainActivity.login(connection)
+                    mainActivity.setLoggedInUser(user)
+                    mainActivity.navigateToFarms(connection, user, 0)
                 }
-                Log.i("LoginActivity.loginResult.token", "Successfully authenticated")
-
-                // TODO: Refactor to support users belonging to multiple organizations
-//                if(organizations.isNotEmpty()) {
-//                    for (organization in organizations) {
-//                        val orgId = organization.id
-//                        if (organizations[0].farms.size > 0) {
-//                            farmId = organizations[0].farms[0].id
-//                        }
-//                        user.id = jwt.uid().toString()
-//                        user.orgId = orgId.toString()
-//
-//                        mainActivity.navigateToOrganizations(connection, user)
-//                        return
-//                    }
-//                }
-                //mainActivity.login(connection)
-                mainActivity.setLoggedInUser(user)
-                mainActivity.navigateToFarms(connection, user, 0)
+                catch(e: Exception) {
+                    e.message?.let { it1 -> AppError(requireActivity()).alert(it1, null, null) }
+                }
             }
         })
 /*

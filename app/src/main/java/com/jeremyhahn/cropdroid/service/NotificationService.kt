@@ -1,9 +1,6 @@
 package com.jeremyhahn.cropdroid.service
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.app.Service
+import android.app.*
 import android.content.Intent
 import android.graphics.Color
 import android.os.Build
@@ -26,8 +23,7 @@ import org.json.JSONObject
 import java.lang.Thread.sleep
 import java.time.ZonedDateTime
 import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
+
 
 class NotificationService : Service() {
 
@@ -102,7 +98,7 @@ class NotificationService : Service() {
         var controllers = EdgeDeviceRepository(this).allControllers
 
         if(controllers.size <= 0) {
-            Log.d("NotificationService.onStartCommand", "No controllers configured, aborting...")
+            Log.d("NotificationService.startListeners", "No controllers configured, aborting...")
             return false
         }
 
@@ -112,14 +108,16 @@ class NotificationService : Service() {
             if(websockets[controller] == null) {
                 if(controller.token.isEmpty()) {
                     // Controller hasn't been logged into yet
+                    Log.w("NotificationService.startListeners", "No JWT token found for controller: " + controller)
                     continue
                 }
-                Log.d("NotificationService.onStartCommand", "Found controller: " + controller)
+                Log.d("NotificationService.startListeners", "Found controller: " + controller)
                 authenticatedControllers.add(controller)
             }
         }
 
         if(authenticatedControllers.size <= 0) {
+            Log.e("NotificationService.startListeners", "Unable to find any authenticated controllers. Aborting.")
             return false
         }
 
@@ -130,7 +128,6 @@ class NotificationService : Service() {
         }
 
         Log.d("NotificationService", "Connected to " + websockets.size.toString() + " controller(s)")
-
         return true
     }
 
@@ -146,32 +143,47 @@ class NotificationService : Service() {
 
     fun createWebsocket(controller: Connection) {
         val jwt = JsonWebToken(applicationContext, controller)
-        try {
+//        try {
             jwt.parse()
-        }
-        catch(e: Exception) {
-            Log.e("NotificationService.createWebsocket", e.message)
-            return
-        }
-        for(org in jwt.organizations()) {
-            for(farm in org.farms) {
-                try {
-                    val client = OkHttpClient()
-                    val protocol = if (controller.secure == 1) "wss://" else "ws://"
-                    val request = Request.Builder()
-                        .url(protocol.plus(controller.hostname).plus(API_BASE).plus("/farms/${farm.id}/notifications"))
-                        .addHeader("Authorization", "Bearer " + controller.token)
-                        .build()
-                    val listener = NotificationWebSocketListener()
-                    websockets[controller] = client.newWebSocket(request, listener)
-                    client.dispatcher().executorService().shutdown()
-                    client.retryOnConnectionFailure()
-                }
-                catch(e: java.lang.IllegalArgumentException) {
-                    Toast.makeText(applicationContext, e.message, Toast.LENGTH_LONG).show()
-                }
-                Log.d("NotificationService.createWebsocket", "Created WebSocket " + websockets[controller].hashCode() + " for " + controller.hostname)
+            Log.d("NotificationService.createWebsocket", "JWT: " + jwt.toString())
+//        }
+//        catch(e: Exception) {
+//            val alertDialog: AlertDialog = AlertDialog.Builder(this)
+//                .setTitle("Authentication Error")
+//                .setMessage(e.message)
+//                .create()
+//            //alertDialog.window.setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT)
+//            alertDialog.show()
+//            Log.e("NotificationService.createWebsocket", e.message)
+//            return
+//        }
+        //for(org in jwt.organizations()) {
+        //    for(farm in org.farms) {
+        for(farm in jwt.farms()) {
+            try {
+                val client = OkHttpClient()
+                val protocol = if (controller.secure == 1) "wss://" else "ws://"
+                val request = Request.Builder()
+                    .url(
+                        protocol.plus(controller.hostname).plus(API_BASE)
+                            .plus("/farms/${farm.id}/notifications")
+                    )
+                    .addHeader("Authorization", "Bearer " + controller.token)
+                    .build()
+                val listener = NotificationWebSocketListener()
+                websockets[controller] = client.newWebSocket(request, listener)
+                client.dispatcher().executorService().shutdown()
+                client.retryOnConnectionFailure()
+            } catch (e: java.lang.IllegalArgumentException) {
+                Log.e("NotificationService.createWebsocket", e.message)
+                Toast.makeText(applicationContext, e.message, Toast.LENGTH_LONG).show()
             }
+            Log.d(
+                "NotificationService.createWebsocket",
+                "Created WebSocket " + websockets[controller].hashCode() + " for " + controller.hostname
+            )
+            //  }
+            //}
         }
     }
 
@@ -262,6 +274,7 @@ class NotificationService : Service() {
             var controller = getControllerByWebSocket(webSocket)
             if(controller != null) {
                 val jws = JsonWebToken(applicationContext, controller)
+                jws.parse()
                 var payload = "{\"id\":" + jws.uid().toString() + "}"
                 Log.d("NotificationService.onOpen", "controller="  + controller.hostname + ", payload=" + payload)
                 webSocket.send(payload)
