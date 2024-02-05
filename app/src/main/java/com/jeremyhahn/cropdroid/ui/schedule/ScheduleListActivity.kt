@@ -11,6 +11,8 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.jeremyhahn.cropdroid.AppError
+import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
@@ -104,7 +106,8 @@ class ScheduleListActivity : AppCompatActivity(), ScheduleSelectionListener {
         schedule.channelId = channelId
         cropDroidAPI.createSchedule(schedule, object: Callback {
             override fun onFailure(call: Call, e: IOException) {
-                Log.d("ScheduleListActivity.onScheduleSelected", "onFailure response: " + e!!.message)
+                Log.e("ScheduleListActivity.onScheduleSelected", "onFailure response: " + e!!.message)
+                //AppError(this).error(e)
                 return
             }
             override fun onResponse(call: Call, response: okhttp3.Response) {

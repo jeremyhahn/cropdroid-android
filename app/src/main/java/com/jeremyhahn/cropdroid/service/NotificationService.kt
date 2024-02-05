@@ -4,6 +4,7 @@ import android.app.*
 import android.content.Intent
 import android.graphics.Color
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
 import android.provider.Settings.System.DEFAULT_NOTIFICATION_URI
 import android.util.Log
@@ -28,11 +29,17 @@ import java.util.*
 class NotificationService : Service() {
 
     val GROUP_KEY_FOREGROUND = "cropdroid_foreground"
-    val CONNECTION_FAILED_DELAY = 60000L  // one minute
+
+    val RETRY_SECONDS = 5L // 5 seconds
+    val RETRY_INTERVAL = RETRY_SECONDS * 1000
+    val RETRY_INTERVAL_MILLIS = System.currentTimeMillis() + RETRY_INTERVAL
+
     var binder : IBinder? = null
     var websockets : HashMap<Connection, WebSocket> = HashMap()
     var notificationManager: NotificationManager? = null
     var bundlerNotificationBuilder: NotificationCompat.Builder? = null
+    val runnableStartListeners = Runnable { startListeners() }
+    private val handlerStartListeners: Handler = Handler()
 
     companion object {
         private const val NORMAL_CLOSURE_STATUS = 1000
@@ -98,7 +105,9 @@ class NotificationService : Service() {
         var controllers = EdgeDeviceRepository(this).allControllers
 
         if(controllers.size <= 0) {
-            Log.d("NotificationService.startListeners", "No controllers configured, aborting...")
+            Log.d("NotificationService.startListeners", String.format("No controllers configured, trying again in %d seconds...", RETRY_SECONDS))
+            handlerStartListeners.postAtTime(runnableStartListeners, RETRY_INTERVAL_MILLIS);
+            handlerStartListeners.postDelayed(runnableStartListeners, RETRY_INTERVAL);
             return false
         }
 
@@ -117,14 +126,23 @@ class NotificationService : Service() {
         }
 
         if(authenticatedControllers.size <= 0) {
-            Log.e("NotificationService.startListeners", "Unable to find any authenticated controllers. Aborting.")
+            Log.d("NotificationService.startListeners", String.format("Unable to find any authenticated controllers. Trying again in %d seconds...", RETRY_SECONDS))
+            handlerStartListeners.postAtTime(runnableStartListeners, RETRY_INTERVAL_MILLIS)
+            handlerStartListeners.postDelayed(runnableStartListeners, RETRY_INTERVAL)
             return false
         }
 
         for(controller in authenticatedControllers) {
             if(websockets.get(controller) == null) {
-                createWebsocket(controller)
+                createFarmNotificationWebsocket(controller)
             }
+        }
+
+        if(websockets.size != authenticatedControllers.size) {
+            Log.d("NotificationService.startListeners", String.format("Unable to connect to notification websocket. Trying again in %d seconds...", RETRY_SECONDS))
+            handlerStartListeners.postAtTime(runnableStartListeners, RETRY_INTERVAL_MILLIS)
+            handlerStartListeners.postDelayed(runnableStartListeners, RETRY_INTERVAL)
+            return false
         }
 
         Log.d("NotificationService", "Connected to " + websockets.size.toString() + " controller(s)")
@@ -141,7 +159,7 @@ class NotificationService : Service() {
         stopSelf()
     }
 
-    fun createWebsocket(controller: Connection) {
+    fun createFarmNotificationWebsocket(controller: Connection) {
         val jwt = JsonWebToken(applicationContext, controller)
 //        try {
             jwt.parse()
@@ -330,7 +348,7 @@ class NotificationService : Service() {
             Log.d("NotificationService.onFailure", "response: " + response.toString())
             Log.d("NotificationService.onFailure", "t:" + t.toString())
 
-            sleep(CONNECTION_FAILED_DELAY)
+            sleep(RETRY_INTERVAL_MILLIS)
 
             var controller = getControllerByWebSocket(webSocket)
             if(controller != null) {
@@ -339,7 +357,8 @@ class NotificationService : Service() {
                 createNotification(Notification(controller.hostname,
                     Constants.NOTIFICATION_PRIORITY_MED,
                     "Notification Service",
-                    "Connection failed! \n\n" + t.message, ZonedDateTime.now().toString()))
+                    String.format("Connection failed! %s", t.message),
+                    ZonedDateTime.now().toString()))
 
                 webSocket.cancel()
 
@@ -351,11 +370,11 @@ class NotificationService : Service() {
                 for(c in controllers) {
                     if (controller.equals(c)) {
                         if (controller.token.isEmpty()) {
-                            // Controller hasn't been logged into yet
+                            Log.d("NotificationService.onFailure", "No JWT token found for controller. Log in first...")
                             return
                         }
-                        Log.d("NotificationService.onStartCommand", "Found controller: " + controller)
-                        createWebsocket(controller)
+                        Log.d("NotificationService.onFailure", "Found controller: " + controller)
+                        createFarmNotificationWebsocket(controller)
                     }
                 }
                 return

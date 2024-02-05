@@ -50,8 +50,11 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
 
     init {
         if(preferences != null) {
-            orgId = preferences.getLong(CONFIG_ORG_ID_KEY, 0)
-            farmId = preferences.getLong(CONFIG_FARM_ID_KEY, 0)
+            try {
+                orgId = preferences!!.getLong(CONFIG_ORG_ID_KEY, 0)
+                farmId = preferences!!.getLong(CONFIG_FARM_ID_KEY, 0)
+            } catch (e: ClassCastException) {
+            }
         }
 
         REST_ENDPOINT = if(connection.secure == 1)
@@ -208,6 +211,9 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         json.put("interval", schedule.interval)
         json.put("count", schedule.count)
         json.put("days", days)
+
+        Log.e("CropDroidAPI.createSchedule", json.toString())
+
         doPost(SCHEDULE_ENDPOINT, json, callback)
     }
 
@@ -231,7 +237,6 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         }
         json.put("frequency", schedule.frequency)
         json.put("interval", schedule.interval)
-        json.put("count", schedule.count)
         json.put("days", days)
         doPut(SCHEDULE_ENDPOINT, json, callback)
     }

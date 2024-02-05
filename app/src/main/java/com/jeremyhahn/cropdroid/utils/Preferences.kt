@@ -32,7 +32,11 @@ class Preferences(context: Context) {
     }
 
     fun currentOrgId() : Long {
-        return getDefaultPreferences().getLong(CONFIG_ORG_ID_KEY, 0)
+        return try {
+            getDefaultPreferences().getLong(CONFIG_ORG_ID_KEY, 0)
+        } catch(e: ClassCastException) {
+            0
+        }
     }
 
     fun currentFarmId() : Long {
