@@ -11,15 +11,13 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.jeremyhahn.cropdroid.AppError
-import com.jeremyhahn.cropdroid.MainActivity
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
 import com.jeremyhahn.cropdroid.model.Connection
 import com.jeremyhahn.cropdroid.model.Schedule
 import com.jeremyhahn.cropdroid.utils.Preferences
-import kotlinx.android.synthetic.main.activity_schedule_list.*
 import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
@@ -42,7 +40,7 @@ class ScheduleListActivity : AppCompatActivity(), ScheduleSelectionListener {
         setContentView(R.layout.activity_schedule_list)
 
         channelId = intent.getLongExtra("channel_id", 0)
-        channelName = intent.getStringExtra("channel_name")
+        channelName = intent.getStringExtra("channel_name").toString()
         channelDuration = intent.getIntExtra("channel_duration", 0)
 
         val preferences = Preferences(applicationContext)
@@ -90,6 +88,7 @@ class ScheduleListActivity : AppCompatActivity(), ScheduleSelectionListener {
         })
         viewModel.getSchedule()
 
+        val fab = this.findViewById(R.id.fab) as FloatingActionButton
         fab.setOnClickListener { view ->
             val fragmentManager = supportFragmentManager
             var sublimePickerDialogFragment = SublimePickerDialogFragment(this, Schedule(), null)

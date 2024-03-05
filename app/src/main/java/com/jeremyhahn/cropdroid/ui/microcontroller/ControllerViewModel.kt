@@ -38,13 +38,13 @@ class ControllerViewModel(cropDroidAPI: CropDroidAPI, controllerType: String) : 
     fun getState() {
         cropDroidAPI.getState(controllerType, object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                Log.d("ControllerViewModel.getState()", "onFailure response: " + e!!.message)
+                Log.d("ProductViewModel.getState()", "onFailure response: " + e!!.message)
                 return
             }
             override fun onResponse(call: Call, response: okhttp3.Response) {
                 var responseBody = response.body().string()
 
-                Log.d("ControllerViewModel.getState()", "responseBody: " + responseBody)
+                Log.d("ProductViewModel.getState()", "responseBody: " + responseBody)
 
                 val json = JSONObject(responseBody)
 
@@ -75,7 +75,7 @@ class ControllerViewModel(cropDroidAPI: CropDroidAPI, controllerType: String) : 
     }
 
     override fun setConfig(controller: Controller) {
-        Log.d("ControllerViewModel.updateConfig", controller.toString())
+        Log.d("ProductViewModel.updateConfig", controller.toString())
         // Server doesn't send values with config updates; use current values
         for(metric in metrics) {
             for(newMetric in controller.metrics) {

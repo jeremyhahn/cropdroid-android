@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
@@ -18,7 +19,6 @@ import com.jeremyhahn.cropdroid.model.Condition
 import com.jeremyhahn.cropdroid.model.ConditionConfig
 import com.jeremyhahn.cropdroid.model.Connection
 import com.jeremyhahn.cropdroid.utils.Preferences
-import kotlinx.android.synthetic.main.activity_condition_list.*
 import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
@@ -40,7 +40,7 @@ class ConditionListActivity : AppCompatActivity(), ConditionDialogHandler {
         setContentView(R.layout.activity_condition_list)
 
         channelId = intent.getLongExtra("channel_id", 0)
-        channelName = intent.getStringExtra("channel_name")
+        channelName = intent.getStringExtra("channel_name").toString()
 
         val preferences = Preferences(applicationContext)
         val controllerSharedPrefs = preferences.getControllerPreferences()
@@ -88,7 +88,8 @@ class ConditionListActivity : AppCompatActivity(), ConditionDialogHandler {
         })
         viewModel.getConditions()
 
-        fab.setOnClickListener { view ->
+        val floatingActionButton = findViewById(R.id.fab) as FloatingActionButton
+        floatingActionButton.setOnClickListener { view ->
             showConditionDialog(Condition())
         }
     }

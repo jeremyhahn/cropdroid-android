@@ -23,7 +23,7 @@ class DownloadImageTask(bmImage: ImageView) : AsyncTask<String?, Void?, Bitmap?>
             val instream: InputStream = URL(urldisplay).openStream()
             mIcon11 = BitmapFactory.decodeStream(instream)
         } catch (e: Exception) {
-            Log.e("AppError", e.message)
+            e.message?.let { Log.e("AppError", it) }
             e.printStackTrace()
         }
         return mIcon11

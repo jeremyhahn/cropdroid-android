@@ -5,6 +5,7 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import android.os.StrictMode
 import android.util.Log
 import com.jeremyhahn.cropdroid.Constants.Companion.DATABASE_NAME
 import com.jeremyhahn.cropdroid.model.Connection
@@ -65,6 +66,9 @@ class EdgeDeviceRepository(context: Context) : SQLiteOpenHelper(context, DATABAS
     }
 
     fun create(controller: Connection) : Connection {
+        val oldReadPolicy = StrictMode.allowThreadDiskReads()
+        StrictMode.allowThreadDiskWrites()
+
         val db: SQLiteDatabase = this.getWritableDatabase()
         val values = ContentValues()
         values.put(KEY_HOSTNAME, controller.hostname)
@@ -77,10 +81,16 @@ class EdgeDeviceRepository(context: Context) : SQLiteOpenHelper(context, DATABAS
         if (!controller.token.isEmpty()) {
             controller.jwt = JsonWebToken(context!!, controller)
         }
+
+        StrictMode.setThreadPolicy(oldReadPolicy)
+
         return controller
     }
 
     fun get(hostname: String): Connection? {
+        val oldReadPolicy = StrictMode.allowThreadDiskReads()
+        StrictMode.allowThreadDiskWrites()
+
         val db: SQLiteDatabase = this.getReadableDatabase()
         val cursor: Cursor = db.query(
             TABLE_SERVERS,
@@ -107,15 +117,23 @@ class EdgeDeviceRepository(context: Context) : SQLiteOpenHelper(context, DATABAS
             cursor.getString(2),
             cursor.getString(3),
             null)
+        cursor.close()
         db.close()
         if(controller.token != "") {
             controller.jwt = JsonWebToken(context!!, controller)
         }
+
+        //StrictMode.setThreadPolicy(oldReadPolicy)
+
         return controller
     }
 
     fun getByHostname(hostname: String): Connection? {
         var controller : Connection? = null
+
+        val oldReadPolicy = StrictMode.allowThreadDiskReads()
+        StrictMode.allowThreadDiskWrites()
+
         val db: SQLiteDatabase = this.getReadableDatabase()
         val cursor: Cursor = db.query(
             TABLE_SERVERS,
@@ -144,7 +162,11 @@ class EdgeDeviceRepository(context: Context) : SQLiteOpenHelper(context, DATABAS
                 controller.jwt = JsonWebToken(context!!, controller)
             }
         }
+        cursor.close()
         db.close()
+
+        //StrictMode.setThreadPolicy(oldReadPolicy)
+
         return controller
     }
 
@@ -152,6 +174,10 @@ class EdgeDeviceRepository(context: Context) : SQLiteOpenHelper(context, DATABAS
         get() {
             var controllerList: ArrayList<Connection> = ArrayList<Connection>()
             val selectQuery = "SELECT  * FROM $TABLE_SERVERS ORDER BY $KEY_HOSTNAME"
+
+            val oldReadPolicy = StrictMode.allowThreadDiskReads()
+            StrictMode.allowThreadDiskWrites()
+
             val db: SQLiteDatabase = this.getWritableDatabase()
             val cursor: Cursor = db.rawQuery(selectQuery, null)
             if (cursor.moveToFirst()) {
@@ -176,7 +202,11 @@ class EdgeDeviceRepository(context: Context) : SQLiteOpenHelper(context, DATABAS
                     controllerList.add(controller)
                 } while (cursor.moveToNext())
             }
+            cursor.close()
             db.close()
+
+            //StrictMode.setThreadPolicy(oldReadPolicy)
+
             return controllerList
         }
 

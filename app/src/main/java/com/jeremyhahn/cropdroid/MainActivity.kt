@@ -7,16 +7,16 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.TextView
+import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.navigation.NavController
-import androidx.navigation.findNavController
+import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.navigateUp
-import androidx.navigation.ui.setupActionBarWithNavController
+import androidx.navigation.ui.NavigationUI
 import androidx.navigation.ui.setupWithNavController
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
@@ -41,8 +41,7 @@ import com.jeremyhahn.cropdroid.utils.Preferences
 import okhttp3.WebSocket
 import java.util.concurrent.ConcurrentHashMap
 
-class MainActivity : AppCompatActivity(),
-    PreferenceFragmentCompat.OnPreferenceStartFragmentCallback {
+class MainActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPreferenceStartFragmentCallback {
 
     var workflowsViewModel: WorkflowViewModel? = null
     val controllerViewModels: ConcurrentHashMap<String, ControllerViewModel> = ConcurrentHashMap()
@@ -52,18 +51,24 @@ class MainActivity : AppCompatActivity(),
     var orgId: Long = 0L
     var farmId: Long = 0L
     var user: User? = null
-    //lateinit var farm: Farm
+
+    val drawerLayout by lazy { findViewById<DrawerLayout>(R.id.drawer_layout) }
+//    val navController by lazy {
+//        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_container) as NavHostFragment
+//        navHostFragment.navController
+//    }
+    val navigationView by lazy { findViewById<NavigationView>(R.id.nav_view) }
+
+    private var navController: NavController? = null
 
     lateinit var connection: Connection
     lateinit var cropDroidAPI: CropDroidAPI
     lateinit var configManager: ConfigManager
     lateinit var preferences: Preferences
-    private lateinit var appBarConfiguration: AppBarConfiguration
-    private lateinit var navController: NavController
-    private lateinit var drawer: DrawerLayout
-    private lateinit var toolbar: Toolbar
+    lateinit var toolbar: Toolbar
     private var navUserName: TextView? = null
-    //private lateinit var navHeader:
+
+    //lateinit var navController: NavController
 
     fun createConstraints() = Constraints.Builder()
         .setRequiredNetworkType(NetworkType.CONNECTED) // other values(NOT_REQUIRED, UNMETERED (if connected to wifi), NOT_ROAMING, METERED)
@@ -73,15 +78,27 @@ class MainActivity : AppCompatActivity(),
 
     override fun onPreferenceStartFragment(caller: PreferenceFragmentCompat,  pref: Preference): Boolean {
         if (pref.key.equals("user_management_settings")) {
-            navController.navigate(R.id.nav_user_management_settings)
+            navController!!.navigate(R.id.nav_user_management_settings)
         } else if (pref.key.equals("fragment_b")) {
-            navController.navigate(R.id.nav_microcontroller_settings)
+            navController!!.navigate(R.id.nav_microcontroller_settings)
         }
         return true
     }
 
+//    override fun onBackPressed() {
+//        val drawerLayout: DrawerLayout = findViewById(R.id.drawer_layout)
+//        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+//            drawerLayout.closeDrawer(GravityCompat.START)
+//        } else {
+//            super.onBackPressed()
+//        }
+//    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+        //turnOnStrictMode()
+        //permitDiskReads{
+            super.onCreate(savedInstanceState)
+        //}
         setContentView(R.layout.activity_main)
 
         createConstraints()
@@ -89,34 +106,33 @@ class MainActivity : AppCompatActivity(),
 
         val googleAvail = GoogleApiAvailability.getInstance()
         val playServicesAvail = googleAvail.isGooglePlayServicesAvailable(this)
-
-        if(playServicesAvail == SERVICE_MISSING || playServicesAvail == SERVICE_VERSION_UPDATE_REQUIRED ||
-            playServicesAvail == SERVICE_DISABLED) {
-
+        if(playServicesAvail == SERVICE_MISSING || playServicesAvail == SERVICE_VERSION_UPDATE_REQUIRED || playServicesAvail == SERVICE_DISABLED) {
             googleAvail.getErrorDialog(this, playServicesAvail, 1)
         }
 
         toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
 
-        drawer = findViewById(R.id.drawer_layout)
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_container) as NavHostFragment
+        navController = navHostFragment.navController
 
-        val navView: NavigationView = findViewById(R.id.nav_view)
-        navController = findNavController(R.id.nav_host_fragment)
-        // Passing each menu ID as a set of Ids because each
-        // menu should be considered as top level destinations.
-        appBarConfiguration = AppBarConfiguration(
-            setOf(
-                R.id.nav_connections, R.id.nav_store, R.id.nav_quit
-            ), drawer
+        val appBarConfiguration = AppBarConfiguration(navController!!.graph)
+        NavigationUI.setupWithNavController(navigationView, navController!!)
+        NavigationUI.setupWithNavController(toolbar, navController!!, appBarConfiguration)
+        val toggle = ActionBarDrawerToggle(
+            this,
+            drawerLayout,
+            toolbar,
+            R.string.navigation_drawer_open,
+            R.string.navigation_drawer_close
         )
-        setupActionBarWithNavController(navController, appBarConfiguration)
-        navView.setupWithNavController(navController)
+        drawerLayout.addDrawerListener(toggle)
+        toggle.syncState()
+        toolbar.setupWithNavController(navController!!, appBarConfiguration)
 
         var intent = Intent(this, NotificationService::class.java)
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         startForegroundService(intent)
-        //startService(intent)
     }
 
     fun setLoggedInUser(user: User) {
@@ -138,7 +154,7 @@ class MainActivity : AppCompatActivity(),
         val bundle = Bundle()
         bundle.putString(Constants.PREF_KEY_CONTROLLER_HOSTNAME, controller.hostname)
         bundle.putString(Constants.PREF_KEY_CONTROLLER_PUBKEY, controller.pubkey)
-        navController.navigate(R.id.nav_login, bundle)
+        navController!!.navigate(R.id.nav_login, bundle)
     }
 
     fun navigateToOrganizations(connection: Connection, user: User?) {
@@ -146,13 +162,12 @@ class MainActivity : AppCompatActivity(),
         this.user = user
         this.orgId = orgId
         preferences.set(connection, user, 0L, 0L)
-        navController.popBackStack()
-        navController.navigate(R.id.nav_organizations)
+        navController!!.popBackStack()
+        navController!!.navigate(R.id.nav_organizations)
     }
 
     fun navigateToMicrocontroller() {
-        // navController.popBackStack()
-        navController.navigate(R.id.nav_microcontroller_tabs)
+        navController!!.navigate(R.id.nav_microcontroller_tabs)
     }
 
     fun navigateToFarms(connection: Connection, user: User, orgId: Long) {
@@ -160,32 +175,36 @@ class MainActivity : AppCompatActivity(),
         this.user = user
         this.orgId = orgId
         preferences.set(connection, user, orgId, 0L)
-        navController.popBackStack()
-        navController.navigate(R.id.nav_farms)
+//        navController!!.popBackStack()
+        navController!!.navigate(R.id.nav_farms)
     }
 
     fun navigateToFarms(connection: Connection) {
         this.connection = connection
         preferences.set(connection, user, orgId, 0L)
-        navController.popBackStack()
-        navController.navigate(R.id.nav_farms)
+//        navController!!.popBackStack()
+        navController!!.navigate(R.id.nav_farms)
     }
 
     fun navigateToWorkflows() {
-        navController.navigate(R.id.nav_workflows)
+        navController!!.navigate(R.id.nav_workflows)
     }
 
     fun navigateToHome() {
-        navController.navigate(R.id.nav_connections)
+        navController!!.navigate(R.id.nav_connections)
     }
 
     fun navigateToNewEdgeController() {
-        navController.navigate(R.id.nav_new_edge_controller)
+        navController!!.navigate(R.id.nav_new_edge_controller)
     }
 
     fun navigateToMicroControllerSettings() {
-        navController.navigate(R.id.nav_microcontroller_settings)
+        navController!!.navigate(R.id.nav_microcontroller_settings)
         //supportFragmentManager.beginTransaction().add(R.id.nav_microcontroller_settings, SettingsFragment()).addToBackStack("fragBack").commit()
+    }
+
+    fun navigateToShoppingCart() {
+        navController!!.navigate(R.id.nav_shoppingcart_cart)
     }
 
     suspend fun waitForReply(orgId: Int) {
@@ -378,7 +397,7 @@ class MainActivity : AppCompatActivity(),
 //            var viewModel = controllerViewModels[controllerType]
 //            if(viewModel == null) {
 //                controllerFragments[controllerType] = ControllerFragment.newInstance(controllerType)
-//                controllerViewModels[controllerType] = ViewModelProvider(ViewModelStore(), ControllerViewModelFactory(cropDroidAPI, controllerType)).get(ControllerViewModel::class.java)
+//                controllerViewModels[controllerType] = ViewModelProvider(ViewModelStore(), ProductViewModelFactory(cropDroidAPI, controllerType)).get(ProductViewModel::class.java)
 //                redraw = true
 //            }
 //            viewModel!!.setState(controllerState)
@@ -394,7 +413,7 @@ class MainActivity : AppCompatActivity(),
 //        var viewModel = controllerViewModels[controllerState.type]
 //        if(viewModel == null) {
 //            controllerFragments[controllerState.type] = ControllerFragment.newInstance(controllerState.type)
-//            controllerViewModels[controllerState.type] = ViewModelProvider(ViewModelStore(), ControllerViewModelFactory(cropDroidAPI, controllerState.type)).get(ControllerViewModel::class.java)
+//            controllerViewModels[controllerState.type] = ViewModelProvider(ViewModelStore(), ProductViewModelFactory(cropDroidAPI, controllerState.type)).get(ProductViewModel::class.java)
 //            redraw = true
 //        }
 //        viewModel!!.setState(controllerState)
@@ -418,9 +437,52 @@ class MainActivity : AppCompatActivity(),
         }
     }
 
-    override fun onSupportNavigateUp(): Boolean {
-        return navController.navigateUp(appBarConfiguration)// || super.onSupportNavigateUp()
-    }
+//    override fun onSupportNavigateUp(): Boolean {
+//        //return navController!!.navigateUp(appBarConfiguration)// || super.onSupportNavigateUp()
+//        return navController!!.navigateUp(drawerLayout)
+//    }
+//
+
+//    fun addToCart(productId: Int, productName: String?, quantity: Int, price: Double) {
+//        val item = CartItem(productId, productName!!, quantity, price)
+//        shoppingCart.add(item)
+//    }
+
+//   fun turnOnStrictMode() {
+//        if (BuildConfig.DEBUG) {
+//            StrictMode.setThreadPolicy(
+//                StrictMode.ThreadPolicy.Builder()
+//                    .permitDiskWrites()
+//                    .detectDiskReads()
+//                    .detectDiskWrites()
+//                    //.detectNetwork()
+//                    .penaltyDeath()
+//                    .detectAll()
+//                    .penaltyLog()
+//                    .penaltyDeath().build())
+//            StrictMode.setVmPolicy(
+//                StrictMode.VmPolicy.Builder()
+//                    .penaltyDeath()
+//                    .detectAll()
+//                    .penaltyLog()
+//                    .penaltyDeath().build())
+//        }
+//    }
+
+//    fun permitDiskReads(func: () -> Any) : Any {
+//        if (BuildConfig.DEBUG) {
+//            val oldThreadPolicy = StrictMode.getThreadPolicy()
+//            StrictMode.setThreadPolicy(
+//                StrictMode.ThreadPolicy.Builder(oldThreadPolicy)
+//                    .permitDiskReads().build())
+//            val anyValue = func()
+//            StrictMode.setThreadPolicy(oldThreadPolicy)
+//
+//            return anyValue
+//        } else {
+//            return func()
+//        }
+//    }
 
     fun showQuitDialog(): Dialog {
         return let {

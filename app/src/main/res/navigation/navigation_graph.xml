@@ -2,7 +2,7 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/mobile_navigation"
+    android:id="@+id/navigation_graph"
     app:startDestination="@+id/nav_connections">
 
     <fragment
@@ -47,10 +47,10 @@
     </fragment>
 
     <fragment
-        android:id="@+id/nav_store"
-        android:name="com.jeremyhahn.cropdroid.ui.iap.StoreFragment"
+        android:id="@+id/nav_shoppingcart_cart"
+        android:name="com.jeremyhahn.cropdroid.ui.shoppingcart.ProductListFragment"
         android:label="@string/menu_store"
-        tools:layout="@layout/fragment_store">
+        tools:layout="@layout/fragment_cart_product_list">
     </fragment>
 
     <fragment

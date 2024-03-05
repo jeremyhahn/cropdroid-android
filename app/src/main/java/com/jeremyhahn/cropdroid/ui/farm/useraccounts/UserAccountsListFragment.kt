@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -24,7 +25,6 @@ import com.jeremyhahn.cropdroid.model.Connection
 import com.jeremyhahn.cropdroid.model.RoleConfig
 import com.jeremyhahn.cropdroid.model.UserConfig
 import com.jeremyhahn.cropdroid.utils.Preferences
-import kotlinx.android.synthetic.main.fragment_useraccounts.view.*
 import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
@@ -85,10 +85,11 @@ class UserAccountsListFragment : Fragment(), UserAccountsListener,
             recyclerView.adapter = UserAccountsRecyclerAdapter(this, recyclerItems)
             recyclerView.adapter!!.notifyDataSetChanged()
 
+            val textView = fragmentView.findViewById(R.id.usersListEmptyText) as TextView
             if (recyclerItems.size <= 0) {
-                fragmentView.usersListEmptyText.visibility = View.VISIBLE
+                textView.visibility = View.VISIBLE
             } else {
-                fragmentView.usersListEmptyText.visibility = View.GONE
+                textView.visibility = View.GONE
             }
         })
 

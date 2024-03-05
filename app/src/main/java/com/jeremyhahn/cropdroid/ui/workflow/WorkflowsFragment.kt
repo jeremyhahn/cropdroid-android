@@ -12,6 +12,7 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.jeremyhahn.cropdroid.AppError
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
@@ -23,7 +24,6 @@ import com.jeremyhahn.cropdroid.model.WorkflowStep
 import com.jeremyhahn.cropdroid.ui.workflow.menu.WorkflowRenameMenuItem
 import com.jeremyhahn.cropdroid.ui.workflow.menu.WorkflowRunMenuItem
 import com.jeremyhahn.cropdroid.utils.Preferences
-import kotlinx.android.synthetic.main.fragment_workflows.view.*
 import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
@@ -176,7 +176,8 @@ class WorkflowsFragment : Fragment(), NewWorkflowDialogHandler, NewWorkflowStepD
             }
         })
 
-        fragmentView.workflowsFab.setOnClickListener { view ->
+        val workflowsFab = fragmentView.findViewById(R.id.workflowsFab) as FloatingActionButton
+        workflowsFab.setOnClickListener { view ->
             showNewWorkflowDialog(null)
         }
 

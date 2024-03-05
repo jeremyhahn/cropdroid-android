@@ -2,23 +2,23 @@ package com.jeremyhahn.cropdroid.ui.condition
 
 import android.util.Log
 import android.view.*
+import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.jeremyhahn.cropdroid.R
-import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Condition
 import com.jeremyhahn.cropdroid.model.ConditionConfig
-import kotlinx.android.synthetic.main.microcontroller_condition_cardview.view.*
 import java.util.*
 
 class ConditionListRecyclerAdapter(val activity: ConditionListActivity, var recyclerItems: ArrayList<Condition>) :
     RecyclerView.Adapter<ConditionListRecyclerAdapter.ViewHolder>() {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ConditionListRecyclerAdapter.ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val v = LayoutInflater.from(parent.context).inflate(R.layout.microcontroller_condition_cardview, parent, false)
         return ViewHolder(this, activity, v)
     }
 
-    override fun onBindViewHolder(holder: ConditionListRecyclerAdapter.ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         if(recyclerItems.size < position) {
             return
         }
@@ -51,7 +51,8 @@ class ConditionListRecyclerAdapter(val activity: ConditionListActivity, var recy
 
             Log.d(TAG, "binding condition: " + condition)
 
-            itemView.conditionText.text = condition.text
+            val textView = itemView.findViewById(R.id.conditionText) as TextView
+            textView.text = condition.text
         }
 
         override fun onCreateContextMenu(menu: ContextMenu?, v: View?, menuInfo: ContextMenu.ContextMenuInfo?) {

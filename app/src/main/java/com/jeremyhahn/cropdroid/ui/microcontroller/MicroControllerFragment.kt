@@ -15,7 +15,6 @@ import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.TabAdapter
 import com.jeremyhahn.cropdroid.utils.Preferences
-import kotlinx.android.synthetic.main.app_bar_navigation.*
 
 class MicroControllerFragment: Fragment() {
 

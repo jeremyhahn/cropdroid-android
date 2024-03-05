@@ -4,12 +4,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
@@ -17,8 +19,6 @@ import com.jeremyhahn.cropdroid.model.Connection
 import com.jeremyhahn.cropdroid.ui.edgecontroller.EdgeControllerRecyclerAdapter.OnMasterListener
 import com.jeremyhahn.cropdroid.ui.room.EdgeControllerViewModel
 import com.jeremyhahn.cropdroid.utils.Preferences
-import kotlinx.android.synthetic.main.fragment_edge_controller_list.view.*
-
 
 class EdgeControllerListFragment : Fragment(), OnMasterListener {
 
@@ -33,7 +33,8 @@ class EdgeControllerListFragment : Fragment(), OnMasterListener {
         var fragmentActivity = requireActivity()
         var fragmentView = inflater.inflate(R.layout.fragment_edge_controller_list, container, false)
 
-        fragmentView.fab.setOnClickListener { view ->
+        val floatingActionButton = fragmentView.findViewById(R.id.fab) as FloatingActionButton
+        floatingActionButton.setOnClickListener { view ->
             (activity as MainActivity).navigateToNewEdgeController()
         }
 
@@ -64,10 +65,11 @@ class EdgeControllerListFragment : Fragment(), OnMasterListener {
             _adapter.setControllers(controllers)
             recyclerView.adapter!!.notifyDataSetChanged()
 
+            val textView = fragmentView.findViewById(R.id.edgeListEmptyText) as TextView
             if(controllers.size <= 0) {
-                fragmentView.edgeListEmptyText.visibility = View.VISIBLE
+                textView.visibility = View.VISIBLE
             } else {
-                fragmentView.edgeListEmptyText.visibility = View.GONE
+                textView.visibility = View.GONE
             }
         })
 

@@ -3,13 +3,13 @@ package com.jeremyhahn.cropdroid.ui.microcontroller
 import android.util.Log
 import android.view.ContextMenu
 import android.view.View
+import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_MODE_VIRTUAL
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Metric
 import com.jeremyhahn.cropdroid.ui.microcontroller.menu.*
-import kotlinx.android.synthetic.main.microcontroller_metric_cardview.view.*
 
 class MetricTypeViewHolder(adapter: MicroControllerRecyclerAdapter, controllerType: String, mode: String, itemView: View) :
     RecyclerView.ViewHolder(itemView), View.OnCreateContextMenuListener {
@@ -25,8 +25,12 @@ class MetricTypeViewHolder(adapter: MicroControllerRecyclerAdapter, controllerTy
 
     fun bind(metric: Metric) {
         itemView.tag = metric
-        itemView.title.text = metric.name
-        itemView.value.text = metric.value.toString().plus(" ").plus(metric.unit)
+
+        val metricTitleTextView = itemView.findViewById(R.id.title) as TextView
+        val metricValueTextView = itemView.findViewById(R.id.value) as TextView
+
+        metricTitleTextView.text = metric.name
+        metricValueTextView.text = metric.value.toString().plus(" ").plus(metric.unit)
     }
 
     override fun onCreateContextMenu(menu: ContextMenu?, v: View?, menuInfo: ContextMenu.ContextMenuInfo?) {

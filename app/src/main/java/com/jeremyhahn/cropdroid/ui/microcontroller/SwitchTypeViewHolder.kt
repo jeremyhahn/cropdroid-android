@@ -6,7 +6,10 @@ import android.util.Log
 import android.view.ContextMenu
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.ImageButton
 import android.widget.NumberPicker
+import android.widget.Switch
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
@@ -17,9 +20,6 @@ import com.jeremyhahn.cropdroid.model.Channel
 import com.jeremyhahn.cropdroid.model.Metric
 import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
 import com.jeremyhahn.cropdroid.ui.microcontroller.menu.*
-import kotlinx.android.synthetic.main.doser_switch_cardview.view.btnDispense
-import kotlinx.android.synthetic.main.microcontroller_channel_cardview.view.channelName
-import kotlinx.android.synthetic.main.microcontroller_channel_cardview.view.channelValue
 import okhttp3.Call
 import okhttp3.Callback
 import org.json.JSONObject
@@ -37,7 +37,8 @@ class SwitchTypeViewHolder(adapter: MicroControllerRecyclerAdapter, itemView: Vi
     }
 
     fun bindDispenseButton(channel: Channel) {
-        itemView.btnDispense.setOnClickListener {
+        val btnDispense = itemView.findViewById(R.id.btnDispense) as ImageButton
+        btnDispense.setOnClickListener {
             val d = AlertDialog.Builder(activity)
             val inflater: LayoutInflater = activity.getLayoutInflater()
             val dialogView: View = inflater.inflate(R.layout.dialog_number_picker, null)
@@ -79,12 +80,15 @@ class SwitchTypeViewHolder(adapter: MicroControllerRecyclerAdapter, itemView: Vi
 
         Log.d("MicroControllerRecyclerAdapter.bind", "channel: " + channel.toString())
 
+        val channelName = itemView.findViewById(R.id.channelName) as TextView
+        val channelValue = itemView.findViewById(R.id.channelValue) as Switch
+
         itemView.setTag(channel)
-        itemView.channelName.text = displayName
-        itemView.channelValue.isChecked = channel.value === 1
-        itemView.channelValue.setOnClickListener(
+        channelName.text = displayName
+        channelValue.isChecked = channel.value === 1
+        channelValue.setOnClickListener(
             View.OnClickListener {
-                var newState = itemView.channelValue.isChecked()
+                var newState = channelValue.isChecked()
                 var switchState = if(newState) Constants.Companion.SwitchState.ON else Constants.Companion.SwitchState.OFF
                 var dialogMessage = activity.getResources().getString(R.string.action_confirm_switch)
                     .plus(" the ")
@@ -100,12 +104,12 @@ class SwitchTypeViewHolder(adapter: MicroControllerRecyclerAdapter, itemView: Vi
                         Log.d("SwitchTypeViewHolder.onClick", "DialogInterface.OnClickListener  " + channel.channelId)
                         val _adapter = this.adapter
                         val _channel = channel
-                        val _itemView = itemView
+                        val _channelValue = channelValue
                         cropDroidAPI.switch(controllerType, channel.channelId, newState, object: Callback {
                             override fun onFailure(call: Call, e: IOException) {
                                 Log.d("MicroControllerRecyclerAdapter.onSwitchState", "onFailure response: " + e!!.message)
                                 _adapter.activity.runOnUiThread(Runnable() {
-                                    _itemView.channelValue.setChecked(!newState)
+                                    _channelValue.isChecked = !newState
                                 })
                                 return
                             }
@@ -135,11 +139,11 @@ class SwitchTypeViewHolder(adapter: MicroControllerRecyclerAdapter, itemView: Vi
                     R.string.action_cancel,
                     DialogInterface.OnClickListener { dialog, id ->
                         Log.d("confirmDelete", "cancel pressed")
-                        itemView.channelValue.setChecked(!newState)
+                        channelValue.setChecked(!newState)
                     })
                 builder.create().show()
             })
-        itemView.channelValue.isEnabled = channel.isEnabled()
+        channelValue.isEnabled = channel.isEnabled()
     }
 
     override fun onCreateContextMenu(menu: ContextMenu?, v: View?, menuInfo: ContextMenu.ContextMenuInfo?) {

@@ -29,7 +29,6 @@ import com.jeremyhahn.cropdroid.model.Connection
 import com.jeremyhahn.cropdroid.model.Farm
 import com.jeremyhahn.cropdroid.utils.JsonWebToken
 import com.jeremyhahn.cropdroid.utils.Preferences
-import kotlinx.android.synthetic.main.fragment_farms.view.*
 import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
@@ -56,8 +55,8 @@ class FarmListFragment : Fragment(), FarmListener, NewFarmDialogHandler {
         var fragmentView = inflater.inflate(R.layout.fragment_farms, container, false)
         val mainActivity = (activity as MainActivity)
 
-        farmListTextView = fragmentView.farmListText
-        fab = fragmentView.fab
+        farmListTextView = fragmentView.findViewById(R.id.farmListText) as TextView
+        fab = fragmentView.findViewById(R.id.fab) as FloatingActionButton
 
         val preferences = Preferences(fragmentActivity)
         val controllerSharedPrefs = preferences.getControllerPreferences()

@@ -18,7 +18,6 @@ import com.jeremyhahn.cropdroid.Constants.Companion.WORKFLOW_STATE_EXECUTING
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.model.Workflow
 import com.jeremyhahn.cropdroid.model.WorkflowStep
-import kotlinx.android.synthetic.main.microcontroller_schedule_cardview.view.*
 import java.text.SimpleDateFormat
 
 // DragNDrop ExpandableListView

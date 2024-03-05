@@ -1,16 +1,14 @@
 package com.jeremyhahn.cropdroid.ui.farm
 
-import com.jeremyhahn.cropdroid.ui.workflow.NewWorkflowDialogHandler
-
 import android.app.AlertDialog
 import android.app.Dialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.EditText
 import androidx.fragment.app.DialogFragment
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
-import kotlinx.android.synthetic.main.dialog_edit_text.view.*
 
 class NewFarmDialogFragment(cropDroidAPI: CropDroidAPI, dialogHandler: NewFarmDialogHandler) : DialogFragment() {
 
@@ -21,14 +19,15 @@ class NewFarmDialogFragment(cropDroidAPI: CropDroidAPI, dialogHandler: NewFarmDi
         super.onCreateDialog(savedInstanceState)
 
         val inflater: LayoutInflater = LayoutInflater.from(activity)
-        val dialogView: View = inflater.inflate(R.layout.dialog_edit_text, null)
+        val fragmentView: View = inflater.inflate(R.layout.dialog_edit_text, null)
 
         val d = AlertDialog.Builder(activity)
         d.setTitle(R.string.title_new_farm)
         d.setMessage(R.string.dialog_message_farm)
-        d.setView(dialogView)
+        d.setView(fragmentView)
         d.setPositiveButton("Apply") { dialogInterface, i ->
-            val farmName = dialogView.editText.text.toString()
+            val editText = fragmentView.findViewById(R.id.editText) as EditText
+            val farmName = editText.text.toString()
             handler.onNewFarmDialogApply(farmName)
         }
         d.setNegativeButton("Cancel") { dialogInterface, i ->

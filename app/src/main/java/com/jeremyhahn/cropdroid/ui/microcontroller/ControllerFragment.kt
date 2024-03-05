@@ -84,7 +84,7 @@ open class ControllerFragment : Fragment() {
         //controller = mainActivity.connection
         cropDroidAPI = CropDroidAPI(controller, controllerPreferences)
 
-        //viewModel = ViewModelProvider(this, ControllerViewModelFactory(cropDroidAPI)).get(ControllerViewModel::class.java)
+        //viewModel = ViewModelProvider(this, ProductViewModelFactory(cropDroidAPI)).get(ProductViewModel::class.java)
         //mainActivity.controllerViewModels[controllerType] = viewModel!!
         viewModel = mainActivity.controllerViewModels[controllerType]
 

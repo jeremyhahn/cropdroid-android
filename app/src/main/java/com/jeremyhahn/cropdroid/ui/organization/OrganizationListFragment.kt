@@ -7,6 +7,8 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -14,6 +16,7 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
@@ -21,7 +24,6 @@ import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
 import com.jeremyhahn.cropdroid.model.Connection
 import com.jeremyhahn.cropdroid.model.Organization
 import com.jeremyhahn.cropdroid.utils.Preferences
-import kotlinx.android.synthetic.main.fragment_organizations.view.*
 import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
@@ -42,7 +44,7 @@ class OrganizationListFragment : Fragment(), OrganizationListener {
 
         var fragmentActivity = requireActivity()
         var fragmentView = inflater.inflate(R.layout.fragment_organizations, container, false)
-        val mainActivity = (activity as MainActivity)
+        //val mainActivity = (activity as MainActivity)
 
         val preferences = Preferences(fragmentActivity)
         val controllerSharedPrefs = preferences.getControllerPreferences()
@@ -76,14 +78,16 @@ class OrganizationListFragment : Fragment(), OrganizationListener {
             recyclerView.adapter = OrganizationRecyclerAdapter(recyclerItems, fragmentActivity.applicationContext, this)
             recyclerView.adapter!!.notifyDataSetChanged()
 
+            val organizationListEmptyText = fragmentView.findViewById(R.id.organizationListEmptyText) as TextView
             if(recyclerItems.size <= 0) {
-                fragmentView.organizationListEmptyText.visibility = View.VISIBLE
+                organizationListEmptyText.visibility = View.VISIBLE
             } else {
-                fragmentView.organizationListEmptyText.visibility = View.GONE
+                organizationListEmptyText.visibility = View.GONE
             }
         })
 
-        fragmentView.fab.setOnClickListener { view ->
+        val fab = fragmentView.findViewById(R.id.fab) as FloatingActionButton
+        fab.setOnClickListener { view ->
 //            cropDroidAPI.provision(mainActivity.orgId, object: Callback {
 //                override fun onFailure(call: Call, e: IOException) {
 //                    Log.d("UserAccountsListFragment.provision", "onFailure response: " + e!!.message)

@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.EditText
 import android.widget.Spinner
 import androidx.fragment.app.DialogFragment
 import com.jeremyhahn.cropdroid.R
@@ -18,9 +19,6 @@ import com.jeremyhahn.cropdroid.model.Channel
 import com.jeremyhahn.cropdroid.model.Controller
 import com.jeremyhahn.cropdroid.model.WorkflowStep
 import com.jeremyhahn.cropdroid.utils.DurationUtil
-import kotlinx.android.synthetic.main.dialog_edit_duration.view.durationSpinner
-import kotlinx.android.synthetic.main.dialog_edit_duration.view.editDuration
-import kotlinx.android.synthetic.main.dialog_workflow_step.view.*
 import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
@@ -49,8 +47,13 @@ class NewWorkflowStepDialogFragment(cropDroidAPI: CropDroidAPI,
         val controllerMap = HashMap<Int, Controller>()
         val channelMap = HashMap<Int, Channel>()
 
-        DurationUtil.setDuration(workflowStep.duration, dialogView.editDuration ,dialogView.durationSpinner)
-        DurationUtil.setDuration(workflowStep.wait, dialogView.waitDuration ,dialogView.waitSpinner)
+        val editDuration = dialogView.findViewById(R.id.editDuration) as EditText
+        val durationSpinner = dialogView.findViewById(R.id.durationSpinner) as Spinner
+        val waitDuration = dialogView.findViewById(R.id.waitDuration) as EditText
+        val waitSpinner = dialogView.findViewById(R.id.waitSpinner) as Spinner
+
+        DurationUtil.setDuration(workflowStep.duration, editDuration, durationSpinner)
+        DurationUtil.setDuration(workflowStep.wait, waitDuration, waitSpinner)
 
         // Populate channel spinner
         val channelArray: MutableList<String> = ArrayList()
@@ -155,20 +158,20 @@ class NewWorkflowStepDialogFragment(cropDroidAPI: CropDroidAPI,
             val selectedChannel = channelMap.get(channelSpinner.selectedItemPosition)
 
             val timerSeconds = DurationUtil.parseDuration(
-                dialogView.editDuration.text.toString().toInt(),
-                dialogView.durationSpinner.selectedItem.toString())
+                editDuration.text.toString().toInt(),
+                durationSpinner.selectedItem.toString())
 
             val waitSeconds = DurationUtil.parseDuration(
-                dialogView.waitDuration.text.toString().toInt(),
-                dialogView.waitSpinner.selectedItem.toString())
+                waitDuration.text.toString().toInt(),
+                waitSpinner.selectedItem.toString())
 
             handler.onWorkflowStepDialogApply(WorkflowStep(
                 workflowStep.id,
                 workflowStep.workflowId,
                 selectedController!!.id,
-                dialogView.controllerSpinner.selectedItem.toString(),
+                controllerSpinner.selectedItem.toString(),
                 selectedChannel!!.id,
-                dialogView.channelSpinner.selectedItem.toString(),
+                channelSpinner.selectedItem.toString(),
                 "",
                 timerSeconds,
                 waitSeconds,

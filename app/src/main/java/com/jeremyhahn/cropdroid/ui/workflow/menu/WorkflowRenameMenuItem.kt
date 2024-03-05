@@ -7,12 +7,12 @@ import android.view.ContextMenu
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
+import android.widget.EditText
 import com.jeremyhahn.cropdroid.AppError
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Workflow
 import com.jeremyhahn.cropdroid.ui.workflow.WorkflowExpandableListAdapter
-import kotlinx.android.synthetic.main.dialog_edit_text.view.*
 import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
@@ -25,7 +25,9 @@ class WorkflowRenameMenuItem(context: Context, menu: ContextMenu, workflow: Work
                 val inflater: LayoutInflater = LayoutInflater.from(context)
 
                 val dialogView: View = inflater.inflate(R.layout.dialog_edit_text, null)
-                dialogView.editText.setText(workflow.name)
+
+                val editText = dialogView.findViewById(R.id.editText) as EditText
+                editText.setText(workflow.name)
 
                 val d = AlertDialog.Builder(context)
                 d.setTitle(R.string.title_rename)
@@ -33,7 +35,7 @@ class WorkflowRenameMenuItem(context: Context, menu: ContextMenu, workflow: Work
                 d.setView(dialogView)
                 d.setPositiveButton("Apply") { dialogInterface, i ->
                     Log.d("Rename", "onClick: " + it.itemId)
-                    workflow.name = dialogView.editText.text.toString()
+                    workflow.name = editText.text.toString()
                     cropDroidAPI.updateWorkflow(workflow, object: Callback {
                         override fun onFailure(call: Call, e: IOException) {
                             Log.d("WorkflowRenameMenuItem.Rename", "onFailure response: " + e!!.message)

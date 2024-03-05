@@ -13,6 +13,6 @@ class VideoActivity : AppCompatActivity() {
 
         val myWebView = WebView(this)
         setContentView(myWebView)
-        myWebView.loadUrl(intent.getStringExtra("video_url"))
+        intent.getStringExtra("video_url")?.let { myWebView.loadUrl(it) }
     }
 }

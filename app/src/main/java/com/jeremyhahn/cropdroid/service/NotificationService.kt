@@ -1,7 +1,12 @@
 package com.jeremyhahn.cropdroid.service
 
 import android.app.*
+import android.app.PendingIntent.FLAG_IMMUTABLE
+import android.app.PendingIntent.FLAG_MUTABLE
+import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.content.Intent
+import android.content.pm.ServiceInfo
+import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
 import android.graphics.Color
 import android.os.Build
 import android.os.Handler
@@ -10,6 +15,7 @@ import android.provider.Settings.System.DEFAULT_NOTIFICATION_URI
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
+import androidx.core.app.ServiceCompat
 import com.jeremyhahn.cropdroid.Constants
 import com.jeremyhahn.cropdroid.Constants.Companion.API_BASE
 import com.jeremyhahn.cropdroid.MainActivity
@@ -55,7 +61,12 @@ class NotificationService : Service() {
         var contentText = "Monitoring and listening for notifications"
         val pendingIntent: PendingIntent =
             Intent(this, MainActivity::class.java).let { notificationIntent ->
-                PendingIntent.getActivity(this, 0, notificationIntent, 0)
+                PendingIntent.getActivity(applicationContext, 0, notificationIntent,
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        FLAG_IMMUTABLE or FLAG_UPDATE_CURRENT
+                    } else {
+                        FLAG_UPDATE_CURRENT
+                    })
             }
 
         val foregroundChannel = NotificationChannel("foreground_channel_id", "High priority notifications", NotificationManager.IMPORTANCE_HIGH)
@@ -74,7 +85,12 @@ class NotificationService : Service() {
             .setTicker(contentText) // audibly announce when accessibility services turned on
             .build()
 
-        startForeground(1, _notification)
+        ServiceCompat.startForeground(this, 1, _notification,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
+            } else {
+                0
+            })
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -193,7 +209,7 @@ class NotificationService : Service() {
                 client.dispatcher().executorService().shutdown()
                 client.retryOnConnectionFailure()
             } catch (e: java.lang.IllegalArgumentException) {
-                Log.e("NotificationService.createWebsocket", e.message)
+                e.message?.let { Log.e("NotificationService.createWebsocket", it) }
                 Toast.makeText(applicationContext, e.message, Toast.LENGTH_LONG).show()
             }
             Log.d(

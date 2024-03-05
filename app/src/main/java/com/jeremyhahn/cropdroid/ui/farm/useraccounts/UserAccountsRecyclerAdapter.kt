@@ -2,10 +2,10 @@ package com.jeremyhahn.cropdroid.ui.farm.useraccounts
 
 import android.util.Log
 import android.view.*
+import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.model.UserConfig
-import kotlinx.android.synthetic.main.cardview_useraccount.view.*
 import java.util.*
 
 class UserAccountsRecyclerAdapter(val userListener: UserAccountsListener, var recyclerItems: ArrayList<UserConfig>)
@@ -47,7 +47,8 @@ class UserAccountsRecyclerAdapter(val userListener: UserAccountsListener, var re
 
             Log.d(TAG, "binding user account: " + user)
 
-            itemView.userEmail.text = user.email
+            val textView = itemView.findViewById(R.id.userEmail) as TextView
+            textView.text = user.email
         }
 
         override fun onCreateContextMenu(menu: ContextMenu?, v: View?, menuInfo: ContextMenu.ContextMenuInfo?) {

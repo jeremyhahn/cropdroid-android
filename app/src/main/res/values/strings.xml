@@ -17,6 +17,8 @@
     <string name="empty_conditions">Add a new condition to switch on/off based on sensor data</string>
     <string name="empty_schedule">Add a new schedule that specifies when to switch on/off</string>
     <string name="empty_edge_controller_list">Add a new edge device or cloud service to get started!</string>
+    <string name="empty_products">Add a new product to get started!</string>
+    <string name="empty_cart">Your shopping cart is empty</string>
 
     <string name="title_activity_masters">Grow Spaces</string>
     <string name="title_activity_microcontrollers">Controllers</string>
@@ -204,5 +206,7 @@
     <string name="menu_header_condition_options">Condition Options</string>
     <string name="menu_header_metric_options">Metric Options</string>
     <string name="menu_header_switch_options">Switch Options</string>
+
+    <string name="format_price">$%.2f</string>
 
 </resources>

@@ -19,11 +19,11 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.cast.CastRemoteDisplayLocalService.startService
 import com.google.android.gms.cast.CastStatusCodes.*
 import com.google.android.gms.common.SignInButton
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
+import com.google.android.material.textfield.TextInputEditText
 import com.jeremyhahn.cropdroid.AppError
 import com.jeremyhahn.cropdroid.Constants.Companion.APP_SERVER_CLIENT_ID
 import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_CONTROLLER_HOSTNAME
@@ -33,14 +33,9 @@ import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
 import com.jeremyhahn.cropdroid.model.Connection
-import com.jeremyhahn.cropdroid.service.NotificationService
 import com.jeremyhahn.cropdroid.utils.JsonWebToken
 import com.jeremyhahn.cropdroid.utils.Preferences
 import io.jsonwebtoken.ExpiredJwtException
-import kotlinx.android.synthetic.main.activity_login.password
-import kotlinx.android.synthetic.main.activity_login.useSSL
-import kotlinx.android.synthetic.main.activity_login.username
-import kotlinx.android.synthetic.main.fragment_login.*
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Response
@@ -99,9 +94,11 @@ class LoginFragment() : Fragment(), View.OnClickListener {
         login.setOnClickListener {
             loading.visibility = View.VISIBLE
             checkSslFlag()
+
+            val organizationNameEditText = fragmentView.findViewById(R.id.organizationName) as EditText
             loginViewModel.login(
                 CropDroidAPI(connection, sharedPrefs),
-                organizationName.text.toString(),
+                organizationNameEditText.text.toString(),
                 username.text.toString(),
                 password.text.toString()
             )
@@ -291,12 +288,13 @@ class LoginFragment() : Fragment(), View.OnClickListener {
                 )
             }*/
 
+            val orgNameEditText = fragmentView.findViewById(R.id.organizationName) as EditText
             setOnEditorActionListener { _, actionId, _ ->
                 when (actionId) {
                     EditorInfo.IME_ACTION_DONE ->
                         loginViewModel.login(
                             CropDroidAPI(connection, sharedPrefs),
-                            organizationName.text.toString(),
+                            orgNameEditText.text.toString(),
                             username.text.toString(),
                             password.text.toString()
                         )
@@ -383,21 +381,27 @@ class LoginFragment() : Fragment(), View.OnClickListener {
 
     fun onRegister(v: View) {
         checkSslFlag()
-        val email = username.text.toString()
+
+        val orgNameEditText = v.findViewById(R.id.organizationName) as EditText
+        val usernameTextEdit = v.findViewById(R.id.username) as EditText
+        val passwordTextEdit = v.findViewById(R.id.password) as EditText
+
+        val email = usernameTextEdit.text.toString()
         if(email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             AppError(requireActivity()).alert("Invalid email address", null, null)
             return
         }
         loginViewModel.register(
             CropDroidAPI(connection, sharedPrefs),
-            organizationName.text.toString(),
+            orgNameEditText.text.toString(),
             email,
-            password.text.toString()
+            passwordTextEdit.text.toString()
         )
     }
 
     fun checkSslFlag() {
-        if(useSSL.isChecked()) {
+        val useSSLCheckBox = requireActivity().findViewById(R.id.useSSL) as CheckBox
+        if(useSSLCheckBox.isChecked()) {
             connection.secure = 1
         } else {
             connection.secure = 0

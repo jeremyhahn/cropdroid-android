@@ -19,7 +19,6 @@ import com.jeremyhahn.cropdroid.model.Controller
 import com.jeremyhahn.cropdroid.model.Metric
 import com.jeremyhahn.cropdroid.config.ControllerParser
 import com.jeremyhahn.cropdroid.config.MetricParser
-import kotlinx.android.synthetic.main.dialog_condition.view.*
 import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
@@ -148,7 +147,7 @@ class ConditionDialogFragment(cropDroidAPI: CropDroidAPI, condition: Condition, 
         operatorSpinner.setSelection(operatorPosition)
 
         // Populate condition value
-        dialogView.conditionValue.setText(condition.threshold.toString())
+        //dialogView.conditionValue.setText(condition.threshold.toString())
 
         // Show the dialog box / condition view
         val d = AlertDialog.Builder(activity)

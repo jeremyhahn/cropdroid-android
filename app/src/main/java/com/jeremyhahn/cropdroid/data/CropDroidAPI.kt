@@ -2,8 +2,8 @@ package com.jeremyhahn.cropdroid.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.net.TrafficStats
 import android.util.Log
-import com.android.billingclient.api.Purchase
 import com.jeremyhahn.cropdroid.Constants
 import com.jeremyhahn.cropdroid.Constants.Companion.API_BASE
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARM_ID_KEY
@@ -13,9 +13,11 @@ import com.jeremyhahn.cropdroid.model.Connection
 import okhttp3.*
 import org.json.JSONObject
 import java.io.IOException
+import java.net.Socket
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import java.util.concurrent.TimeUnit
+import javax.net.SocketFactory
 
 
 class CropDroidAPI(private val connection: Connection, preferences: SharedPreferences?) {
@@ -47,6 +49,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
     val PROVISION_ENDPOINT: String
     val DEPROVISION_ENDPOINT: String
     val ROLES_ENDPOINT: String
+    val SHOPPING_CART_ENDPOINT: String
 
     init {
         if(preferences != null) {
@@ -88,16 +91,23 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         PROVISION_ENDPOINT = PROVISIONER_ENDPOINT.plus("/provision")
         DEPROVISION_ENDPOINT = PROVISIONER_ENDPOINT.plus("/deprovision")
         ROLES_ENDPOINT = VERSIONED_ENDPOINT.plus("/roles")
+        SHOPPING_CART_ENDPOINT = VERSIONED_ENDPOINT.plus("/shoppingcart")
     }
 
-    fun verifyPurchase(purchase: Purchase, callback: Callback) {
-        Log.d("CropDropAPI.verifyPurchase", "purchase="+purchase)
-        var json = JSONObject()
-        json.put("orderId", purchase.orderId)
-        //json.put("productId", purchase.sku)
-        json.put("purchaseToken", purchase.purchaseToken)
-        json.put("purchaseTime", purchase.purchaseTime)
-        doPost(IAP_ENDPOINT.plus("/verify"), json, callback)
+//    // Google play store in-app purchase
+//    fun verifyPurchase(purchase: Purchase, callback: Callback) {
+//        Log.d("CropDropAPI.verifyPurchase", "purchase="+purchase)
+//        var json = JSONObject()
+//        json.put("orderId", purchase.orderId)
+//        //json.put("productId", purchase.sku)
+//        json.put("purchaseToken", purchase.purchaseToken)
+//        json.put("purchaseTime", purchase.purchaseTime)
+//        doPost(IAP_ENDPOINT.plus("/verify"), json, callback)
+//    }
+
+    fun getProducts(callback: Callback) {
+        val args = ArrayList<String>()
+        doGet(SHOPPING_CART_ENDPOINT, args, callback)
     }
 
     fun eventsList(page: String, callback: Callback) {
@@ -510,6 +520,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
     }
 
     fun doGet(endpoint: String, args: ArrayList<String>, callback: Callback) {
+
         if(connection.hostname.isEmpty()) return fail(callback, "Hostname required")
         //var endpoint = REST_ENDPOINT.plus(resource)
         var endpoint = endpoint
@@ -525,6 +536,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         //val client = OkHttpClient.Builder()
         //.addInterceptor(logging)
         //  .build()
+        TrafficStats.setThreadStatsTag(532);
         val client = OkHttpClient()
         var request = Request.Builder()
             .header("Authorization","Bearer " + connection.token)

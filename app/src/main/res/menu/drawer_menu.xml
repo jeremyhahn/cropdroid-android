@@ -9,13 +9,13 @@
             android:icon="@drawable/ic_menu_camera"
             android:title="@string/menu_home" />
         <item
-            android:id="@+id/nav_store"
+            android:id="@+id/nav_shoppingcart_cart"
             android:icon="@drawable/ic_menu_gallery"
             android:title="@string/menu_store" />
-        <item
-            android:id="@+id/nav_community"
-            android:icon="@drawable/ic_menu_gallery"
-            android:title="@string/menu_community" />
+<!--        <item-->
+<!--            android:id="@+id/nav_community"-->
+<!--            android:icon="@drawable/ic_menu_gallery"-->
+<!--            android:title="@string/menu_community" />-->
         <item
             android:id="@+id/nav_quit"
             android:icon="@drawable/ic_menu_slideshow"

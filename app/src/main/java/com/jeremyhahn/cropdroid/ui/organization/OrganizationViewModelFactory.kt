@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 
 class OrganizationViewModelFactory(private val cropDroidAPI: CropDroidAPI) : ViewModelProvider.Factory {
-    override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return OrganizationViewModel(cropDroidAPI) as T
     }
 }
