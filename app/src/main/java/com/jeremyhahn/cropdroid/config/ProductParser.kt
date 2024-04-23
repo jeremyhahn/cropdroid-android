@@ -1,8 +1,7 @@
 package com.jeremyhahn.cropdroid.config
 
 import android.util.Log
-import com.jeremyhahn.cropdroid.model.Algorithm
-import com.jeremyhahn.cropdroid.ui.shoppingcart.Product
+import com.jeremyhahn.cropdroid.ui.shoppingcart.model.Product
 import org.json.JSONArray
 
 class ProductParser {
@@ -25,7 +24,7 @@ class ProductParser {
                 val name = jsonProduct.getString("name")
                 val description = jsonProduct.getString("description")
                 val imageUrl = jsonProduct.getString("imageUrl")
-                val price = jsonProduct.getDouble("price")
+                val price = jsonProduct.getLong("price")
                 val quantity = jsonProduct.getInt("quantity")
                 products.add(Product(id, name, description, imageUrl, price, quantity))
             }

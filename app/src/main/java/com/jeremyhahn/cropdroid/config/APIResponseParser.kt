@@ -16,12 +16,11 @@ class APIResponseParser {
                 val errcode = jsonResponse.getInt("code")
                 val error = jsonResponse.getString("error")
                 val success = jsonResponse.getBoolean("success")
-                val payload = jsonResponse.get("payload")
-
+                var payload = if(jsonResponse.isNull("payload")) null else jsonResponse.get("payload")
                 var displayCode = if(errcode > 0) errcode else response.code()
                 APIResponse(displayCode, error, success, payload)
             } catch(e: JSONException) {
-                APIResponse(response.code(), responseBody, false, "")
+                APIResponse(response.code(), responseBody, false, null)
             }
         }
     }

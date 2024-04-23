@@ -8,17 +8,15 @@ import com.jeremyhahn.cropdroid.AppError
 import com.jeremyhahn.cropdroid.config.APIResponseParser
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.config.ProductParser
+import com.jeremyhahn.cropdroid.ui.shoppingcart.model.Product
 import okhttp3.Call
 import okhttp3.Callback
 import org.json.JSONArray
-import org.json.JSONObject
 import java.io.IOException
 import kotlin.collections.ArrayList
 
-class ProductViewModel(activity: Activity, cropDroidAPI: CropDroidAPI) : ViewModel() {
+class ProductViewModel(var activity: Activity, var cropDroidAPI: CropDroidAPI) : ViewModel() {
 
-    private val activity: Activity = activity
-    private val cropDroidAPI: CropDroidAPI = cropDroidAPI
     val products = MutableLiveData<ArrayList<Product>>()
     val error = MutableLiveData<String>()
 

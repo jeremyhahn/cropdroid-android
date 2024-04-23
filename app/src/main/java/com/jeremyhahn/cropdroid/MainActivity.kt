@@ -22,13 +22,18 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.work.Constraints
 import androidx.work.NetworkType
-import com.google.android.gms.common.ConnectionResult.*
+import com.google.android.gms.common.ConnectionResult.SERVICE_DISABLED
+import com.google.android.gms.common.ConnectionResult.SERVICE_MISSING
+import com.google.android.gms.common.ConnectionResult.SERVICE_VERSION_UPDATE_REQUIRED
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.material.navigation.NavigationView
 import com.jeremyhahn.cropdroid.config.ConfigManager
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
-import com.jeremyhahn.cropdroid.model.*
+import com.jeremyhahn.cropdroid.model.Connection
+import com.jeremyhahn.cropdroid.model.ControllerStateDelta
+import com.jeremyhahn.cropdroid.model.Farm
+import com.jeremyhahn.cropdroid.model.User
 import com.jeremyhahn.cropdroid.service.NotificationService
 import com.jeremyhahn.cropdroid.ui.events.EventListFragment
 import com.jeremyhahn.cropdroid.ui.microcontroller.ControllerFragment
@@ -52,23 +57,17 @@ class MainActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPreferenceS
     var farmId: Long = 0L
     var user: User? = null
 
-    val drawerLayout by lazy { findViewById<DrawerLayout>(R.id.drawer_layout) }
-//    val navController by lazy {
-//        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_container) as NavHostFragment
-//        navHostFragment.navController
-//    }
-    val navigationView by lazy { findViewById<NavigationView>(R.id.nav_view) }
+    private val drawerLayout by lazy { findViewById<DrawerLayout>(R.id.drawer_layout) }
+    private val navigationView by lazy { findViewById<NavigationView>(R.id.nav_view) }
 
     private var navController: NavController? = null
+    private var navUserName: TextView? = null
 
     lateinit var connection: Connection
     lateinit var cropDroidAPI: CropDroidAPI
     lateinit var configManager: ConfigManager
     lateinit var preferences: Preferences
     lateinit var toolbar: Toolbar
-    private var navUserName: TextView? = null
-
-    //lateinit var navController: NavController
 
     fun createConstraints() = Constraints.Builder()
         .setRequiredNetworkType(NetworkType.CONNECTED) // other values(NOT_REQUIRED, UNMETERED (if connected to wifi), NOT_ROAMING, METERED)
@@ -112,6 +111,11 @@ class MainActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPreferenceS
 
         toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
+
+        // actionBar?.setLogo(android.R.drawable.ic_menu_crop)
+        actionBar?.setDisplayShowTitleEnabled(true)
+        actionBar?.setDisplayShowHomeEnabled(true)
+        actionBar?.setIcon(R.drawable.ic_cropdroid_logo)
 
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_container) as NavHostFragment
         navController = navHostFragment.navController
@@ -207,19 +211,23 @@ class MainActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPreferenceS
         navController!!.navigate(R.id.nav_shoppingcart_cart)
     }
 
-    suspend fun waitForReply(orgId: Int) {
-        while (controllerViewModels.isEmpty()) {
-            Log.d("MainActivity", "Waiting for configuration reply from serverConnection...")
-            Thread.sleep(200L)
-        }
-        runOnUiThread(Runnable {
-            if(orgId == 0) {
-                navigateToMicrocontroller()
-            } else {
-                navigateToOrganizations(connection, user)
-            }
-        })
+    fun navigateToShoppingCartCheckout() {
+        navController!!.navigate(R.id.nav_shoppingcart_checkout)
     }
+
+//    suspend fun waitForReply(orgId: Int) {
+//        while (controllerViewModels.isEmpty()) {
+//            Log.d("MainActivity", "Waiting for configuration reply from serverConnection...")
+//            Thread.sleep(200L)
+//        }
+//        runOnUiThread(Runnable {
+//            if(orgId == 0) {
+//                navigateToMicrocontroller()
+//            } else {
+//                navigateToOrganizations(connection, user)
+//            }
+//        })
+//    }
 
     fun logout() {
         if(navUserName != null) {
@@ -357,14 +365,14 @@ class MainActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPreferenceS
         })
     }
 
-    fun getViewModel(controllerType: String) : ControllerViewModel? {
-        controllerViewModels.forEach { (key, viewModel) ->
-            if(key.equals(controllerType)) {
-                return viewModel
-            }
-        }
-        return null
-    }
+//    fun getViewModel(controllerType: String) : ControllerViewModel? {
+//        controllerViewModels.forEach { (key, viewModel) ->
+//            if(key.equals(controllerType)) {
+//                return viewModel
+//            }
+//        }
+//        return null
+//    }
 
     @Synchronized fun update(farmConfig: Farm) {
         var redraw = false
@@ -375,7 +383,8 @@ class MainActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPreferenceS
             var viewModel = controllerViewModels[controller.type]
             if(viewModel == null) {
                 controllerFragments[controller.type] = ControllerFragment.newInstance(controller.type)
-                controllerViewModels[controller.type] = ViewModelProvider(ViewModelStore(), ControllerViewModelFactory(cropDroidAPI, controller.type)).get(ControllerViewModel::class.java)
+                controllerViewModels[controller.type] = ViewModelProvider(ViewModelStore(),
+                    ControllerViewModelFactory(cropDroidAPI, controller.type)).get(ControllerViewModel::class.java)
                 redraw = true
                 continue
             }

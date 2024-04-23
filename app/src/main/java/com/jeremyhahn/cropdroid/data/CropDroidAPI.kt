@@ -10,14 +10,16 @@ import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARM_ID_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ORG_ID_KEY
 import com.jeremyhahn.cropdroid.model.*
 import com.jeremyhahn.cropdroid.model.Connection
+import com.jeremyhahn.cropdroid.ui.shoppingcart.model.Customer
+import com.jeremyhahn.cropdroid.ui.shoppingcart.rest.PaymentIntentRequest
+import com.jeremyhahn.cropdroid.ui.shoppingcart.rest.CreateInvoiceRequest
 import okhttp3.*
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
-import java.net.Socket
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import java.util.concurrent.TimeUnit
-import javax.net.SocketFactory
 
 
 class CropDroidAPI(private val connection: Connection, preferences: SharedPreferences?) {
@@ -108,6 +110,125 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
     fun getProducts(callback: Callback) {
         val args = ArrayList<String>()
         doGet(SHOPPING_CART_ENDPOINT, args, callback)
+    }
+
+    fun getPaymentIntent(paymentIntent: PaymentIntentRequest, callback: Callback) {
+        var json = JSONObject()
+        json.put("customerId", paymentIntent.customerId)
+        json.put("amount", paymentIntent.amount)
+        json.put("currencyCode", paymentIntent.currencyCode)
+        doPost(SHOPPING_CART_ENDPOINT.plus("/paymentIntent"), json, callback)
+    }
+
+    fun createInvoice(createInvoiceRequest: CreateInvoiceRequest, callback: Callback) {
+        var json = JSONObject()
+        var jsonProducts = JSONArray()
+        json.put("description", createInvoiceRequest.description)
+        for(product in createInvoiceRequest.products) {
+            val jsonProduct = JSONObject()
+            jsonProduct.put("id", product.id)
+            jsonProduct.put("name", product.name)
+            jsonProduct.put("description", product.description)
+            jsonProduct.put("imageUrl", product.imageUrl)
+            jsonProduct.put("price", product.price)
+            jsonProduct.put("quantity", product.quantity)
+            jsonProducts.put(jsonProduct)
+        }
+        json.put("products", jsonProducts)
+        doPost(SHOPPING_CART_ENDPOINT.plus("/invoice"), json, callback)
+    }
+
+    fun getCustomer(id: Long, callback: Callback) {
+        val args = ArrayList<String>()
+        args.add(id.toString())
+        doGet(SHOPPING_CART_ENDPOINT.plus("/customer"), args, callback)
+    }
+
+    fun createCustomer(customer: Customer, callback: Callback) {
+        val jsonProduct = JSONObject()
+        jsonProduct.put("id", customer.id)
+        jsonProduct.put("processor_id", customer.processorId)
+        jsonProduct.put("description", customer.description)
+        jsonProduct.put("name", customer.name)
+        jsonProduct.put("email", customer.email)
+        jsonProduct.put("phone", customer.phone)
+        if(customer.address != null) {
+            val jsonAddress = JSONObject()
+            jsonAddress.put("id", customer.address?.id)
+            jsonAddress.put("line1", customer.address?.line1)
+            jsonAddress.put("line2", customer.address?.line2)
+            jsonAddress.put("city", customer.address?.city)
+            jsonAddress.put("state", customer.address?.state)
+            jsonAddress.put("postal_code", customer.address?.postalCode)
+            jsonAddress.put("country", customer.address?.country)
+
+            jsonProduct.put("address", jsonAddress)
+        }
+        if(customer.shipping != null) {
+            val jsonShipping = JSONObject()
+            val jsonShippingAddress = JSONObject()
+            jsonShippingAddress.put("line1", customer.shipping?.address?.line1)
+            jsonShippingAddress.put("line2", customer.shipping?.address?.line2)
+            jsonShippingAddress.put("city", customer.shipping?.address?.city)
+            jsonShippingAddress.put("state", customer.shipping?.address?.state)
+            jsonShippingAddress.put("postal_code", customer.shipping?.address?.postalCode)
+            jsonShippingAddress.put("country", customer.shipping?.address?.country)
+
+            jsonShipping.put("id", customer.shipping?.id)
+            jsonShipping.put("name", customer.shipping?.name)
+            jsonShipping.put("phone", customer.shipping?.phone)
+            jsonShipping.put("address", jsonShippingAddress)
+
+            jsonProduct.put("shipping", jsonShipping)
+        }
+
+        Log.d("createCustomer: ", jsonProduct.toString())
+
+        doPost(SHOPPING_CART_ENDPOINT.plus("/customer"), jsonProduct, callback)
+    }
+
+    fun updateCustomer(customer: Customer, callback: Callback) {
+        val jsonProduct = JSONObject()
+        jsonProduct.put("id", customer.id)
+        jsonProduct.put("processor_id", customer.processorId)
+        jsonProduct.put("description", customer.description)
+        jsonProduct.put("name", customer.name)
+        jsonProduct.put("email", customer.email)
+        jsonProduct.put("phone", customer.phone)
+        if(customer.address != null) {
+            val jsonAddress = JSONObject()
+            jsonAddress.put("id", customer.address?.id)
+            jsonAddress.put("line1", customer.address?.line1)
+            jsonAddress.put("line2", customer.address?.line2)
+            jsonAddress.put("city", customer.address?.city)
+            jsonAddress.put("state", customer.address?.state)
+            jsonAddress.put("postal_code", customer.address?.postalCode)
+            jsonAddress.put("country", customer.address?.country)
+
+            jsonProduct.put("address", jsonAddress)
+        }
+        if(customer.shipping != null) {
+            val jsonShipping = JSONObject()
+            val jsonShippingAddress = JSONObject()
+            jsonShippingAddress.put("id", customer.shipping?.address?.id)
+            jsonShippingAddress.put("line1", customer.shipping?.address?.line1)
+            jsonShippingAddress.put("line2", customer.shipping?.address?.line2)
+            jsonShippingAddress.put("city", customer.shipping?.address?.city)
+            jsonShippingAddress.put("state", customer.shipping?.address?.state)
+            jsonShippingAddress.put("postal_code", customer.shipping?.address?.postalCode)
+            jsonShippingAddress.put("country", customer.shipping?.address?.country)
+
+            jsonShipping.put("id", customer.shipping?.id)
+            jsonShipping.put("name", customer.shipping?.name)
+            jsonShipping.put("phone", customer.shipping?.phone)
+            jsonShipping.put("address", jsonShippingAddress)
+
+            jsonProduct.put("shipping", jsonShipping)
+        }
+
+        Log.d("updateCustomer: ", jsonProduct.toString())
+
+        doPut(SHOPPING_CART_ENDPOINT.plus("/customer"), jsonProduct, callback)
     }
 
     fun eventsList(page: String, callback: Callback) {

@@ -19,7 +19,7 @@ class EdgeControllerRecyclerAdapter(val controllers: ArrayList<Connection>,
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val v = LayoutInflater.from(parent.context).inflate(R.layout.edgedevice_cardview, parent, false)
+        val v = LayoutInflater.from(parent.context).inflate(R.layout.cardview_edgedevice, parent, false)
         return ViewHolder(v, onMasterListener)
     }
 

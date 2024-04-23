@@ -123,7 +123,7 @@ class NotificationService : Service() {
         if(controllers.size <= 0) {
             Log.d("NotificationService.startListeners", String.format("No controllers configured, trying again in %d seconds...", RETRY_SECONDS))
             handlerStartListeners.postAtTime(runnableStartListeners, RETRY_INTERVAL_MILLIS);
-            handlerStartListeners.postDelayed(runnableStartListeners, RETRY_INTERVAL);
+            //handlerStartListeners.postDelayed(runnableStartListeners, RETRY_INTERVAL);
             return false
         }
 
@@ -143,7 +143,7 @@ class NotificationService : Service() {
 
         if(authenticatedControllers.size <= 0) {
             Log.d("NotificationService.startListeners", String.format("Unable to find any authenticated controllers. Trying again in %d seconds...", RETRY_SECONDS))
-            handlerStartListeners.postAtTime(runnableStartListeners, RETRY_INTERVAL_MILLIS)
+            //handlerStartListeners.postAtTime(runnableStartListeners, RETRY_INTERVAL_MILLIS)
             handlerStartListeners.postDelayed(runnableStartListeners, RETRY_INTERVAL)
             return false
         }
@@ -152,14 +152,25 @@ class NotificationService : Service() {
             if(websockets.get(controller) == null) {
                 createFarmNotificationWebsocket(controller)
             }
+            if(websockets.get(controller) == null) {
+                Log.d(
+                    "NotificationService.startListeners", String.format(
+                        "Unable to connect to notification websocket for controller %s. Trying again in %d seconds...",
+                        controller.hostname, RETRY_SECONDS
+                    )
+                )
+                handlerStartListeners.postAtTime(runnableStartListeners, RETRY_INTERVAL_MILLIS)
+                //handlerStartListeners.postDelayed(runnableStartListeners, RETRY_INTERVAL)
+                return false
+            }
         }
 
-        if(websockets.size != authenticatedControllers.size) {
-            Log.d("NotificationService.startListeners", String.format("Unable to connect to notification websocket. Trying again in %d seconds...", RETRY_SECONDS))
-            handlerStartListeners.postAtTime(runnableStartListeners, RETRY_INTERVAL_MILLIS)
-            handlerStartListeners.postDelayed(runnableStartListeners, RETRY_INTERVAL)
-            return false
-        }
+//        if(websockets.size != authenticatedControllers.size) {
+//            Log.d("NotificationService.startListeners", String.format("Unable to connect to notification websocket. Trying again in %d seconds...", RETRY_SECONDS))
+//            handlerStartListeners.postAtTime(runnableStartListeners, RETRY_INTERVAL_MILLIS)
+//            handlerStartListeners.postDelayed(runnableStartListeners, RETRY_INTERVAL)
+//            return false
+//        }
 
         Log.d("NotificationService", "Connected to " + websockets.size.toString() + " controller(s)")
         return true

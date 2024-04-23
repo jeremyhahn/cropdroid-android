@@ -54,6 +54,13 @@
     </fragment>
 
     <fragment
+        android:id="@+id/nav_shoppingcart_checkout"
+        android:name="com.jeremyhahn.cropdroid.ui.shoppingcart.CheckoutFragment"
+        android:label="@string/store_checkout"
+        tools:layout="@layout/fragment_cart_checkout">
+    </fragment>
+
+    <fragment
         android:id="@+id/nav_microcontroller_settings"
         android:name="com.jeremyhahn.cropdroid.ui.settings.SettingsFragment"
         android:label="@string/menu_settings"

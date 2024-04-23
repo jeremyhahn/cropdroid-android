@@ -6,9 +6,7 @@
     tools:context=".ui.shoppingcart.ProductListFragment">
 
     <data>
-        <variable
-            name="product"
-            type="com.jeremyhahn.cropdroid.ui.shoppingcart.Product"/>
+        <variable name="product" type="com.jeremyhahn.cropdroid.ui.shoppingcart.model.Product"/>
     </data>
 
     <LinearLayout
@@ -85,7 +83,7 @@
                         android:layout_height="wrap_content"
                         android:padding="5dp"
                         android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
-                        android:text="@{@string/format_price(product.price / 100)}" />
+                        android:text='@{String.format("$%.2f", Double.valueOf(product.price / 100))}' />
 
                 </TableRow>
 
@@ -114,7 +112,7 @@
                             android:radius="10dp"
                             android:text="-" />
 
-                        <EditText
+                        <TextView
                             android:id="@+id/productQuantity"
                             android:layout_width="25dp"
                             android:layout_height="40dp"

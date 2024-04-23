@@ -6,7 +6,6 @@ import android.content.DialogInterface
 import android.view.Gravity
 
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatDialog
 import com.jeremyhahn.cropdroid.model.APIResponse
 
 class AppError(context: Context) {

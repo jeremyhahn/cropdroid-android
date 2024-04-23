@@ -41,7 +41,7 @@ class EventListPaginationRecyclerAdapter(private val context: Context) :  Recycl
     @NonNull
     private fun getViewHolder(parent: ViewGroup, inflater: LayoutInflater): RecyclerView.ViewHolder {
         val viewHolder: RecyclerView.ViewHolder
-        val v1: View = inflater.inflate(R.layout.eventlist_cardview, parent, false)
+        val v1: View = inflater.inflate(R.layout.cardview_eventlist, parent, false)
         viewHolder = this.EventLogVH(v1)
         return viewHolder
     }

@@ -6,10 +6,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
-
+        <import type="android.view.View"/>
+        <variable
+            name="cart"
+            type="com.jeremyhahn.cropdroid.ui.shoppingcart.CartViewModel" />
     </data>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -24,25 +27,79 @@
         <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
             android:id="@+id/cartSwipeRefresh"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:layout_marginBottom="80dp">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/cartRecyclerView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:scrollbars="vertical"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="80dp"
                 tools:layout_editor_absoluteX="8dp"
                 tools:layout_editor_absoluteY="8dp"
-                android:layout_marginTop="8dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp"
-                android:paddingBottom="?attr/actionBarSize"/>
+                android:scrollbars="vertical"/>
 
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        <com.google.android.material.appbar.AppBarLayout
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:fitsSystemWindows="true"
+            android:layout_gravity="bottom"
+            android:theme="@style/AppTheme.AppBarOverlay">
+
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/toolbarBottom"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                app:layout_collapseMode="pin"
+                app:popupTheme="@style/AppTheme.PopupOverlay">
+
+                <TextView
+                    android:id="@+id/toolbarTotal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/store_total" />
+
+                <TextView
+                    android:id="@+id/toolbarTotalText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="20dp"
+                    android:text='@{String.format("$%,.2f", cart.total)}' />
+
+                <Button
+                    android:id="@+id/btnCheckout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="right"
+                    android:layout_marginRight="20dp"
+                    android:clickable="true"
+                    android:onClick="@{() -> cart.checkout()}"
+                    android:text="@string/store_checkout"
+                    android:visibility='@{(cart.size > 0) ? View.VISIBLE : View.GONE}' />
+
+                <Button
+                    android:id="@+id/btnEmptyCart"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="right"
+                    android:layout_marginRight="0dp"
+                    android:clickable="true"
+                    android:onClick="@{() -> cart.clear()}"
+                    android:text="@string/store_empty_cart"
+                    android:visibility='@{(cart.size > 0) ? View.VISIBLE : View.GONE}' />
+
+            </androidx.appcompat.widget.Toolbar>
+
+        </com.google.android.material.appbar.AppBarLayout>
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
 </layout>
