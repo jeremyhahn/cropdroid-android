@@ -4,18 +4,22 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.jeremyhahn.cropdroid.ui.shoppingcart.model.Product
 
-class CartViewModel() : ViewModel() {
+class CartViewModel(private var taxRate: Double = 0.0) : ViewModel() {
 
     private val TAG = "Cart"
     private lateinit var cartListener: CartListener
 
     val items: MutableLiveData<HashMap<String, Product>> = MutableLiveData<HashMap<String, Product>>()
     val size = MutableLiveData<Int>()
+    var tax = MutableLiveData<Double>()
+    var subtotal = MutableLiveData<Double>()
     var total = MutableLiveData<Double>()
 
     init {
         items.value = HashMap()
         size.apply { value = 0 }
+        tax.apply { value = 0.0 }
+        subtotal.apply { value = 0.0 }
         total.apply { value = 0.0 }
     }
 
@@ -23,8 +27,9 @@ class CartViewModel() : ViewModel() {
         cartListener = listener
     }
 
-    fun checkout() {
-        cartListener.checkout()
+    fun setTaxRate(rate: Double) {
+        taxRate = rate
+        updateCounters()
     }
 
     fun set(product: Product) {
@@ -56,8 +61,14 @@ class CartViewModel() : ViewModel() {
     }
 
     private fun updateCounters() {
-        size.postValue(calculateSize())
-        total.postValue(calculateTotal() / 100)
+        val _subtotal = calculateSubotal() / 100
+        val _tax = _subtotal * (taxRate / 100)
+        val _total = _subtotal + _tax
+        val _size = calculateSize()
+        subtotal.postValue(_subtotal)
+        tax.postValue(_tax)
+        total.postValue(_total)
+        size.postValue(_size)
     }
 
     fun calculateSize(): Int {
@@ -68,12 +79,11 @@ class CartViewModel() : ViewModel() {
         return s
     }
 
-    private fun calculateTotal(): Double {
+    private fun calculateSubotal(): Double {
         var t = 0.0
         for (product in items.value!!.values) {
             t = (t + (product.price * product.quantity))
         }
         return t
     }
-
 }

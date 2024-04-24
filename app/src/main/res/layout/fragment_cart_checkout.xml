@@ -61,40 +61,79 @@
                 app:layout_collapseMode="pin"
                 app:popupTheme="@style/AppTheme.PopupOverlay">
 
+
                 <TextView
-                    android:id="@+id/toolbarTotal"
+                    android:id="@+id/toolbarSubTotal"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/store_total" />
+                    android:textStyle="bold"
+                    android:layout_gravity="left"
+                    android:text="@string/store_subtotal" />
+
+                <TextView
+                    android:id="@+id/toolbarSubTotalText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="3dp"
+                    android:layout_gravity="left"
+                    android:text='@{String.format("$%,.2f", cart.subtotal)}' />
+
+
+                <TextView
+                    android:id="@+id/toolbarTax"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="25dp"
+                    android:textStyle="bold"
+                    android:layout_gravity="center_horizontal"
+                    android:text="@string/store_tax" />
+
+                <TextView
+                    android:id="@+id/toolbarTaxText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="3dp"
+                    android:layout_gravity="center_horizontal"
+                    android:text='@{String.format("$%,.2f", cart.tax)}' />
 
                 <TextView
                     android:id="@+id/toolbarTotalText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="20dp"
+                    android:layout_gravity="right"
+                    android:layout_marginLeft="3dp"
+                    android:layout_marginRight="15dp"
                     android:text='@{String.format("$%,.2f", cart.total)}' />
 
-                <Button
-                    android:id="@+id/btnCheckout"
+                <TextView
+                    android:id="@+id/toolbarTotal"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="right"
-                    android:layout_marginRight="20dp"
-                    android:clickable="true"
-                    android:onClick="@{() -> cart.checkout()}"
-                    android:text="@string/store_checkout"
-                    android:visibility='@{(cart.size > 0) ? View.VISIBLE : View.GONE}' />
+                    android:textStyle="bold"
+                    android:text="@string/store_total" />
 
-                <Button
-                    android:id="@+id/btnEmptyCart"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="right"
-                    android:layout_marginRight="0dp"
-                    android:clickable="true"
-                    android:onClick="@{() -> cart.clear()}"
-                    android:text="@string/store_empty_cart"
-                    android:visibility='@{(cart.size > 0) ? View.VISIBLE : View.GONE}' />
+<!--                <Button-->
+<!--                    android:id="@+id/btnCheckout"-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_gravity="right"-->
+<!--                    android:layout_marginRight="20dp"-->
+<!--                    android:clickable="true"-->
+<!--                    android:onClick="@{() -> cart.checkout()}"-->
+<!--                    android:text="@string/store_checkout"-->
+<!--                    android:visibility='@{(cart.size > 0) ? View.VISIBLE : View.GONE}' />-->
+
+<!--                <Button-->
+<!--                    android:id="@+id/btnEmptyCart"-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_gravity="right"-->
+<!--                    android:layout_marginRight="0dp"-->
+<!--                    android:clickable="true"-->
+<!--                    android:onClick="@{() -> cart.clear()}"-->
+<!--                    android:text="@string/store_empty_cart"-->
+<!--                    android:visibility='@{(cart.size > 0) ? View.VISIBLE : View.GONE}' />-->
 
             </androidx.appcompat.widget.Toolbar>
 

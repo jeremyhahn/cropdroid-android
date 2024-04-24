@@ -1,14 +1,20 @@
 package com.jeremyhahn.cropdroid.ui.shoppingcart
 
+import android.content.DialogInterface
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.MenuProvider
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -16,6 +22,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.jeremyhahn.cropdroid.AppError
 import com.jeremyhahn.cropdroid.BR
 import com.jeremyhahn.cropdroid.MainActivity
+import com.jeremyhahn.cropdroid.Prompt
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.config.APIResponseParser
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
@@ -29,8 +36,8 @@ import com.jeremyhahn.cropdroid.ui.shoppingcart.rest.CreateInvoiceRequest
 import com.jeremyhahn.cropdroid.ui.shoppingcart.rest.PaymentIntentResponse
 import com.jeremyhahn.cropdroid.utils.Preferences
 import com.stripe.android.PaymentConfiguration
-import com.stripe.android.paymentsheet.PaymentSheet.Address
 import com.stripe.android.paymentsheet.PaymentSheet
+import com.stripe.android.paymentsheet.PaymentSheet.Address
 import com.stripe.android.paymentsheet.PaymentSheetResult
 import com.stripe.android.paymentsheet.addresselement.AddressDetails
 import com.stripe.android.paymentsheet.addresselement.AddressLauncher
@@ -39,7 +46,7 @@ import okhttp3.Call
 import okhttp3.Callback
 import org.json.JSONObject
 import java.io.IOException
-import java.lang.Exception
+
 
 class CheckoutFragment : Fragment(), CartListener {
 
@@ -61,6 +68,8 @@ class CheckoutFragment : Fragment(), CartListener {
     private var billingAddress: Address? = null
     private var shippingAddress: Address? = null
     private var paymentIntentResponse: PaymentIntentResponse? = null
+
+    private lateinit var toolbarMenu: Menu
 
     private val cartViewModel: CartViewModel by activityViewModels()
 
@@ -90,6 +99,33 @@ class CheckoutFragment : Fragment(), CartListener {
 
         cropDroidAPI = CropDroidAPI(connection, controllerSharedPrefs)
 
+        fragmentActivity.addMenuProvider(object : MenuProvider {
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                return when (menuItem.itemId) {
+                    R.id.emptyCart -> {
+                        Prompt(requireContext()).show(
+                            resources.getString(R.string.store_empty_cart),
+                            resources.getString(R.string.store_prompt_empty_cart),
+                            DialogInterface.OnClickListener { dialog, which ->
+                                cartViewModel.clear()
+                            },
+                            null
+                        )
+                        true
+                    }
+                    R.id.pay -> {
+                        checkout()
+                        true
+                    }
+                    else -> false
+                }
+            }
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                menuInflater.inflate(R.menu.shoppingcart_checkout, menu)
+                toolbarMenu = menu
+            }
+        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
+
         binding.cart = cartViewModel
 
         cartListAdapter = CartListAdapter(cartViewModel)
@@ -102,12 +138,12 @@ class CheckoutFragment : Fragment(), CartListener {
         })
 
         cartViewModel.size.observe(viewLifecycleOwner, Observer {
-            toggleEmptyText()
+            toggleVisibility()
             applyCartViewModelBindings()
         })
 
         binding.cartSwipeRefresh.setOnRefreshListener {
-            toggleEmptyText()
+            toggleVisibility()
             applyCartViewModelBindings()
             binding.cartSwipeRefresh.isRefreshing = false
         }
@@ -125,10 +161,18 @@ class CheckoutFragment : Fragment(), CartListener {
         return binding.root
     }
 
-    private fun toggleEmptyText() {
+    private fun toggleVisibility() {
         if (cartViewModel.size.value!! > 0) {
+            if(::toolbarMenu.isInitialized) {
+                toolbarMenu.findItem(R.id.emptyCart).setVisible(true)
+                toolbarMenu.findItem(R.id.pay).setVisible(true)
+            }
             binding.cartEmptyText.visibility = View.GONE
         } else {
+            if(::toolbarMenu.isInitialized) {
+                toolbarMenu.findItem(R.id.emptyCart).setVisible(false)
+                toolbarMenu.findItem(R.id.pay).setVisible(false)
+            }
             binding.cartEmptyText.visibility = View.VISIBLE
         }
     }

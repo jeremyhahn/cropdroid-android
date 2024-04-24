@@ -15,7 +15,7 @@ import org.json.JSONArray
 import java.io.IOException
 import kotlin.collections.ArrayList
 
-class ProductViewModel(var activity: Activity, var cropDroidAPI: CropDroidAPI) : ViewModel() {
+class ProductListViewModel(var activity: Activity, var cropDroidAPI: CropDroidAPI) : ViewModel() {
 
     val products = MutableLiveData<ArrayList<Product>>()
     val error = MutableLiveData<String>()

@@ -1,0 +1,19 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".ui.shoppingcart.CheckoutFragment">
+
+    <item android:id="@+id/emptyCart"
+        android:icon="@drawable/ic_remove_shopping_cart"
+        android:title="@string/store_empty_cart"
+        android:tooltipText="@string/store_empty_cart"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/pay"
+        android:icon="@drawable/ic_payments"
+        android:title="@string/store_payment"
+        android:tooltipText="@string/store_payment"
+        app:showAsAction="always"/>
+
+</menu>

@@ -26,12 +26,18 @@ import com.jeremyhahn.cropdroid.AppError
 import com.jeremyhahn.cropdroid.BR
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
+import com.jeremyhahn.cropdroid.config.APIResponseParser
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.databinding.BadgeShoppingCartBinding
 import com.jeremyhahn.cropdroid.databinding.FragmentCartProductListBinding
 import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
 import com.jeremyhahn.cropdroid.ui.shoppingcart.model.Product
+import com.jeremyhahn.cropdroid.ui.shoppingcart.parser.TaxRateParser
 import com.jeremyhahn.cropdroid.utils.Preferences
+import okhttp3.Call
+import okhttp3.Callback
+import org.json.JSONArray
+import java.io.IOException
 
 class ProductListFragment : Fragment() {
 
@@ -40,7 +46,7 @@ class ProductListFragment : Fragment() {
     lateinit private var productListBinding: FragmentCartProductListBinding
     lateinit private var cartBinding: BadgeShoppingCartBinding
     lateinit private var cropDroidAPI: CropDroidAPI
-    lateinit private var productViewModel: ProductViewModel
+    lateinit private var productListViewModel: ProductListViewModel
     lateinit private var cartTextView: TextView
     lateinit private var fragmentActivity: FragmentActivity
     lateinit private var mainActivity: MainActivity
@@ -76,7 +82,7 @@ class ProductListFragment : Fragment() {
                 return true
             }
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-                menuInflater.inflate(R.menu.cart_checkout, menu)
+                menuInflater.inflate(R.menu.shoppingcart, menu)
 
                 val badgeLayout = menu.findItem(R.id.item_cart).actionView as RelativeLayout?
                 cartTextView = badgeLayout!!.findViewById<View>(R.id.actionbar_cart_textview) as TextView
@@ -94,8 +100,8 @@ class ProductListFragment : Fragment() {
             }
         }, viewLifecycleOwner, Lifecycle.State.RESUMED)
 
-        productViewModel = ViewModelProviders.of(this,
-            ProductViewModelFactory(fragmentActivity, cropDroidAPI))[ProductViewModel::class.java]
+        productListViewModel = ViewModelProviders.of(this,
+            ProductViewModelFactory(fragmentActivity, cropDroidAPI))[ProductListViewModel::class.java]
 
         productListAdapter = ProductListAdapter(products, cartViewModel)
 
@@ -105,9 +111,9 @@ class ProductListFragment : Fragment() {
 
         productListBinding.productSwipeRefresh.setOnRefreshListener {
             productListBinding.productSwipeRefresh.isRefreshing = true
-            productViewModel.getProducts()
-            applyProductListViewModelBindings()
-            applyCartViewModelBindings()
+            productListViewModel.getProducts()
+            applyProductListBindings()
+            applyCartBindings()
             productListBinding.productSwipeRefresh.isRefreshing = false
         }
 
@@ -118,8 +124,8 @@ class ProductListFragment : Fragment() {
             R.color.holo_red_light
         )
 
-        productViewModel.products.observe(viewLifecycleOwner, Observer {
-            products = productViewModel.products.value!!
+        productListViewModel.products.observe(viewLifecycleOwner, Observer {
+            products = productListViewModel.products.value!!
             productListAdapter.updateProducts(products)
             hideProgressBar()
             toggleViewVisibility()
@@ -130,21 +136,55 @@ class ProductListFragment : Fragment() {
                 cartTextView.text = cartViewModel.size.value.toString()
             }
             if(::cartBinding.isInitialized) {
-                applyCartViewModelBindings()
+                applyCartBindings()
             }
         })
 
-        productViewModel.error.observe(viewLifecycleOwner, Observer {
+        productListViewModel.error.observe(viewLifecycleOwner, Observer {
             hideProgressBar()
-            AppError(requireContext()).error(productViewModel.error.value.toString())
+            AppError(requireContext()).error(productListViewModel.error.value.toString())
             toggleViewVisibility()
         })
 
         showProgressBar()
-        productViewModel.getProducts()
-        applyProductListViewModelBindings()
+        productListViewModel.getProducts()
+        applyProductListBindings()
 
         return productListBinding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        cropDroidAPI.getTaxRates(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.d(TAG, "onFailure response: " + e!!.message)
+                activity!!.runOnUiThread {
+                    AppError(requireContext()).exception(e)
+                }
+                return
+            }
+            override fun onResponse(call: Call, response: okhttp3.Response) {
+                val apiResponse = APIResponseParser.parse(response)
+                if (!apiResponse.success) {
+                    activity!!.runOnUiThread {
+                        AppError(requireContext()).apiAlert(apiResponse)
+                    }
+                    return
+                }
+                try {
+                    val jsonTaxRates = apiResponse.payload as JSONArray
+                    val taxRates = TaxRateParser.parse(jsonTaxRates)
+                    if(taxRates.isNotEmpty()) {
+                        cartViewModel.setTaxRate(taxRates[0].percentage)
+                    }
+                }
+                catch(e: Exception) {
+                    activity!!.runOnUiThread {
+                        AppError(fragmentActivity).error(e)
+                    }
+                }
+            }
+        })
     }
 
     fun showProgressBar() {
@@ -164,14 +204,18 @@ class ProductListFragment : Fragment() {
         }
     }
 
-    private fun applyCartViewModelBindings() {
+    private fun applyCartBindings() {
         cartBinding.apply {
             cartBinding.setVariable(BR.cart, cartViewModel)
             cartBinding.executePendingBindings()
         }
     }
 
-    private fun applyProductListViewModelBindings() {
+    private fun applyProductListBindings() {
+        productListBinding.apply {
+            productListBinding.setVariable(BR.product, productListViewModel)
+            productListBinding.executePendingBindings()
+        }
         productListBinding.apply {
             productListBinding.setVariable(BR.cart, cartViewModel)
             productListBinding.executePendingBindings()

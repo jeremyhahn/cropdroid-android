@@ -209,9 +209,13 @@
 
     <string name="format_price">$%.2f</string>
 
-    <string name="store_total">Total</string>
+    <string name="store_subtotal">Subtotal:</string>
+    <string name="store_tax">Tax:</string>
+    <string name="store_total">Total:</string>
     <string name="store_empty_cart">Empty Cart</string>
     <string name="store_checkout">Checkout</string>
+    <string name="store_payment">Payment</string>
+    <string name="store_prompt_empty_cart">Are you sure you want to empty your cart?</string>
     <string name="store_billing_details">Billing Details</string>
     <string name="store_shipping_details">Shipping Details</string>
 

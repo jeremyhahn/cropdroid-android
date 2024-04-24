@@ -7,6 +7,6 @@ import com.jeremyhahn.cropdroid.data.CropDroidAPI
 
 class ProductViewModelFactory(private val activity: Activity, private val cropDroidAPI: CropDroidAPI) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return ProductViewModel(activity, cropDroidAPI) as T
+        return ProductListViewModel(activity, cropDroidAPI) as T
     }
 }

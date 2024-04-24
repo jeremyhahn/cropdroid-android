@@ -138,6 +138,11 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         doPost(SHOPPING_CART_ENDPOINT.plus("/invoice"), json, callback)
     }
 
+    fun getTaxRates(callback: Callback) {
+        val args = ArrayList<String>()
+        doGet(SHOPPING_CART_ENDPOINT.plus("/taxrate"), args, callback)
+    }
+
     fun getCustomer(id: Long, callback: Callback) {
         val args = ArrayList<String>()
         args.add(id.toString())

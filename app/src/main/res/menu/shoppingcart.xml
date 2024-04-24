@@ -4,8 +4,9 @@
     tools:context=".ui.shoppingcart.CheckoutFragment">
 
     <item android:id="@+id/item_cart"
-        android:icon="@drawable/baseline_shopping_cart_24"
+        android:icon="@drawable/ic_fast_cart"
         app:actionLayout="@layout/badge_shopping_cart"
+        android:tooltipText="@string/store_checkout"
         app:showAsAction="always" />
 
 </menu>
