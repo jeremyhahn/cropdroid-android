@@ -1,5 +1,7 @@
 package com.jeremyhahn.cropdroid.ui.shoppingcart
 
+// https://docs.stripe.com/libraries/android
+
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -33,6 +35,8 @@ import com.jeremyhahn.cropdroid.databinding.FragmentCartProductListBinding
 import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
 import com.jeremyhahn.cropdroid.ui.shoppingcart.model.Product
 import com.jeremyhahn.cropdroid.ui.shoppingcart.parser.TaxRateParser
+import com.jeremyhahn.cropdroid.ui.shoppingcart.viewmodel.CartViewModel
+import com.jeremyhahn.cropdroid.ui.shoppingcart.viewmodel.ProductListViewModel
 import com.jeremyhahn.cropdroid.utils.Preferences
 import okhttp3.Call
 import okhttp3.Callback

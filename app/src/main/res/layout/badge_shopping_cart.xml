@@ -9,7 +9,7 @@
         <import type="android.view.View"/>
         <variable
             name="cart"
-            type="com.jeremyhahn.cropdroid.ui.shoppingcart.CartViewModel" />
+            type="com.jeremyhahn.cropdroid.ui.shoppingcart.viewmodel.CartViewModel" />
     </data>
 
     <RelativeLayout

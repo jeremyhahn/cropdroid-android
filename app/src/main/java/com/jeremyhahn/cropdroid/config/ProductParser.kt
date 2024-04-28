@@ -3,6 +3,7 @@ package com.jeremyhahn.cropdroid.config
 import android.util.Log
 import com.jeremyhahn.cropdroid.ui.shoppingcart.model.Product
 import org.json.JSONArray
+import org.json.JSONObject
 
 class ProductParser {
 
@@ -26,9 +27,24 @@ class ProductParser {
                 val imageUrl = jsonProduct.getString("imageUrl")
                 val price = jsonProduct.getLong("price")
                 val quantity = jsonProduct.getInt("quantity")
-                products.add(Product(id, name, description, imageUrl, price, quantity))
+                val metadata = jsonProduct.getJSONObject("metadata").toMap()
+                products.add(Product(id, name, description, imageUrl, price, quantity, metadata))
             }
             return products
+        }
+
+        fun JSONObject.toMap(): Map<String, *> = keys().asSequence().associateWith {
+            when (val value = this[it])
+            {
+                is JSONArray ->
+                {
+                    val map = (0 until value.length()).associate { Pair(it.toString(), value[it]) }
+                    JSONObject(map).toMap().values.toList()
+                }
+                is JSONObject -> value.toMap()
+                JSONObject.NULL -> null
+                else            -> value
+            }
         }
     }
 }

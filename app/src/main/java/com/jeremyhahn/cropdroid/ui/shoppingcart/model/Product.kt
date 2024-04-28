@@ -1,7 +1,6 @@
 package com.jeremyhahn.cropdroid.ui.shoppingcart.model
 
 import androidx.databinding.BaseObservable
-import java.math.BigDecimal
 
 data class Product(
     val id: String,
@@ -9,5 +8,6 @@ data class Product(
     val description: String,
     val imageUrl: String,
     val price: Long,
-    var quantity: Int) : BaseObservable() {
+    var quantity: Int,
+    val metadata: Map<String, *>) : BaseObservable() {
 }

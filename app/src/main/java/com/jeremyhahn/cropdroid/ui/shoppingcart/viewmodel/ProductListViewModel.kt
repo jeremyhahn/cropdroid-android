@@ -1,4 +1,4 @@
-package com.jeremyhahn.cropdroid.ui.shoppingcart
+package com.jeremyhahn.cropdroid.ui.shoppingcart.viewmodel
 
 import android.app.Activity
 import android.util.Log

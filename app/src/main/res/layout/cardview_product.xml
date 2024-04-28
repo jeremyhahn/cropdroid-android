@@ -6,7 +6,8 @@
     tools:context=".ui.shoppingcart.ProductListFragment">
 
     <data>
-        <variable name="product" type="com.jeremyhahn.cropdroid.ui.shoppingcart.model.Product"/>
+        <variable name="product"
+                  type="com.jeremyhahn.cropdroid.ui.shoppingcart.model.Product"/>
     </data>
 
     <LinearLayout
@@ -48,7 +49,7 @@
                         android:id="@+id/productName"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_span="4"
+                        android:layout_span="2"
                         android:padding="5dp"
                         android:textAppearance="@style/Base.TextAppearance.AppCompat.Large"
                         android:text="@{product.name}"/>
@@ -105,29 +106,28 @@
                         android:orientation="horizontal">
 
                         <Button
-                            style="@style/Widget.AppCompat.Button.Colored"
                             android:id="@+id/btnDecrementQuantity"
-                            android:layout_width="35dp"
-                            android:layout_height="40dp"
-                            android:radius="10dp"
+                            style="@style/Widget.AppCompat.Button.Colored"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:background="@drawable/rounded_button_corners"
                             android:text="-" />
 
                         <TextView
                             android:id="@+id/productQuantity"
-                            android:layout_width="25dp"
+                            android:layout_width="20dp"
                             android:layout_height="40dp"
+                            android:gravity="center"
                             android:hint="0"
                             android:inputType="number"
-                            android:gravity="center"
-                            android:background="@null"
                             android:text="@{String.valueOf(product.quantity)}" />
 
                         <Button
-                            style="@style/Widget.AppCompat.Button.Colored"
                             android:id="@+id/btnIncrementQuantity"
-                            android:layout_width="35dp"
-                            android:layout_height="40dp"
-                            android:radius="10dp"
+                            style="@style/Widget.AppCompat.Button.Colored"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:background="@drawable/rounded_button_corners"
                             android:text="+" />
 
                     </LinearLayout>

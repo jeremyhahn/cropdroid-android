@@ -34,6 +34,7 @@ import com.jeremyhahn.cropdroid.ui.shoppingcart.parser.CustomerParser
 import com.jeremyhahn.cropdroid.ui.shoppingcart.parser.PaymentIntentResponseParser
 import com.jeremyhahn.cropdroid.ui.shoppingcart.rest.CreateInvoiceRequest
 import com.jeremyhahn.cropdroid.ui.shoppingcart.rest.PaymentIntentResponse
+import com.jeremyhahn.cropdroid.ui.shoppingcart.viewmodel.CartViewModel
 import com.jeremyhahn.cropdroid.utils.Preferences
 import com.stripe.android.PaymentConfiguration
 import com.stripe.android.paymentsheet.PaymentSheet
@@ -47,6 +48,10 @@ import okhttp3.Callback
 import org.json.JSONObject
 import java.io.IOException
 
+enum class AddressType {
+    BILLING,
+    SHIPPING
+}
 
 class CheckoutFragment : Fragment(), CartListener {
 
@@ -68,6 +73,7 @@ class CheckoutFragment : Fragment(), CartListener {
     private var billingAddress: Address? = null
     private var shippingAddress: Address? = null
     private var paymentIntentResponse: PaymentIntentResponse? = null
+    private var checkoutFlag = false
 
     private lateinit var toolbarMenu: Menu
 
@@ -142,6 +148,11 @@ class CheckoutFragment : Fragment(), CartListener {
             applyCartViewModelBindings()
         })
 
+        cartViewModel.shippingAddress.observe(viewLifecycleOwner, Observer {
+            toggleVisibility()
+            applyCartViewModelBindings()
+        })
+
         binding.cartSwipeRefresh.setOnRefreshListener {
             toggleVisibility()
             applyCartViewModelBindings()
@@ -159,6 +170,35 @@ class CheckoutFragment : Fragment(), CartListener {
         applyCartViewModelBindings()
 
         return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        cropDroidAPI.getCustomer(mainActivity.user!!.id.toLong(), object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.d(TAG, "onFailure response: " + e!!.message)
+                activity!!.runOnUiThread {
+                    AppError(requireContext()).exception(e)
+                }
+                return
+            }
+            override fun onResponse(call: Call, response: okhttp3.Response) {
+                val apiResponse = APIResponseParser.parse(response)
+                if (!apiResponse.success) {
+                    activity!!.runOnUiThread {
+                        AppError(requireContext()).apiAlert(apiResponse)
+                    }
+                    return
+                }
+                if(apiResponse.payload != null) {
+                    val response = apiResponse.payload as JSONObject
+                    customer = CustomerParser.parse(response)
+                    cartViewModel.setShippingAddress(customer!!.shipping!!)
+                } else {
+                    presentBillingDetailsAddressLauncher()
+                }
+            }
+        })
     }
 
     private fun toggleVisibility() {
@@ -184,40 +224,256 @@ class CheckoutFragment : Fragment(), CartListener {
         }
     }
 
+    override fun editAddress() {
+        if(this.customer == null) {
+            presentBillingDetailsAddressLauncher()
+        } else {
+            presentShippingDetailsAddressLauncher()
+        }
+    }
+
     override fun clear() {
         applyCartViewModelBindings()
         cartListAdapter.notifyDataSetChanged()
     }
 
-    override fun checkout() {
-        cropDroidAPI.getCustomer(mainActivity.user!!.id.toLong(), object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                Log.d(TAG, "onFailure response: " + e!!.message)
-                activity!!.runOnUiThread {
-                    AppError(requireContext()).exception(e)
-                }
-                return
-            }
-            override fun onResponse(call: Call, response: okhttp3.Response) {
-                val apiResponse = APIResponseParser.parse(response)
-                if (!apiResponse.success) {
-                    activity!!.runOnUiThread {
-                        AppError(requireContext()).apiAlert(apiResponse)
+    override fun checkout() = if(this.customer == null) {
+        checkoutFlag = true
+        presentBillingDetailsAddressLauncher()
+    } else {
+        createInvoice()
+    }
+
+    private fun presentBillingDetailsAddressLauncher() {
+        billingDetailsAddressLauncher.present(
+            publishableKey = getPublishableKey(),
+            configuration = getAddressLauncherConfig(AddressType.BILLING)
+        )
+    }
+
+    private fun presentShippingDetailsAddressLauncher() {
+        shippingAddressLauncher.present(
+            publishableKey = getPublishableKey(),
+            configuration = getAddressLauncherConfig(AddressType.SHIPPING)
+        )
+    }
+
+    private fun presentPaymentSheet() {
+        paymentSheet.presentWithPaymentIntent(
+            paymentIntentClientSecret,
+            PaymentSheet.Configuration(
+                merchantDisplayName = resources.getString(R.string.app_name),
+                customer = paymentSheetCustomerConfig,
+                // Setting this value hides the "Shipping address is same as billing" checkbox on the payment sheet
+                // defaultBillingDetails = defaultBillingDetails,
+                shippingDetails = shippingDetails,
+                // Set `allowsDelayedPaymentMethods` to true if your business handles
+                // delayed notification payment methods like US bank accounts.
+                // allowsDelayedPaymentMethods = true
+                billingDetailsCollectionConfiguration = PaymentSheet.BillingDetailsCollectionConfiguration(
+                    attachDefaultsToPaymentMethod = true
+                )
+            )
+        )
+    }
+
+    private fun getPublishableKey(): String {
+        return if(paymentIntentResponse == null)
+            ""
+        else
+            paymentIntentResponse!!.publishableKey
+    }
+
+    private fun getAddressLauncherConfig(addressType: AddressType): AddressLauncher.Configuration {
+        var addressDetails: AddressDetails? = null
+        var title = resources.getString(R.string.store_billing_details)
+        if(addressType == AddressType.BILLING && customer != null && customer!!.address != null) {
+            title = resources.getString(R.string.store_billing_details)
+            addressDetails = AddressDetails(
+                name = customer!!.name,
+                phoneNumber = customer!!.phone,
+                address = billingAddress
+            )
+        }
+        else if(customer != null && customer!!.shipping != null) {
+            title = resources.getString(R.string.store_shipping_details)
+            addressDetails = AddressDetails(
+                name = customer!!.shipping!!.name,
+                phoneNumber = customer!!.shipping!!.phone,
+                address = Address(
+                    line1 = customer!!.shipping!!.address.line1,
+                    line2 = customer!!.shipping!!.address.line2,
+                    city = customer!!.shipping!!.address.city,
+                    state = customer!!.shipping!!.address.state,
+                    postalCode = customer!!.shipping!!.address.postalCode,
+                    country = customer!!.shipping!!.address.country))
+        }
+        return AddressLauncher.Configuration(
+            title = title,
+            additionalFields = AddressLauncher.AdditionalFieldsConfiguration(
+                phone = AddressLauncher.AdditionalFieldsConfiguration.FieldConfiguration.REQUIRED
+            ),
+            address = addressDetails,
+            //allowedCountries = setOf("US", "CA", "GB"),
+            googlePlacesApiKey = "(optional) YOUR KEY HERE"
+        )
+    }
+
+    private fun onBillingDetailsAddressLauncherResult(result: AddressLauncherResult) {
+        when (result) {
+            is AddressLauncherResult.Succeeded -> {
+
+                val billingDetails = result.address
+                val address = com.jeremyhahn.cropdroid.ui.shoppingcart.model.Address(
+                    id = 0L,
+                    line1 = billingDetails.address?.line1!!,
+                    line2 = billingDetails.address?.line2!!,
+                    city = billingDetails.address?.city!!,
+                    state = billingDetails.address?.state!!,
+                    postalCode = billingDetails.address?.postalCode!!,
+                    country = billingDetails.address?.country!!)
+
+                customer = Customer(
+                    mainActivity.user!!.id.toLong(),
+                    "",
+                    "",
+                    billingDetails.name!!,
+                    mainActivity.user!!.username,  // email address
+                    billingDetails.phoneNumber!!,
+                    address,
+                    ShippingAddress(
+                        0L,
+                        billingDetails.name!!,
+                        billingDetails.phoneNumber!!,
+                        address
+                    ),
+                    "")
+
+                cropDroidAPI.createCustomer(customer!!, object : Callback {
+                    override fun onFailure(call: Call, e: IOException) {
+                        Log.d(TAG, "onFailure response: " + e!!.message)
+                        activity!!.runOnUiThread {
+                            AppError(requireContext()).exception(e)
+                        }
+                        return
                     }
-                    return
-                }
-
-                Log.d(TAG, "getCustomer payload: " + apiResponse.payload)
-
-                if(apiResponse.payload == null) {
-                    presentBillingDetailsAddressLauncher()
-                } else {
-                    val response = apiResponse.payload as JSONObject
-                    customer = CustomerParser.parse(response)
-                    createInvoice()
-                }
+                    override fun onResponse(call: Call, response: okhttp3.Response) {
+                        val apiResponse = APIResponseParser.parse(response)
+                        if (!apiResponse.success) {
+                            activity!!.runOnUiThread {
+                                AppError(requireContext()).apiAlert(apiResponse)
+                            }
+                            return
+                        }
+                        val jsonCustomer = apiResponse.payload as JSONObject
+                        customer = CustomerParser.parse(jsonCustomer)
+                        presentShippingDetailsAddressLauncher()
+                    }
+                })
             }
-        })
+            is AddressLauncherResult.Canceled -> {
+                // Do nothing
+            }
+        }
+    }
+
+    private fun onShippingAddressLauncherResult(result: AddressLauncherResult) {
+        when (result) {
+            is AddressLauncherResult.Succeeded -> {
+                shippingDetails = result.address
+
+                customer!!.shipping?.name = result.address.name!!
+                customer!!.shipping?.phone = result.address.phoneNumber!!
+
+                val address = com.jeremyhahn.cropdroid.ui.shoppingcart.model.Address(
+                    id = customer!!.shipping!!.address!!.id,
+                    line1 = shippingDetails!!.address?.line1!!,
+                    line2 = shippingDetails!!.address?.line2!!,
+                    city = shippingDetails!!.address?.city!!,
+                    state = shippingDetails!!.address?.state!!,
+                    postalCode = shippingDetails!!.address?.postalCode!!,
+                    country = shippingDetails!!.address?.country!!
+                )
+
+                customer!!.shipping = ShippingAddress(
+                    id = customer!!.shipping!!.id,
+                    name = customer!!.shipping!!.name,
+                    phone = customer!!.shipping!!.phone,
+                    address = address
+                )
+
+                cropDroidAPI.updateCustomer(customer!!, object : Callback {
+                    override fun onFailure(call: Call, e: IOException) {
+                        Log.d(TAG, "onFailure response: " + e!!.message)
+                        activity!!.runOnUiThread {
+                            AppError(requireContext()).exception(e)
+                        }
+                        return
+                    }
+                    override fun onResponse(call: Call, response: okhttp3.Response) {
+                        val apiResponse = APIResponseParser.parse(response)
+                        if (!apiResponse.success) {
+                            activity!!.runOnUiThread {
+                                AppError(requireContext()).apiAlert(apiResponse)
+                            }
+                            return
+                        }
+                        val jsonCustomer = apiResponse.payload as JSONObject
+                        customer = CustomerParser.parse(jsonCustomer)
+                        cartViewModel.setShippingAddress(customer!!.shipping!!)
+                        if(checkoutFlag) createInvoice()
+                    }
+                })
+            }
+            is AddressLauncherResult.Canceled -> {
+                // Do nothing
+            }
+        }
+    }
+
+    fun onPaymentSheetResult(paymentSheetResult: PaymentSheetResult) {
+        Log.d(TAG, "payment result: " + paymentSheetResult.toString())
+        when(paymentSheetResult) {
+            is PaymentSheetResult.Canceled -> {
+                Log.i(TAG,  "Payment canceled")
+            }
+            is PaymentSheetResult.Failed -> {
+                Log.e(TAG,  "Payment error: ${paymentSheetResult.error}")
+            }
+            is PaymentSheetResult.Completed -> {
+                // Display for example, an order confirmation screen
+                Log.i(TAG,  "Completed")
+
+                if(customer!!.defaultPaymentMethod.isEmpty()) {
+                    cropDroidAPI.setDefaultPaymentMethod(customer!!.id, customer!!.processorId, object : Callback {
+                        override fun onFailure(call: Call, e: IOException) {
+                            Log.d(TAG, "onFailure response: " + e!!.message)
+                            activity!!.runOnUiThread {
+                                AppError(requireContext()).exception(e)
+                            }
+                            return
+                        }
+                        override fun onResponse(call: Call, response: okhttp3.Response) {
+                            val apiResponse = APIResponseParser.parse(response)
+                            if (!apiResponse.success) {
+                                if(apiResponse.error == "missing payment method") {
+                                    return
+                                }
+                                activity!!.runOnUiThread {
+                                    AppError(requireContext()).apiAlert(apiResponse)
+                                }
+                                return
+                            }
+                            Log.d(TAG, "onShippingAddressLauncherResult payload: " + apiResponse.payload)
+                            // Save the new customer with the newly created payment method
+                            val jsonCustomer = apiResponse.payload as JSONObject
+                            customer = CustomerParser.parse(jsonCustomer)
+                        }
+                    })
+                }
+                completePayment()
+            }
+        }
     }
 
     fun createInvoice() {
@@ -238,8 +494,6 @@ class CheckoutFragment : Fragment(), CartListener {
                     }
                     return
                 }
-
-                Log.d(TAG, "payload: " + apiResponse.payload)
 
                 try {
 
@@ -282,7 +536,6 @@ class CheckoutFragment : Fragment(), CartListener {
                         requireContext(),
                         paymentIntentResponse!!.publishableKey
                     )
-
                     presentPaymentSheet()
                 }
                 catch(e: Exception) {
@@ -293,207 +546,6 @@ class CheckoutFragment : Fragment(), CartListener {
 
             }
         })
-    }
-
-    private fun presentBillingDetailsAddressLauncher() {
-        billingDetailsAddressLauncher.present(
-            publishableKey = getPublishableKey(),
-            configuration = getAddressLauncherConfig(paymentIntentResponse,
-                resources.getString(R.string.store_billing_details))
-        )
-    }
-
-    private fun presentShippingDetailsAddressLauncher() {
-        shippingAddressLauncher.present(
-            publishableKey = getPublishableKey(),
-            configuration = getAddressLauncherConfig(
-                paymentIntentResponse,
-                resources.getString(R.string.store_shipping_details)
-            )
-        )
-    }
-
-    private fun getPublishableKey(): String {
-        return if(paymentIntentResponse == null)
-            ""
-        else
-            paymentIntentResponse!!.publishableKey
-    }
-
-    private fun getAddressLauncherConfig(paymentIntentResponse: PaymentIntentResponse?, title: String): AddressLauncher.Configuration {
-        var addressDetails: AddressDetails? = null
-        if(paymentIntentResponse != null && paymentIntentResponse.customer.address != null) {
-            addressDetails = AddressDetails(
-                name = paymentIntentResponse.customer.name,
-                phoneNumber = paymentIntentResponse.customer.phone,
-                address = billingAddress,
-                isCheckboxSelected = true
-            )
-        }
-        return AddressLauncher.Configuration(
-            title = title,
-            additionalFields = AddressLauncher.AdditionalFieldsConfiguration(
-                phone = AddressLauncher.AdditionalFieldsConfiguration.FieldConfiguration.REQUIRED
-            ),
-            address = addressDetails,
-            //allowedCountries = setOf("US", "CA", "GB"),
-            googlePlacesApiKey = "(optional) YOUR KEY HERE"
-        )
-    }
-
-    private fun onBillingDetailsAddressLauncherResult(result: AddressLauncherResult) {
-        when (result) {
-            is AddressLauncherResult.Succeeded -> {
-                shippingDetails = result.address
-
-                val address = com.jeremyhahn.cropdroid.ui.shoppingcart.model.Address(
-                    id = 0L,
-                    line1 = shippingDetails!!.address?.line1!!,
-                    line2 = shippingDetails!!.address?.line2!!,
-                    city = shippingDetails!!.address?.city!!,
-                    state = shippingDetails!!.address?.state!!,
-                    postalCode = shippingDetails!!.address?.postalCode!!,
-                    country = shippingDetails!!.address?.country!!)
-
-                customer = Customer(
-                    mainActivity.user!!.id.toLong(),
-                    "",
-                    "",
-                    result.address.name!!,
-                    mainActivity.user!!.username,
-                    result.address.phoneNumber!!,
-                    address,
-                    ShippingAddress(
-                        0L,
-                        "",
-                        "",
-                        address
-                    ))
-
-                cropDroidAPI.createCustomer(customer!!, object : Callback {
-                    override fun onFailure(call: Call, e: IOException) {
-                        Log.d(TAG, "onFailure response: " + e!!.message)
-                        activity!!.runOnUiThread {
-                            AppError(requireContext()).exception(e)
-                        }
-                        return
-                    }
-                    override fun onResponse(call: Call, response: okhttp3.Response) {
-                        val apiResponse = APIResponseParser.parse(response)
-                        if (!apiResponse.success) {
-                            activity!!.runOnUiThread {
-                                AppError(requireContext()).apiAlert(apiResponse)
-                            }
-                            return
-                        }
-                        Log.d(TAG, "onBillingDetailsAddressLauncherResult payload: " + apiResponse.payload)
-                        // Save the new customer with the newly created address ID and form field values
-                        val jsonCustomer = apiResponse.payload as JSONObject
-                        customer = CustomerParser.parse(jsonCustomer)
-
-                        presentShippingDetailsAddressLauncher()
-                    }
-                })
-            }
-            is AddressLauncherResult.Canceled -> {
-                // Do nothing
-            }
-        }
-    }
-
-    private fun onShippingAddressLauncherResult(result: AddressLauncherResult) {
-        when (result) {
-            is AddressLauncherResult.Succeeded -> {
-                shippingDetails = result.address
-
-                customer!!.shipping?.name = result.address.name!!
-                customer!!.shipping?.phone = result.address.phoneNumber!!
-
-                val address = com.jeremyhahn.cropdroid.ui.shoppingcart.model.Address(
-                    id = customer!!.shipping!!.address!!.id,
-                    line1 = shippingDetails!!.address?.line1!!,
-                    line2 = shippingDetails!!.address?.line2!!,
-                    city = shippingDetails!!.address?.city!!,
-                    state = shippingDetails!!.address?.state!!,
-                    postalCode = shippingDetails!!.address?.postalCode!!,
-                    country = shippingDetails!!.address?.country!!
-                )
-
-                customer!!.shipping = ShippingAddress(
-                    id = customer!!.shipping!!.id,
-                    name = customer!!.shipping!!.name,
-                    phone = customer!!.shipping!!.phone,
-                    address = address
-                )
-
-                // Update the customers shipping address
-                cropDroidAPI.updateCustomer(customer!!, object : Callback {
-                    override fun onFailure(call: Call, e: IOException) {
-                        Log.d(TAG, "onFailure response: " + e!!.message)
-                        activity!!.runOnUiThread {
-                            AppError(requireContext()).exception(e)
-                        }
-                        return
-                    }
-                    override fun onResponse(call: Call, response: okhttp3.Response) {
-                        val apiResponse = APIResponseParser.parse(response)
-                        if (!apiResponse.success) {
-                            activity!!.runOnUiThread {
-                                AppError(requireContext()).apiAlert(apiResponse)
-                            }
-                            return
-                        }
-                        Log.d(TAG, "onShippingAddressLauncherResult payload: " + apiResponse.payload)
-                        // Save the new customer with the newly created shipping address ID and form field values
-                        val jsonCustomer = apiResponse.payload as JSONObject
-                        customer = CustomerParser.parse(jsonCustomer)
-
-                        // Create the invoice
-                        createInvoice()
-                        //presentPaymentSheet()
-                    }
-                })
-
-            }
-            is AddressLauncherResult.Canceled -> {
-                // Do nothing
-            }
-        }
-    }
-
-    private fun presentPaymentSheet() {
-        paymentSheet.presentWithPaymentIntent(
-            paymentIntentClientSecret,
-            PaymentSheet.Configuration(
-                merchantDisplayName = resources.getString(R.string.app_name),
-                customer = paymentSheetCustomerConfig,
-                //defaultBillingDetails = defaultBillingDetails,
-                shippingDetails = shippingDetails,
-                // Set `allowsDelayedPaymentMethods` to true if your business handles
-                // delayed notification payment methods like US bank accounts.
-                // allowsDelayedPaymentMethods = true
-                billingDetailsCollectionConfiguration = PaymentSheet.BillingDetailsCollectionConfiguration(
-                    attachDefaultsToPaymentMethod = true
-                )
-            )
-        )
-    }
-
-    fun onPaymentSheetResult(paymentSheetResult: PaymentSheetResult) {
-        Log.d(TAG, "payment result: " + paymentSheetResult.toString())
-        when(paymentSheetResult) {
-            is PaymentSheetResult.Canceled -> {
-                Log.i(TAG,  "Payment canceled")
-            }
-            is PaymentSheetResult.Failed -> {
-                Log.e(TAG,  "Payment error: ${paymentSheetResult.error}")
-            }
-            is PaymentSheetResult.Completed -> {
-                // Display for example, an order confirmation screen
-                Log.i(TAG,  "Completed")
-                completePayment()
-            }
-        }
     }
 
     fun completePayment() {

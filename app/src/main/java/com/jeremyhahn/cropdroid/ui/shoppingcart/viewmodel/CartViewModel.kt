@@ -1,12 +1,14 @@
-package com.jeremyhahn.cropdroid.ui.shoppingcart
+package com.jeremyhahn.cropdroid.ui.shoppingcart.viewmodel
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.jeremyhahn.cropdroid.ui.shoppingcart.CartListener
 import com.jeremyhahn.cropdroid.ui.shoppingcart.model.Product
+import com.jeremyhahn.cropdroid.ui.shoppingcart.model.ShippingAddress
 
 class CartViewModel(private var taxRate: Double = 0.0) : ViewModel() {
 
-    private val TAG = "Cart"
+    private val TAG = "CartViewModel"
     private lateinit var cartListener: CartListener
 
     val items: MutableLiveData<HashMap<String, Product>> = MutableLiveData<HashMap<String, Product>>()
@@ -15,12 +17,22 @@ class CartViewModel(private var taxRate: Double = 0.0) : ViewModel() {
     var subtotal = MutableLiveData<Double>()
     var total = MutableLiveData<Double>()
 
+    var shippingAddress = MutableLiveData<ShippingAddressViewModel>()
+
     init {
         items.value = HashMap()
         size.apply { value = 0 }
         tax.apply { value = 0.0 }
         subtotal.apply { value = 0.0 }
         total.apply { value = 0.0 }
+    }
+
+    fun setShippingAddress(shippingAddress: ShippingAddress) {
+        this.shippingAddress.postValue(ShippingAddressViewModel(shippingAddress))
+    }
+
+    fun editAddress() {
+        cartListener.editAddress()
     }
 
     fun registerListener(listener: CartListener) {

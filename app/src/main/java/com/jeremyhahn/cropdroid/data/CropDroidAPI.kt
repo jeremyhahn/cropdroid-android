@@ -112,12 +112,19 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         doGet(SHOPPING_CART_ENDPOINT, args, callback)
     }
 
+    fun setDefaultPaymentMethod(customerId: Long, processorId: String, callback: Callback) {
+        val args = ArrayList<String>()
+        args.add(customerId.toString())
+        args.add(processorId)
+        doGet(SHOPPING_CART_ENDPOINT.plus("/customer/default-payment-method"), args, callback)
+    }
+
     fun getPaymentIntent(paymentIntent: PaymentIntentRequest, callback: Callback) {
         var json = JSONObject()
         json.put("customerId", paymentIntent.customerId)
         json.put("amount", paymentIntent.amount)
         json.put("currencyCode", paymentIntent.currencyCode)
-        doPost(SHOPPING_CART_ENDPOINT.plus("/paymentIntent"), json, callback)
+        doPost(SHOPPING_CART_ENDPOINT.plus("/payment-intent"), json, callback)
     }
 
     fun createInvoice(createInvoiceRequest: CreateInvoiceRequest, callback: Callback) {
@@ -140,7 +147,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
 
     fun getTaxRates(callback: Callback) {
         val args = ArrayList<String>()
-        doGet(SHOPPING_CART_ENDPOINT.plus("/taxrate"), args, callback)
+        doGet(SHOPPING_CART_ENDPOINT.plus("/tax-rate"), args, callback)
     }
 
     fun getCustomer(id: Long, callback: Callback) {

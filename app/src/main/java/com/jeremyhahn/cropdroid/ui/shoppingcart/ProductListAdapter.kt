@@ -1,15 +1,14 @@
 package com.jeremyhahn.cropdroid.ui.shoppingcart
 
 import android.view.LayoutInflater
-import android.view.View.OnFocusChangeListener
 import android.view.ViewGroup
-import android.widget.EditText
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.jeremyhahn.cropdroid.BR
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.databinding.CardviewProductBindingImpl
 import com.jeremyhahn.cropdroid.ui.shoppingcart.model.Product
+import com.jeremyhahn.cropdroid.ui.shoppingcart.viewmodel.CartViewModel
 
 class ProductListAdapter(private var products : List<Product>, private val cart: CartViewModel) :
     RecyclerView.Adapter<ProductListAdapter.ProductListViewHolder>() {

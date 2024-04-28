@@ -8,5 +8,6 @@ data class Customer(
     var email: String,
     var phone: String,
     var address: Address?,
-    var shipping: ShippingAddress?
+    var shipping: ShippingAddress?,
+    var defaultPaymentMethod: String
 )

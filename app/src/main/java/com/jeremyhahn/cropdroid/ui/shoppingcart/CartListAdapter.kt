@@ -1,20 +1,19 @@
 package com.jeremyhahn.cropdroid.ui.shoppingcart
 
 import android.view.LayoutInflater
-import android.view.View.OnFocusChangeListener
 import android.view.ViewGroup
-import android.widget.EditText
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.jeremyhahn.cropdroid.BR
 import com.jeremyhahn.cropdroid.R
-import com.jeremyhahn.cropdroid.databinding.CardviewProductBindingImpl
+import com.jeremyhahn.cropdroid.databinding.CardviewCartCheckoutProductBinding
 import com.jeremyhahn.cropdroid.ui.shoppingcart.model.Product
+import com.jeremyhahn.cropdroid.ui.shoppingcart.viewmodel.CartViewModel
 
 class CartListAdapter(private val cart: CartViewModel) :
     RecyclerView.Adapter<CartListAdapter.CartListViewHolder>() {
 
-    class CartListViewHolder(val binding: CardviewProductBindingImpl) : RecyclerView.ViewHolder(binding.root) {
+    class CartListViewHolder(val binding: CardviewCartCheckoutProductBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(product: Product) {
             binding.apply { -> itemView
                 binding.setVariable(BR.product, product)
@@ -25,8 +24,8 @@ class CartListAdapter(private val cart: CartViewModel) :
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CartListAdapter.CartListViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
-        val view: CardviewProductBindingImpl = DataBindingUtil.inflate(
-            layoutInflater, R.layout.cardview_product, parent, false)
+        val view: CardviewCartCheckoutProductBinding = DataBindingUtil.inflate(
+            layoutInflater, R.layout.cardview_cart_checkout_product, parent, false)
         return CartListViewHolder(view)
     }
 

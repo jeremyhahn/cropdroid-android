@@ -9,12 +9,13 @@
         <import type="android.view.View"/>
         <variable
             name="cart"
-            type="com.jeremyhahn.cropdroid.ui.shoppingcart.CartViewModel" />
+            type="com.jeremyhahn.cropdroid.ui.shoppingcart.viewmodel.CartViewModel" />
     </data>
 
-    <androidx.coordinatorlayout.widget.CoordinatorLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/cartEmptyText"
@@ -27,118 +28,383 @@
         <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
             android:id="@+id/cartSwipeRefresh"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginBottom="80dp">
+            android:layout_height="wrap_content"
+            android:layout_weight=".75">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/cartRecyclerView"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="8dp"
                 android:layout_marginTop="8dp"
-                android:layout_marginBottom="80dp"
-                tools:layout_editor_absoluteX="8dp"
-                tools:layout_editor_absoluteY="8dp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
                 android:scrollbars="vertical"/>
 
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-        <com.google.android.material.appbar.AppBarLayout
+        <RelativeLayout
+            android:id="@+id/relativeLayout"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:fitsSystemWindows="true"
-            android:layout_gravity="bottom"
-            android:theme="@style/AppTheme.AppBarOverlay">
+            android:layout_height="wrap_content">
 
-            <androidx.appcompat.widget.Toolbar
-                android:id="@+id/toolbarBottom"
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                app:layout_collapseMode="pin"
-                app:popupTheme="@style/AppTheme.PopupOverlay">
+                android:layout_height="wrap_content"
+                android:fitsSystemWindows="true"
+                android:paddingTop="15dp"
+                android:drawableTop="@color/colorGray"
+                android:visibility='@{(cart.size > 0) ? View.VISIBLE : View.GONE}'>
 
-
-                <TextView
-                    android:id="@+id/toolbarSubTotal"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textStyle="bold"
-                    android:layout_gravity="left"
-                    android:text="@string/store_subtotal" />
+                    android:orientation="vertical"
+                    android:layout_margin="5dp">
 
-                <TextView
-                    android:id="@+id/toolbarSubTotalText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="3dp"
-                    android:layout_gravity="left"
-                    android:text='@{String.format("$%,.2f", cart.subtotal)}' />
+                    <TableLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/rounded_top_corners"
+                        android:stretchColumns="0">
+
+                        <TableRow
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <TextView
+                                android:id="@+id/shippingAddress"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="10dp"
+                                android:layout_marginBottom="5dp"
+                                android:textStyle="bold"
+                                android:layout_gravity="left"
+                                android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
+                                android:text="@string/store_shipping_address"
+                                android:textColor="@color/colorBlack"/>
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="5dp"
+                                android:layout_marginRight="10dp"
+                                android:gravity="right"
+                                android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                                android:text="@string/store_edit_shipping_address"
+                                android:textColor="@color/colorBlack"
+                                android:onClick="@{() -> cart.editAddress()}"/>
+
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <TextView
+                                android:id="@+id/shippingAddressName"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
+                                android:textColor="@color/colorBlack"
+                                android:text="@{cart.shippingAddress.name}"/>
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <TextView
+                                android:id="@+id/shippingAddressLine1"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
+                                android:textColor="@color/colorBlack"
+                                android:text="@{cart.shippingAddress.address.line1}"/>
+
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:visibility='@{(cart.shippingAddress.address.line2 != null) ? View.VISIBLE : View.GONE}'>
+
+                            <TextView
+                                android:id="@+id/shippingAddressLine2"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
+                                android:textColor="@color/colorBlack"
+                                android:text="@{cart.shippingAddress.address.line2}"/>
+
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:visibility='@{(cart.shippingAddress.address.city != null) ? View.VISIBLE : View.GONE}'>
+
+                            <TextView
+                                android:id="@+id/shippingAddressCityStateZip"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
+                                android:textColor="@color/colorBlack"
+                                android:text='@{String.format("%s, %s %s", cart.shippingAddress.address.city, cart.shippingAddress.address.state, cart.shippingAddress.address.postalCode)}' />
+
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="5dp">
+
+                            <TextView
+                                android:id="@+id/shippingAddressPhone"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
+                                android:textColor="@color/colorBlack"
+                                android:text="@{cart.shippingAddress.phone}"/>
+
+                        </TableRow>
+
+                    </TableLayout>
+
+                    <TableLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/rounded_top_corners"
+                        android:layout_marginTop="5dp"
+                        android:stretchColumns="0">
+
+                        <TableRow
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:textStyle="bold"
+                                android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
+                                android:textColor="@color/colorBlack"
+                                android:text="@string/store_order_summary" />
+
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <TextView
+                                android:id="@+id/toolbarSubTotal"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginRight="3dp"
+                                android:gravity="right"
+                                android:textStyle="bold"
+                                android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
+                                android:textColor="@color/colorBlack"
+                                android:text="@string/store_subtotal" />
+
+                            <TextView
+                                android:id="@+id/toolbarSubTotalText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:gravity="right"
+                                android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
+                                android:textColor="@color/colorBlack"
+                                android:text='@{String.format("$%,.2f", cart.subtotal)}'/>
+
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <TextView
+                                android:id="@+id/toolbarTax"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginRight="3dp"
+                                android:gravity="right"
+                                android:textStyle="bold"
+                                android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
+                                android:textColor="@color/colorBlack"
+                                android:text="@string/store_tax"/>
+
+                            <TextView
+                                android:id="@+id/toolbarTaxText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:gravity="right"
+                                android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
+                                android:textColor="@color/colorBlack"
+                                android:text='@{String.format("$%,.2f", cart.tax)}'/>
+
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <TextView
+                                android:id="@+id/toolbarShipping"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginRight="3dp"
+                                android:gravity="right"
+                                android:textStyle="bold"
+                                android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
+                                android:textColor="@color/colorBlack"
+                                android:text="@string/store_shipping"/>
+
+                            <TextView
+                                android:id="@+id/toolbarShippingText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:gravity="right"
+                                android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
+                                android:textColor="@color/colorBlack"
+                                android:text='@{String.format("$%,.2f", cart.tax)}'/>
+
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="5dp">
+
+                            <TextView
+                                android:id="@+id/toolbarTotal"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginRight="3dp"
+                                android:gravity="right"
+                                android:textStyle="bold"
+                                android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
+                                android:textColor="@color/colorBlack"
+                                android:text="@string/store_total"/>
 
 
-                <TextView
-                    android:id="@+id/toolbarTax"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="25dp"
-                    android:textStyle="bold"
-                    android:layout_gravity="center_horizontal"
-                    android:text="@string/store_tax" />
+                            <TextView
+                                android:id="@+id/toolbarTotalText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:gravity="right"
+                                android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
+                                android:textColor="@color/colorBlack"
+                                android:text='@{String.format("$%,.2f", cart.total)}'/>
 
-                <TextView
-                    android:id="@+id/toolbarTaxText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="3dp"
-                    android:layout_gravity="center_horizontal"
-                    android:text='@{String.format("$%,.2f", cart.tax)}' />
+                        </TableRow>
 
-                <TextView
-                    android:id="@+id/toolbarTotalText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="right"
-                    android:layout_marginLeft="3dp"
-                    android:layout_marginRight="15dp"
-                    android:text='@{String.format("$%,.2f", cart.total)}' />
+                    </TableLayout>
 
-                <TextView
-                    android:id="@+id/toolbarTotal"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="right"
-                    android:textStyle="bold"
-                    android:text="@string/store_total" />
+                </LinearLayout>
 
-<!--                <Button-->
-<!--                    android:id="@+id/btnCheckout"-->
-<!--                    android:layout_width="wrap_content"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:layout_gravity="right"-->
-<!--                    android:layout_marginRight="20dp"-->
-<!--                    android:clickable="true"-->
-<!--                    android:onClick="@{() -> cart.checkout()}"-->
-<!--                    android:text="@string/store_checkout"-->
-<!--                    android:visibility='@{(cart.size > 0) ? View.VISIBLE : View.GONE}' />-->
+            </androidx.cardview.widget.CardView>
 
-<!--                <Button-->
-<!--                    android:id="@+id/btnEmptyCart"-->
-<!--                    android:layout_width="wrap_content"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:layout_gravity="right"-->
-<!--                    android:layout_marginRight="0dp"-->
-<!--                    android:clickable="true"-->
-<!--                    android:onClick="@{() -> cart.clear()}"-->
-<!--                    android:text="@string/store_empty_cart"-->
-<!--                    android:visibility='@{(cart.size > 0) ? View.VISIBLE : View.GONE}' />-->
+<!--            <com.google.android.material.appbar.AppBarLayout-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="?attr/actionBarSize"-->
+<!--                android:fitsSystemWindows="true"-->
+<!--                android:layout_gravity="bottom"-->
+<!--                android:theme="@style/AppTheme.AppBarOverlay">-->
 
-            </androidx.appcompat.widget.Toolbar>
+<!--                <androidx.appcompat.widget.Toolbar-->
+<!--                    android:id="@+id/toolbarBottom"-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="?attr/actionBarSize"-->
+<!--                    app:layout_collapseMode="pin"-->
+<!--                    app:popupTheme="@style/AppTheme.PopupOverlay">-->
 
-        </com.google.android.material.appbar.AppBarLayout>
+<!--                    <TextView-->
+<!--                        android:id="@+id/toolbarSubTotal"-->
+<!--                        android:layout_width="wrap_content"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:textStyle="bold"-->
+<!--                        android:layout_gravity="left"-->
+<!--                        android:text="@string/store_subtotal"-->
+<!--                        android:visibility='@{(cart.size > 0) ? View.VISIBLE : View.GONE}'/>-->
 
-    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+<!--                    <TextView-->
+<!--                        android:id="@+id/toolbarSubTotalText"-->
+<!--                        android:layout_width="wrap_content"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:layout_marginLeft="3dp"-->
+<!--                        android:layout_gravity="left"-->
+<!--                        android:text='@{String.format("$%,.2f", cart.subtotal)}'-->
+<!--                        android:visibility='@{(cart.size > 0) ? View.VISIBLE : View.GONE}'/>-->
+
+
+<!--                    <TextView-->
+<!--                        android:id="@+id/toolbarTax"-->
+<!--                        android:layout_width="wrap_content"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:layout_marginLeft="25dp"-->
+<!--                        android:textStyle="bold"-->
+<!--                        android:layout_gravity="center_horizontal"-->
+<!--                        android:text="@string/store_tax"-->
+<!--                        android:visibility='@{(cart.size > 0) ? View.VISIBLE : View.GONE}'/>-->
+
+<!--                    <TextView-->
+<!--                        android:id="@+id/toolbarTaxText"-->
+<!--                        android:layout_width="wrap_content"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:layout_marginLeft="3dp"-->
+<!--                        android:layout_gravity="center_horizontal"-->
+<!--                        android:text='@{String.format("$%,.2f", cart.tax)}'-->
+<!--                        android:visibility='@{(cart.size > 0) ? View.VISIBLE : View.GONE}'/>-->
+
+
+<!--                    <TextView-->
+<!--                        android:id="@+id/toolbarTotalText"-->
+<!--                        android:layout_width="wrap_content"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:layout_gravity="right"-->
+<!--                        android:layout_marginLeft="3dp"-->
+<!--                        android:layout_marginRight="15dp"-->
+<!--                        android:text='@{String.format("$%,.2f", cart.total)}'-->
+<!--                        android:visibility='@{(cart.size > 0) ? View.VISIBLE : View.GONE}'/>-->
+
+<!--                    <TextView-->
+<!--                        android:id="@+id/toolbarTotal"-->
+<!--                        android:layout_width="wrap_content"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:layout_gravity="right"-->
+<!--                        android:textStyle="bold"-->
+<!--                        android:text="@string/store_total"-->
+<!--                        android:visibility='@{(cart.size > 0) ? View.VISIBLE : View.GONE}'/>-->
+
+<!--                    &lt;!&ndash;                <Button&ndash;&gt;-->
+<!--                    &lt;!&ndash;                    android:id="@+id/btnCheckout"&ndash;&gt;-->
+<!--                    &lt;!&ndash;                    android:layout_width="wrap_content"&ndash;&gt;-->
+<!--                    &lt;!&ndash;                    android:layout_height="wrap_content"&ndash;&gt;-->
+<!--                    &lt;!&ndash;                    android:layout_gravity="right"&ndash;&gt;-->
+<!--                    &lt;!&ndash;                    android:layout_marginRight="20dp"&ndash;&gt;-->
+<!--                    &lt;!&ndash;                    android:clickable="true"&ndash;&gt;-->
+<!--                    &lt;!&ndash;                    android:onClick="@{() -> cart.checkout()}"&ndash;&gt;-->
+<!--                    &lt;!&ndash;                    android:text="@string/store_checkout"&ndash;&gt;-->
+<!--                    &lt;!&ndash;                    android:visibility='@{(cart.size > 0) ? View.VISIBLE : View.GONE}' />&ndash;&gt;-->
+
+<!--                    &lt;!&ndash;                <Button&ndash;&gt;-->
+<!--                    &lt;!&ndash;                    android:id="@+id/btnEmptyCart"&ndash;&gt;-->
+<!--                    &lt;!&ndash;                    android:layout_width="wrap_content"&ndash;&gt;-->
+<!--                    &lt;!&ndash;                    android:layout_height="wrap_content"&ndash;&gt;-->
+<!--                    &lt;!&ndash;                    android:layout_gravity="right"&ndash;&gt;-->
+<!--                    &lt;!&ndash;                    android:layout_marginRight="0dp"&ndash;&gt;-->
+<!--                    &lt;!&ndash;                    android:clickable="true"&ndash;&gt;-->
+<!--                    &lt;!&ndash;                    android:onClick="@{() -> cart.clear()}"&ndash;&gt;-->
+<!--                    &lt;!&ndash;                    android:text="@string/store_empty_cart"&ndash;&gt;-->
+<!--                    &lt;!&ndash;                    android:visibility='@{(cart.size > 0) ? View.VISIBLE : View.GONE}' />&ndash;&gt;-->
+
+<!--                </androidx.appcompat.widget.Toolbar>-->
+
+<!--            </com.google.android.material.appbar.AppBarLayout>-->
+
+        </RelativeLayout>
+
+    </LinearLayout>
+
+
 
 </layout>
