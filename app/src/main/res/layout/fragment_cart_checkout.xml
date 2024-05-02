@@ -2,14 +2,16 @@
 
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".ui.shoppingcart.CheckoutFragment"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    tools:context=".ui.shoppingcart.CheckoutFragment">
 
     <data>
         <import type="android.view.View"/>
         <variable
             name="cart"
             type="com.jeremyhahn.cropdroid.ui.shoppingcart.viewmodel.CartViewModel" />
+        <variable
+            name="checkout"
+            type="com.jeremyhahn.cropdroid.ui.shoppingcart.viewmodel.CheckoutViewModel" />
     </data>
 
     <LinearLayout
@@ -47,6 +49,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
+            <include layout="@layout/progress_overlay"/>
+
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -72,10 +76,108 @@
                             android:layout_height="wrap_content">
 
                             <TextView
+                                android:id="@+id/defaultPaymentOption"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="5dp"
+                                android:layout_marginBottom="5dp"
+                                android:layout_column="0"
+                                android:textStyle="bold"
+                                android:layout_gravity="left"
+                                android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
+                                android:text="@string/store_default_payment_option"
+                                android:textColor="@color/colorBlack"/>
+
+                            <TextView
+                                android:id="@+id/btnEditPaymentMethod"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="5dp"
+                                android:layout_marginRight="10dp"
+                                android:layout_column="1"
+                                android:gravity="right"
+                                android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                                android:text="@string/store_edit_shipping_address"
+                                android:textColor="@color/colorBlack"
+                                android:onClick="@{() -> cart.editDefaultPaymentMethod()}"
+                                android:visibility='@{(checkout.creditCardLast4 != null) ? View.VISIBLE : View.GONE}'/>
+
+                            <TextView
+                                android:id="@+id/btnCancelPaymentMethod"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="5dp"
+                                android:layout_marginRight="10dp"
+                                android:layout_column="1"
+                                android:gravity="right"
+                                android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                                android:text="@string/store_cancel_default_payment_method"
+                                android:textColor="@color/colorBlack"
+                                android:onClick="@{() -> cart.cancelDefaultPaymentMethod()}"
+                                android:visibility='@{(checkout.creditCardLast4 != null) ? View.GONE : View.GONE}'/>
+
+                            <TextView
+                                android:id="@+id/btnSavePaymentMethod"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="5dp"
+                                android:layout_marginRight="10dp"
+                                android:layout_column="1"
+                                android:gravity="right"
+                                android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                                android:text="@string/store_save_default_payment_method"
+                                android:textColor="@color/colorBlack"
+                                android:onClick="@{() -> cart.saveDefaultPaymentMethod()}"
+                                android:visibility='@{(checkout.creditCardLast4 == null) ? View.VISIBLE : View.GONE}'/>
+
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+                                <LinearLayout
+                                    android:id="@+id/creditCardLayout"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="vertical"
+                                    android:layout_span="3">
+                                </LinearLayout>
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="5dp">
+
+                            <TextView
+                                android:id="@+id/creditCardLast4"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
+                                android:textColor="@color/colorBlack"
+                                android:text="@{checkout.creditCardLast4}"
+                                android:visibility='@{(checkout.creditCardLast4 != null) ? View.VISIBLE : View.GONE}'/>
+
+                        </TableRow>
+
+                    </TableLayout>
+
+
+                    <TableLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/rounded_top_corners"
+                        android:stretchColumns="0">
+
+                        <TableRow
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <TextView
                                 android:id="@+id/shippingAddress"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="10dp"
+                                android:layout_marginTop="5dp"
                                 android:layout_marginBottom="5dp"
                                 android:textStyle="bold"
                                 android:layout_gravity="left"

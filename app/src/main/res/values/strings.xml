@@ -209,7 +209,10 @@
 
     <string name="format_price">$%.2f</string>
 
+    <string name="store_cancel_default_payment_method"><u>Cancel</u></string>
+    <string name="store_save_default_payment_method"><u>Save</u></string>
     <string name="store_edit_shipping_address"><u>Edit</u></string>
+    <string name="store_default_payment_option">Payment</string>
     <string name="store_shipping_address">Shipping Address</string>
     <string name="store_order_summary">Order Summary</string>
     <string name="store_shipping">Shipping:</string>
@@ -223,5 +226,7 @@
     <string name="store_prompt_empty_cart">Are you sure you want to empty your cart?</string>
     <string name="store_billing_details">Billing Details</string>
     <string name="store_shipping_details">Shipping Details</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>

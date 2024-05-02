@@ -13,6 +13,8 @@ import com.jeremyhahn.cropdroid.model.Connection
 import com.jeremyhahn.cropdroid.ui.shoppingcart.model.Customer
 import com.jeremyhahn.cropdroid.ui.shoppingcart.rest.PaymentIntentRequest
 import com.jeremyhahn.cropdroid.ui.shoppingcart.rest.CreateInvoiceRequest
+import com.jeremyhahn.cropdroid.ui.shoppingcart.rest.SetDefaultPaymentMethodRequest
+import com.jeremyhahn.cropdroid.ui.shoppingcart.rest.SetupIntentRequest
 import okhttp3.*
 import org.json.JSONArray
 import org.json.JSONObject
@@ -20,7 +22,6 @@ import java.io.IOException
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import java.util.concurrent.TimeUnit
-
 
 class CropDroidAPI(private val connection: Connection, preferences: SharedPreferences?) {
 
@@ -112,11 +113,47 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         doGet(SHOPPING_CART_ENDPOINT, args, callback)
     }
 
-    fun setDefaultPaymentMethod(customerId: Long, processorId: String, callback: Callback) {
+    fun getPublishableKey(callback: Callback) {
+        val args = ArrayList<String>()
+        doGet(SHOPPING_CART_ENDPOINT.plus("/publishable-key"), args, callback)
+    }
+
+    fun getPublishableKeySynchronous(): SynchronousResponse {
+        val args = ArrayList<String>()
+        return doGetSynchronous(SHOPPING_CART_ENDPOINT.plus("/publishable-key"), args)
+    }
+
+//    fun createSetupIntentForNewCustomer(): SynchronousResponse {
+//        var json = JSONObject()
+//        return doPostSynchronous(SHOPPING_CART_ENDPOINT.plus("/customer/setup-intent"), json)
+//    }
+
+    fun getPaymentMethods(processorId: String, callback: Callback) {
+        val args = ArrayList<String>()
+        args.add(processorId)
+        doGet(SHOPPING_CART_ENDPOINT.plus("/customer/payment-methods"), args, callback)
+    }
+
+    fun attachAndSetDefaultPaymentMethod(setDefaultPaymentMethodRequest: SetDefaultPaymentMethodRequest, callback: Callback) {
+        val json = JSONObject()
+        json.put("customer_id", setDefaultPaymentMethodRequest.customerId)
+        json.put("processor_id", setDefaultPaymentMethodRequest.processorId)
+        json.put("payment_method_id", setDefaultPaymentMethodRequest.paymentMethodId)
+        doPost(SHOPPING_CART_ENDPOINT.plus("/customer/attach-and-set-default-payment-method"), json, callback)
+    }
+
+    fun setDefaultPaymentMethod(setDefaultPaymentMethodRequest: SetDefaultPaymentMethodRequest, callback: Callback) {
+        val json = JSONObject()
+        json.put("customer_id", setDefaultPaymentMethodRequest.customerId)
+        json.put("processor_id", setDefaultPaymentMethodRequest.processorId)
+        json.put("payment_method_id", setDefaultPaymentMethodRequest.paymentMethodId)
+        doPost(SHOPPING_CART_ENDPOINT.plus("/customer/default-payment-method"), json, callback)
+    }
+
+    fun getCustomerWithEphemeralKey(customerId: Long, callback: Callback) {
         val args = ArrayList<String>()
         args.add(customerId.toString())
-        args.add(processorId)
-        doGet(SHOPPING_CART_ENDPOINT.plus("/customer/default-payment-method"), args, callback)
+        doGet(SHOPPING_CART_ENDPOINT.plus("/customer/ephemeral-key"), args, callback)
     }
 
     fun getPaymentIntent(paymentIntent: PaymentIntentRequest, callback: Callback) {
@@ -125,6 +162,29 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         json.put("amount", paymentIntent.amount)
         json.put("currencyCode", paymentIntent.currencyCode)
         doPost(SHOPPING_CART_ENDPOINT.plus("/payment-intent"), json, callback)
+    }
+
+//    fun createSetupIntentForNewCustomer(): SynchronousResponse {
+//        var json = JSONObject()
+//        return doPostSynchronous(SHOPPING_CART_ENDPOINT.plus("/customer/setup-intent"), json)
+//    }
+//
+//    fun createSetupIntentForNewCustomer(): SynchronousResponse {
+//        var json = JSONObject()
+//        return doPostSynchronous(SHOPPING_CART_ENDPOINT.plus("/customer/setup-intent"), json)
+//    }
+
+    fun createSetupIntent(callback: Callback) {
+        var json = JSONObject()
+        // No need to send user or customer ID because server gets the user id from the users Session
+        return doPost(SHOPPING_CART_ENDPOINT.plus("/customer/setup-intent"), json, callback)
+    }
+
+    // This is GET resource, but doing a POST so the HTTP (Request URI) containing the secret will not get logged.
+    fun getSetupIntent(setupIntentRequest: SetupIntentRequest, callback: Callback) {
+        var json = JSONObject()
+        json.put("client_secret", setupIntentRequest.clientSecret)
+        return doPost(SHOPPING_CART_ENDPOINT.plus("/customer/setup-intent/secret"), json, callback)
     }
 
     fun createInvoice(createInvoiceRequest: CreateInvoiceRequest, callback: Callback) {
@@ -652,7 +712,36 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         doPost(VERSIONED_ENDPOINT.plus("/register"), json, callback)
     }
 
-    fun doGet(endpoint: String, args: ArrayList<String>, callback: Callback) {
+    private fun doGetSynchronous(endpoint: String, args: ArrayList<String>): SynchronousResponse {
+        if(connection.hostname.isEmpty()) return SynchronousResponse(null, Exception("Hostname required"))
+        var endpoint = endpoint
+        if(args.size > 0) {
+            for(arg in args) {
+                endpoint = endpoint.plus("/${arg}")
+            }
+        }
+        Log.d("CropDroidAPI.doGet", "endpoint: " + endpoint)
+        Log.d("CropDroidAPI.doGet", "token: " + connection.token)
+        val client = OkHttpClient()
+        var request = Request.Builder()
+            .header("Authorization","Bearer " + connection.token)
+            .url(endpoint)
+            .get()
+            .build();
+
+        try {
+            return SynchronousResponse(client.newCall(request).execute(), null)
+        }
+        catch(e: java.net.ConnectException) {
+            return SynchronousResponse(null, e)
+        }
+        catch(e: IOException) {
+            e.printStackTrace()
+            return SynchronousResponse(null, e)
+        }
+    }
+
+    private fun doGet(endpoint: String, args: ArrayList<String>, callback: Callback) {
 
         if(connection.hostname.isEmpty()) return fail(callback, "Hostname required")
         //var endpoint = REST_ENDPOINT.plus(resource)
@@ -688,7 +777,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         }
     }
 
-    fun doPost(endpoint: String, json: JSONObject, callback: Callback) {
+    private fun doPost(endpoint: String, json: JSONObject, callback: Callback) {
         if(connection.hostname.isEmpty()) return fail(callback, "Hostname required")
         //var endpoint = REST_ENDPOINT.plus(resource)
         Log.d("CropDroidAPI.doPost", "endpoint: " + endpoint)
@@ -726,7 +815,46 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         }
     }
 
-    fun doPut(endpoint: String, json: JSONObject, callback: Callback) {
+    private fun doPostSynchronous(endpoint: String, json: JSONObject): SynchronousResponse {
+        if(connection.hostname.isEmpty()) return SynchronousResponse(null, Exception("Hostname required"))
+        //var endpoint = REST_ENDPOINT.plus(resource)
+        Log.d("CropDroidAPI.doPost", "endpoint: " + endpoint)
+        var client = OkHttpClient.Builder()
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .writeTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
+            .build()
+        var JSON = MediaType.parse("application/json; charset=utf-8")
+        var body = RequestBody.create(JSON, json.toString())
+        var request: Request? = null
+        if(connection.token.isEmpty()) {
+            request = Request.Builder()
+                .url(endpoint)
+                .post(body)
+                .build();
+        }
+        else {
+            request = Request.Builder()
+                .url(endpoint)
+                .post(body)
+                .header("Authorization","Bearer " + connection.token)
+                .build();
+        }
+        var response: Response? = null
+        try {
+            return SynchronousResponse(client.newCall(request).execute(), null)
+        }
+        catch(e: java.net.ConnectException) {
+            return SynchronousResponse(null, e)
+        }
+        catch(e: IOException) {
+            e.printStackTrace()
+            return SynchronousResponse(null, e)
+        }
+    }
+
+    private fun doPut(endpoint: String, json: JSONObject, callback: Callback) {
         if(connection.hostname.isEmpty()) return fail(callback, "Hostname required")
         //var endpoint = REST_ENDPOINT.plus(resource)
         Log.d("CropDroidAPI.doPut", "endpoint: " + endpoint)
@@ -759,7 +887,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         }
     }
 
-    fun doDelete(endpoint: String,  args: ArrayList<String>, callback: Callback) {
+    private fun doDelete(endpoint: String,  args: ArrayList<String>, callback: Callback) {
         if(connection.hostname.isEmpty()) return fail(callback, "Hostname required")
         //var endpoint = REST_ENDPOINT.plus(resource)
         var endpoint = endpoint

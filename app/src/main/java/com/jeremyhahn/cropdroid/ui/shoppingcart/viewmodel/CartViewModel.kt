@@ -17,7 +17,9 @@ class CartViewModel(private var taxRate: Double = 0.0) : ViewModel() {
     var subtotal = MutableLiveData<Double>()
     var total = MutableLiveData<Double>()
 
-    var shippingAddress = MutableLiveData<ShippingAddressViewModel>()
+    var shippingAddress = MutableLiveData<ShippingAddress>()
+    //var defaultPaymentMethodId = MutableLiveData<String>()
+    var creditCardLast4 = MutableLiveData<String>()
 
     init {
         items.value = HashMap()
@@ -27,16 +29,32 @@ class CartViewModel(private var taxRate: Double = 0.0) : ViewModel() {
         total.apply { value = 0.0 }
     }
 
-    fun setShippingAddress(shippingAddress: ShippingAddress) {
-        this.shippingAddress.postValue(ShippingAddressViewModel(shippingAddress))
+    fun registerListener(listener: CartListener) {
+        cartListener = listener
     }
 
     fun editAddress() {
         cartListener.editAddress()
     }
 
-    fun registerListener(listener: CartListener) {
-        cartListener = listener
+    fun editDefaultPaymentMethod() {
+        cartListener.editDefaultPaymentMethod()
+    }
+
+    fun saveDefaultPaymentMethod() {
+        cartListener.saveDefaultPaymentMethod()
+    }
+
+    fun cancelDefaultPaymentMethod() {
+        cartListener.cancelDefaultPaymentMethod()
+    }
+
+//    fun defaultPaymentMethodId(defaultPaymentMethodId: String) {
+//        this.defaultPaymentMethodId.postValue(defaultPaymentMethodId)
+//    }
+
+    fun setShippingAddress(shippingAddress: ShippingAddress) {
+        this.shippingAddress.postValue(shippingAddress)
     }
 
     fun setTaxRate(rate: Double) {

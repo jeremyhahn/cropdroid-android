@@ -43,6 +43,10 @@ class Preferences(context: Context) {
         return getDefaultPreferences().getLong(CONFIG_FARM_ID_KEY, 0)
     }
 
+    fun currentUserId(): Long {
+        return getDefaultPreferences().getString(PREF_KEY_USER_ID, "")!!.toLong()
+    }
+
     fun getDefaultPreferences() : SharedPreferences {
         return PreferenceManager.getDefaultSharedPreferences(context)
     }

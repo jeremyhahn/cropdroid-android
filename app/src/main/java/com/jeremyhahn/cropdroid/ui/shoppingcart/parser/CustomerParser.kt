@@ -22,9 +22,9 @@ class CustomerParser {
                     "shipping"
                 )
             )
-            val defaultPaymentMethod = json.getString("default_payment_method")
-            return Customer(id, processorId, description, name, email, phone, address, shipping, defaultPaymentMethod)
+            val paymentMethodId = json.getString("payment_method_id")
+            val paymentMethodLast4 = json.getString("payment_method_last4")
+            return Customer(id, processorId, description, name, email, phone, address, shipping, paymentMethodId, paymentMethodLast4)
         }
     }
 }
-
