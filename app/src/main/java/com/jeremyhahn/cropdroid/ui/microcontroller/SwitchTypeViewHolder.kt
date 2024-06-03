@@ -37,6 +37,10 @@ class SwitchTypeViewHolder(adapter: MicroControllerRecyclerAdapter, itemView: Vi
     }
 
     fun bindDispenseButton(channel: Channel) {
+        if(itemView == null || itemView.findViewById<ImageButton>(R.id.btnDispense) == null) {
+            // The view has not loaded yet; this is a strange UI bug encountered during testing
+            return
+        }
         val btnDispense = itemView.findViewById(R.id.btnDispense) as ImageButton
         btnDispense.setOnClickListener {
             val d = AlertDialog.Builder(activity)
@@ -54,7 +58,7 @@ class SwitchTypeViewHolder(adapter: MicroControllerRecyclerAdapter, itemView: Vi
             }
             d.setPositiveButton("Done") { dialogInterface, i ->
                 Log.d("btnDispense.onClick", "onClick: " + numberPicker.value)
-                cropDroidAPI.timerSwitch(Constants.CONFIG_DOSER_KEY, channel.channelId, numberPicker.value, object :
+                cropDroidAPI.timerSwitch(Constants.CONFIG_DOSER_KEY, channel.boardId, numberPicker.value, object :
                     Callback {
                     override fun onFailure(call: Call, e: IOException) {
                         Log.d("MicroControllerRecyclerAdapter.onSwitchState", "onFailure response: " + e!!.message)
@@ -101,13 +105,13 @@ class SwitchTypeViewHolder(adapter: MicroControllerRecyclerAdapter, itemView: Vi
                 builder.setPositiveButton(
                     R.string.action_yes,
                     DialogInterface.OnClickListener { dialog, id ->
-                        Log.d("SwitchTypeViewHolder.onClick", "DialogInterface.OnClickListener  " + channel.channelId)
+                        Log.d("SwitchTypeViewHolder.onClick", "DialogInterface.OnClickListener  " + channel.boardId)
                         val _adapter = this.adapter
                         val _channel = channel
                         val _channelValue = channelValue
-                        cropDroidAPI.switch(controllerType, channel.channelId, newState, object: Callback {
+                        cropDroidAPI.switch(controllerType, channel.boardId, newState, object: Callback {
                             override fun onFailure(call: Call, e: IOException) {
-                                Log.d("MicroControllerRecyclerAdapter.onSwitchState", "onFailure response: " + e!!.message)
+                                Log.d("MicroControllerRecyclerAdapter.onSwitchState", "onFailure response: ${e.message}")
                                 _adapter.activity.runOnUiThread(Runnable() {
                                     _channelValue.isChecked = !newState
                                 })
@@ -115,12 +119,14 @@ class SwitchTypeViewHolder(adapter: MicroControllerRecyclerAdapter, itemView: Vi
                             }
                             override fun onResponse(call: Call, response: okhttp3.Response) {
                                 val responseBody = response.body().string()
-                                Log.d("MicroControllerRecyclerAdapter.onSwitchState", "onResponse response: " + responseBody)
+                                Log.d("MicroControllerRecyclerAdapter.onSwitchState", "onResponse response: $responseBody"
+                                )
 
                                 val channelState = JSONObject(responseBody)
                                 val position = channelState.getInt("position")
 
-                                Log.d("MicroControllerRecyclerAdapter.onSwitchState", "switch position: " + position)
+                                Log.d("MicroControllerRecyclerAdapter.onSwitchState", "switch position: $position"
+                                )
 
                                 _adapter.activity.runOnUiThread(Runnable() {
                                     channel.value = if(position == 1) 1 else 0
@@ -144,6 +150,8 @@ class SwitchTypeViewHolder(adapter: MicroControllerRecyclerAdapter, itemView: Vi
                 builder.create().show()
             })
         channelValue.isEnabled = channel.isEnabled()
+
+        bindDispenseButton(channel)
     }
 
     override fun onCreateContextMenu(menu: ContextMenu?, v: View?, menuInfo: ContextMenu.ContextMenuInfo?) {
@@ -154,11 +162,11 @@ class SwitchTypeViewHolder(adapter: MicroControllerRecyclerAdapter, itemView: Vi
 
         menu!!.setHeaderTitle(R.string.menu_header_switch_options)
 
-        ChannelEnableMenuItem(menu!!, channel, cropDroidAPI, adapter)
+        ChannelEnableMenuItem(v!!.context, menu!!, channel, cropDroidAPI, adapter)
 
         //if(!channel.isEnabled()) return
 
-        ChannelNotifyMenuItem(menu, channel, cropDroidAPI, adapter)
+        ChannelNotifyMenuItem(v!!.context, menu, channel, cropDroidAPI, adapter)
         ChannelRenameMenuItem(v!!.context, menu, channel, cropDroidAPI, adapter)
         ChannelConditionMenuItem(activity, v.context, menu, channel, metrics, cropDroidAPI, adapter)
         ChannelScheduleMenuItem(v.context, menu, channel)

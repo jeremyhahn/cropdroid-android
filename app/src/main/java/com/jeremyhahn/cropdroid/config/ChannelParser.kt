@@ -27,7 +27,7 @@ class ChannelParser {
         fun parse(jsonChannel: JSONObject) : Channel {
             val id = jsonChannel.getLong("id")
             val controllerId =  if(jsonChannel.isNull("device_id")) jsonChannel.getLong("deviceId") else jsonChannel.getLong("device_id")
-            val channelId = if(jsonChannel.isNull("channel_id")) jsonChannel.getLong("channelId") else jsonChannel.getLong("channel_id")
+            val boardId = if(jsonChannel.isNull("board_id")) jsonChannel.getLong("boardId") else jsonChannel.getLong("board_id")
             val name = jsonChannel.getString("name")
             val enable = jsonChannel.getBoolean("enable")
             val notify = jsonChannel.getBoolean("notify")
@@ -36,7 +36,7 @@ class ChannelParser {
             val backoff = jsonChannel.getInt("backoff")
             val algorithmId = if(jsonChannel.isNull("algorithm_id")) jsonChannel.getLong("algorithmId") else jsonChannel.getLong("algorithm_id")
             val value = if(!jsonChannel.isNull("value")) jsonChannel.getInt("value") else 0
-            return Channel(id, controllerId, channelId, name, enable, notify, duration, debounce, backoff, algorithmId, value)
+            return Channel(id, controllerId, boardId, name, enable, notify, duration, debounce, backoff, algorithmId, value)
         }
     }
 }

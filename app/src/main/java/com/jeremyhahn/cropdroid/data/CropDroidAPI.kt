@@ -1,5 +1,6 @@
 package com.jeremyhahn.cropdroid.data
 
+import android.R
 import android.content.Context
 import android.content.SharedPreferences
 import android.net.TrafficStats
@@ -11,8 +12,8 @@ import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ORG_ID_KEY
 import com.jeremyhahn.cropdroid.model.*
 import com.jeremyhahn.cropdroid.model.Connection
 import com.jeremyhahn.cropdroid.ui.shoppingcart.model.Customer
-import com.jeremyhahn.cropdroid.ui.shoppingcart.rest.PaymentIntentRequest
 import com.jeremyhahn.cropdroid.ui.shoppingcart.rest.CreateInvoiceRequest
+import com.jeremyhahn.cropdroid.ui.shoppingcart.rest.PaymentIntentRequest
 import com.jeremyhahn.cropdroid.ui.shoppingcart.rest.SetDefaultPaymentMethodRequest
 import com.jeremyhahn.cropdroid.ui.shoppingcart.rest.SetupIntentRequest
 import okhttp3.*
@@ -22,6 +23,7 @@ import java.io.IOException
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import java.util.concurrent.TimeUnit
+
 
 class CropDroidAPI(private val connection: Connection, preferences: SharedPreferences?) {
 
@@ -110,7 +112,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
 
     fun getProducts(callback: Callback) {
         val args = ArrayList<String>()
-        doGet(SHOPPING_CART_ENDPOINT, args, callback)
+        doGet(SHOPPING_CART_ENDPOINT.plus("/products"), args, callback)
     }
 
     fun getPublishableKey(callback: Callback) {
@@ -131,7 +133,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
     fun getPaymentMethods(processorId: String, callback: Callback) {
         val args = ArrayList<String>()
         args.add(processorId)
-        doGet(SHOPPING_CART_ENDPOINT.plus("/customer/payment-methods"), args, callback)
+        doGet(SHOPPING_CART_ENDPOINT.plus("/payment-methods"), args, callback)
     }
 
     fun attachAndSetDefaultPaymentMethod(setDefaultPaymentMethodRequest: SetDefaultPaymentMethodRequest, callback: Callback) {
@@ -139,7 +141,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         json.put("customer_id", setDefaultPaymentMethodRequest.customerId)
         json.put("processor_id", setDefaultPaymentMethodRequest.processorId)
         json.put("payment_method_id", setDefaultPaymentMethodRequest.paymentMethodId)
-        doPost(SHOPPING_CART_ENDPOINT.plus("/customer/attach-and-set-default-payment-method"), json, callback)
+        doPost(SHOPPING_CART_ENDPOINT.plus("/attach-and-set-default-payment-method"), json, callback)
     }
 
     fun setDefaultPaymentMethod(setDefaultPaymentMethodRequest: SetDefaultPaymentMethodRequest, callback: Callback) {
@@ -147,13 +149,13 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         json.put("customer_id", setDefaultPaymentMethodRequest.customerId)
         json.put("processor_id", setDefaultPaymentMethodRequest.processorId)
         json.put("payment_method_id", setDefaultPaymentMethodRequest.paymentMethodId)
-        doPost(SHOPPING_CART_ENDPOINT.plus("/customer/default-payment-method"), json, callback)
+        doPost(SHOPPING_CART_ENDPOINT.plus("/default-payment-method"), json, callback)
     }
 
     fun getCustomerWithEphemeralKey(customerId: Long, callback: Callback) {
         val args = ArrayList<String>()
         args.add(customerId.toString())
-        doGet(SHOPPING_CART_ENDPOINT.plus("/customer/ephemeral-key"), args, callback)
+        doGet(SHOPPING_CART_ENDPOINT.plus("/ephemeral-key"), args, callback)
     }
 
     fun getPaymentIntent(paymentIntent: PaymentIntentRequest, callback: Callback) {
@@ -177,14 +179,14 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
     fun createSetupIntent(callback: Callback) {
         var json = JSONObject()
         // No need to send user or customer ID because server gets the user id from the users Session
-        return doPost(SHOPPING_CART_ENDPOINT.plus("/customer/setup-intent"), json, callback)
+        return doPost(SHOPPING_CART_ENDPOINT.plus("/setup-intent"), json, callback)
     }
 
     // This is GET resource, but doing a POST so the HTTP (Request URI) containing the secret will not get logged.
     fun getSetupIntent(setupIntentRequest: SetupIntentRequest, callback: Callback) {
         var json = JSONObject()
         json.put("client_secret", setupIntentRequest.clientSecret)
-        return doPost(SHOPPING_CART_ENDPOINT.plus("/customer/setup-intent/secret"), json, callback)
+        return doPost(SHOPPING_CART_ENDPOINT.plus("/setup-intent/secret"), json, callback)
     }
 
     fun createInvoice(createInvoiceRequest: CreateInvoiceRequest, callback: Callback) {
@@ -213,7 +215,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
     fun getCustomer(id: Long, callback: Callback) {
         val args = ArrayList<String>()
         args.add(id.toString())
-        doGet(SHOPPING_CART_ENDPOINT.plus("/customer"), args, callback)
+        doGet(SHOPPING_CART_ENDPOINT.plus("/customers"), args, callback)
     }
 
     fun createCustomer(customer: Customer, callback: Callback) {
@@ -256,7 +258,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
 
         Log.d("createCustomer: ", jsonProduct.toString())
 
-        doPost(SHOPPING_CART_ENDPOINT.plus("/customer"), jsonProduct, callback)
+        doPost(SHOPPING_CART_ENDPOINT.plus("/customers"), jsonProduct, callback)
     }
 
     fun updateCustomer(customer: Customer, callback: Callback) {
@@ -300,7 +302,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
 
         Log.d("updateCustomer: ", jsonProduct.toString())
 
-        doPut(SHOPPING_CART_ENDPOINT.plus("/customer"), jsonProduct, callback)
+        doPut(SHOPPING_CART_ENDPOINT.plus("/customers"), jsonProduct, callback)
     }
 
     fun eventsList(page: String, callback: Callback) {
@@ -371,8 +373,8 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
         var json = JSONObject()
         json.put("id", condition.id)
         json.put("workflow_id", condition.workflowId)
-        json.put("channelId", condition.channelId)
-        json.put("metricId", condition.metricId)
+        json.put("channel_id", condition.channelId)
+        json.put("metric_id", condition.metricId)
         json.put("comparator", condition.comparator)
         json.put("threshold", condition.threshold)
         doPut(CONDITION_ENDPOINT, json, callback)
@@ -594,6 +596,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
 
     fun getOrganizations(callback: Callback) {
         val args = ArrayList<String>()
+        args.add("1") // TODO: remove hard coded page number
         doGet(ORGANIZATIONS_ENDPOINT, args, callback)
     }
 
@@ -720,7 +723,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
                 endpoint = endpoint.plus("/${arg}")
             }
         }
-        Log.d("CropDroidAPI.doGet", "endpoint: " + endpoint)
+        Log.d("CropDroidAPI.doGet", "[GET SYNC] endpoint: " + endpoint)
         Log.d("CropDroidAPI.doGet", "token: " + connection.token)
         val client = OkHttpClient()
         var request = Request.Builder()
@@ -751,7 +754,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
                 endpoint = endpoint.plus("/${arg}")
             }
         }
-        Log.d("CropDroidAPI.doGet", "endpoint: " + endpoint)
+        Log.d("CropDroidAPI.doGet", "[GET] endpoint: " + endpoint)
         Log.d("CropDroidAPI.doGet", "token: " + connection.token)
         //val logging = HttpLoggingInterceptor()
         //logging.setLevel(HttpLoggingInterceptor.Level.BASIC)
@@ -780,7 +783,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
     private fun doPost(endpoint: String, json: JSONObject, callback: Callback) {
         if(connection.hostname.isEmpty()) return fail(callback, "Hostname required")
         //var endpoint = REST_ENDPOINT.plus(resource)
-        Log.d("CropDroidAPI.doPost", "endpoint: " + endpoint)
+        Log.d("CropDroidAPI.doPost", "[POST] endpoint: " + endpoint)
         var client = OkHttpClient.Builder()
             .connectTimeout(10, TimeUnit.SECONDS)
             .writeTimeout(10, TimeUnit.SECONDS)
@@ -857,7 +860,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
     private fun doPut(endpoint: String, json: JSONObject, callback: Callback) {
         if(connection.hostname.isEmpty()) return fail(callback, "Hostname required")
         //var endpoint = REST_ENDPOINT.plus(resource)
-        Log.d("CropDroidAPI.doPut", "endpoint: " + endpoint)
+        Log.d("CropDroidAPI.doPut", "[PUT] endpoint: " + endpoint)
         var client = OkHttpClient()
         var JSON = MediaType.parse("application/json; charset=utf-8")
         var body = RequestBody.create(JSON, json.toString())
@@ -896,7 +899,7 @@ class CropDroidAPI(private val connection: Connection, preferences: SharedPrefer
                 endpoint = endpoint.plus("/").plus(arg)
             }
         }
-        Log.d("CropDroidAPI.doDelete", "endpoint: " + endpoint)
+        Log.d("CropDroidAPI.doDelete", "[DELETE] endpoint: " + endpoint)
         var client = OkHttpClient()
         var request: Request? = null
         if(connection.token.isEmpty()) {

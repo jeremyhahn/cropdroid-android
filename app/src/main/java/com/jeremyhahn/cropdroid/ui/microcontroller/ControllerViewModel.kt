@@ -3,6 +3,7 @@ package com.jeremyhahn.cropdroid.ui.microcontroller
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.jeremyhahn.cropdroid.config.APIResponseParser
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.config.ChannelParser
 import com.jeremyhahn.cropdroid.config.ConfigObserver
@@ -42,19 +43,19 @@ class ControllerViewModel(cropDroidAPI: CropDroidAPI, controllerType: String) : 
                 return
             }
             override fun onResponse(call: Call, response: okhttp3.Response) {
-                var responseBody = response.body().string()
-
-                Log.d("ProductViewModel.getState()", "responseBody: " + responseBody)
-
-                val json = JSONObject(responseBody)
-
-                if (response.code() != 200) {
-                    if(!json.isNull("error") && json.getString("error").isNotEmpty()) {
-                        error.postValue(json.getString("error"))
-                    }
+                val apiResponse = APIResponseParser.parse(response)
+                if (apiResponse.code != 200) {
+                    error.postValue(apiResponse.error)
+                    Log.d("ControllerViewModel", "error: ${apiResponse.error}")
+                    return
+                }
+                if (!apiResponse.success) {
+                    error.postValue(apiResponse.error)
+                    Log.d("ControllerViewModel", "error: ${apiResponse.error}")
                     return
                 }
 
+                val json = apiResponse.payload as JSONObject
                 val jsonMetrics = json.getJSONArray("metrics")
                 metrics = MetricParser.parse(jsonMetrics)
 
@@ -119,7 +120,7 @@ class ControllerViewModel(cropDroidAPI: CropDroidAPI, controllerType: String) : 
         }
         for(i in state.channels) {
             for(channel in channels) {
-                if(channel.channelId == i.toLong()) {
+                if(channel.boardId == i.toLong()) {
                     channel.value = i
                     _models.add(MicroControllerRecyclerModel(MicroControllerRecyclerModel.CHANNEL_TYPE, null, channel)
                     )
@@ -147,7 +148,7 @@ class ControllerViewModel(cropDroidAPI: CropDroidAPI, controllerType: String) : 
         }
         for(channel in channels) {
             for((k, v)  in delta.channels) {
-                if(channel.channelId == k.toLong()) {
+                if(channel.boardId == k.toLong()) {
                     channel.value = v
                     break
                 }

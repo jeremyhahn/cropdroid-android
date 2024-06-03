@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
+import com.jeremyhahn.cropdroid.AppError
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Metric
@@ -38,6 +39,7 @@ class MetricRenameMenuItem(context: Context, menu: ContextMenu, metric: Metric, 
                     cropDroidAPI.setMetricConfig(metric, object: Callback {
                         override fun onFailure(call: Call, e: IOException) {
                             Log.d("onCreateContextMenu.Rename", "onFailure response: " + e!!.message)
+                            AppError(context).exception(e)
                             return
                         }
                         override fun onResponse(call: Call, response: okhttp3.Response) {

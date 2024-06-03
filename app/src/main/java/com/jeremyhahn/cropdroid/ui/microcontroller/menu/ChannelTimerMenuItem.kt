@@ -9,6 +9,7 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
 import android.widget.Spinner
+import com.jeremyhahn.cropdroid.AppError
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Channel
@@ -46,6 +47,7 @@ class ChannelTimerMenuItem(context: Context, menu: ContextMenu, channel: Channel
                     cropDroidAPI.setChannelConfig(channel, object: Callback {
                         override fun onFailure(call: Call, e: IOException) {
                             Log.d("onCreateContextMenu.Duration", "onFailure response: " + e!!.message)
+                            AppError(context).exception(e)
                             return
                         }
                         override fun onResponse(call: Call, response: Response) {

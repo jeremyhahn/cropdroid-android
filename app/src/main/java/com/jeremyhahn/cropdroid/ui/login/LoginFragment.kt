@@ -23,7 +23,6 @@ import com.google.android.gms.cast.CastStatusCodes.*
 import com.google.android.gms.common.SignInButton
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
-import com.google.android.material.textfield.TextInputEditText
 import com.jeremyhahn.cropdroid.AppError
 import com.jeremyhahn.cropdroid.Constants.Companion.APP_SERVER_CLIENT_ID
 import com.jeremyhahn.cropdroid.Constants.Companion.PREF_KEY_CONTROLLER_HOSTNAME
@@ -266,6 +265,8 @@ class LoginFragment() : Fragment(), View.OnClickListener {
                     mainActivity.navigateToFarms(connection, user, 0)
                 }
                 catch(e: Exception) {
+                    Log.d("LoginFragment", "JWT Parser exception, line 269")
+                    Log.d("LoginFragmet", e.message!!)
                     e.message?.let { it1 -> AppError(requireActivity()).alert(it1, null, null) }
                 }
             }

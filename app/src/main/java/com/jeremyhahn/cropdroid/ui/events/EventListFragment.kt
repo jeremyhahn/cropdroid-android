@@ -12,7 +12,9 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.jeremyhahn.cropdroid.AppError
 import com.jeremyhahn.cropdroid.R
+import com.jeremyhahn.cropdroid.config.APIResponseParser
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
 import com.jeremyhahn.cropdroid.model.EventLog
@@ -37,11 +39,10 @@ class EventListFragment : ControllerFragment() {
     
     private lateinit var sharedPrefs: SharedPreferences
 
-    private val PAGE_START = 0
+    private var pageNumber: Int = 1
+    private var currentPage: EventsPage? = null
+    private var eventPages: ArrayList<EventsPage> = ArrayList()
     private var isLoading = false
-    private var isLastPage = false
-    private var TOTAL_PAGES : Int = 10
-    private var currentPage = PAGE_START
     private var controller : Connection? = null
 
      override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -72,16 +73,22 @@ class EventListFragment : ControllerFragment() {
 
             override fun nextPage() {
                 isLoading = true
-                currentPage += 1
+                pageNumber++
                 loadNextPage()
             }
 
             override fun getPageCount(): Int {
-                return TOTAL_PAGES
+                if(currentPage == null) return 0
+                var pageCount = pageNumber * 25
+                if(currentPage!!.hasMore) {
+                    pageCount++
+                }
+                return pageCount // by default, the server returns 25 records
             }
 
             override fun isLastPage(): Boolean {
-                return isLastPage
+                if(currentPage == null) return false
+                return !currentPage!!.hasMore
             }
 
             override fun isLoading(): Boolean {
@@ -115,16 +122,13 @@ class EventListFragment : ControllerFragment() {
     }
 
     fun getEventsPage(page : Int) {
-
         if(sharedPrefs == null) {
             return
         }
         if(controller == null) {
             return
         }
-
         CropDroidAPI(controller!!, sharedPrefs).eventsList(page.toString(), object : Callback {
-
             override fun onFailure(call: Call, e: IOException) {
                 Log.d("EventListFragment.getEventsPage()", "onFailure response: " + e!!.message)
                 progressBar!!.visibility = GONE
@@ -132,21 +136,25 @@ class EventListFragment : ControllerFragment() {
                 adapter!!.removeLoadingFooter()
                 return
             }
-
             override fun onResponse(call: Call, response: okhttp3.Response) {
-
-                var responseBody = response.body().string()
-
-                Log.d("EventListFragment.getEvemtsPage", "responseBody: " + responseBody)
-                if(response.code() != 200) {
+                val apiResponse = APIResponseParser.parse(response)
+                if (apiResponse.code != 200) {
+                    requireActivity().runOnUiThread {
+                        AppError(requireContext()).apiAlert(apiResponse)
+                    }
                     return
                 }
-
+                if (!apiResponse.success) {
+                    requireActivity().runOnUiThread {
+                        AppError(requireContext()).apiAlert(apiResponse)
+                    }
+                    return
+                }
                 var events = ArrayList<EventLog>()
                 var eventsPage: EventsPage? = null
 
-                val json = JSONObject(responseBody)
-                val jsonArray = json.getJSONArray("events")
+                val json = apiResponse.payload as JSONObject
+                val jsonArray = json.getJSONArray("entities")
 
                 for (i in 0 until jsonArray.length()) {
                     var jsonEvent = jsonArray.getJSONObject(i)
@@ -160,12 +168,8 @@ class EventListFragment : ControllerFragment() {
 
                 eventsPage = EventsPage(events,
                     json.getInt("page"),
-                    json.getInt("size"),
-                    json.getInt("count"),
-                    json.getInt("start"),
-                    json.getInt("end"))
-
-                TOTAL_PAGES = eventsPage.count / eventsPage.size
+                    json.getInt("pageSize"),
+                    json.getBoolean("has_more"))
 
                 activity!!.runOnUiThread(Runnable() {
 
@@ -173,13 +177,9 @@ class EventListFragment : ControllerFragment() {
                     isLoading = false
                     adapter!!.removeLoadingFooter()
 
-                    if(currentPage >= TOTAL_PAGES) {
-                        isLastPage = true
-                    }
-
                     adapter!!.addAll(eventsPage.events)
                     adapter!!.notifyDataSetChanged()
-                    swipeContainer?.setRefreshing(false)
+                    swipeContainer?.isRefreshing = false
                 })
             }
         })
@@ -190,13 +190,13 @@ class EventListFragment : ControllerFragment() {
         if(!adapter!!.isEmpty) {
             adapter!!.clear()
         }
-        getEventsPage(0)
+        getEventsPage(pageNumber)
     }
 
     private fun loadNextPage() {
         Log.d(TAG, "loadNextPage: $currentPage")
         adapter!!.addLoadingFooter()
         isLoading = true
-        getEventsPage(currentPage)
+        getEventsPage(pageNumber)
     }
 }

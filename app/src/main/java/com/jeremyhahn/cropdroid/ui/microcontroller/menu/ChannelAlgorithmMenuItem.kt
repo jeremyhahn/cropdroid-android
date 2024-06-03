@@ -10,13 +10,16 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Spinner
+import com.jeremyhahn.cropdroid.AppError
 import com.jeremyhahn.cropdroid.R
+import com.jeremyhahn.cropdroid.config.APIResponseParser
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Algorithm
 import com.jeremyhahn.cropdroid.model.Channel
 import com.jeremyhahn.cropdroid.config.AlgorithmParser
 import okhttp3.Call
 import okhttp3.Callback
+import org.json.JSONArray
 import java.io.IOException
 
 class ChannelAlgorithmMenuItem(activity: Activity, context: Context, menu: ContextMenu, channel: Channel, cropDroidAPI: CropDroidAPI) {
@@ -42,11 +45,21 @@ class ChannelAlgorithmMenuItem(activity: Activity, context: Context, menu: Conte
                 cropDroidAPI.getAlgorithms(object : Callback {
                     override fun onFailure(call: Call, e: IOException) {
                         Log.d("onCreateContextMenu.Algorithm", "onFailure response: " + e!!.message)
+                        AppError(context).exception(e)
                         return
                     }
                     override fun onResponse(call: Call, response: okhttp3.Response) {
-                        val responseBody = response.body().string()
-                        val algorithms = AlgorithmParser.parse(responseBody)
+                        val apiResponse = APIResponseParser.parse(response)
+                        if (apiResponse.code != 200) {
+                            AppError(context).apiAlert(apiResponse)
+                            return
+                        }
+                        if (!apiResponse.success) {
+                            AppError(context).apiAlert(apiResponse)
+                            return
+                        }
+                        val payload = apiResponse.payload as String
+                        val algorithms = AlgorithmParser.parse(payload)
                         algorithmArray.clear()
                         algorithmArray.add("None")
                         algorithmMap[0] = Algorithm(0, "None")

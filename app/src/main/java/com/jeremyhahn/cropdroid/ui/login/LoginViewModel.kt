@@ -77,21 +77,27 @@ class LoginViewModel() : ViewModel() {
                 var responseBody = response.body().string()
                 Log.d("LoginViewModel.login", "responseBody: " + responseBody)
 
-                var json = JSONObject(responseBody)
-                if (!response.isSuccessful()) {
-                    Log.d("LoginViewModel.login", "fail: " + responseBody)
-                    _loginResult.postValue(LoginResult(error = json.getString("error")))
-                    return
-                }
+                try {
+                    var json = JSONObject(responseBody)
+                    if (!response.isSuccessful()) {
+                        Log.d("LoginViewModel.login", "fail: " + responseBody)
+                        _loginResult.postValue(LoginResult(error = json.getString("error")))
+                        return
+                    }
 
-                if(!json.isNull("success") && !json.getBoolean("success")) {
-                    _loginResult.postValue(LoginResult(error = json.getString("error")))
-                    return
-                }
+                    if (!json.isNull("success") && !json.getBoolean("success")) {
+                        _loginResult.postValue(LoginResult(error = json.getString("error")))
+                        return
+                    }
 
-                //var user : LoggedInUserView? = LoggedInUserView(displayName = username)
-                var token = json.getString("token")
-                _loginResult.postValue(LoginResult(User("0", username, "", token, "", "")))
+                    //var user : LoggedInUserView? = LoggedInUserView(displayName = username)
+                    var token = json.getString("token")
+                    _loginResult.postValue(LoginResult(User("0", username, "", token, "", "")))
+                }
+                catch(e: Exception) {
+                    Log.e("LoginViewModel", e.message!!)
+                    _loginResult.postValue(LoginResult(null, responseBody, false))
+                }
             }
         })
     }

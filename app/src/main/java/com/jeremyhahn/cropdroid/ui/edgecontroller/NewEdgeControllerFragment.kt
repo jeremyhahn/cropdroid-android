@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -23,6 +24,7 @@ import java.io.IOException
 
 class NewEdgeControllerFragment : Fragment() {
 
+    var useSSL = 0
     private lateinit var controllerView: View
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle? ): View? {
@@ -35,7 +37,7 @@ class NewEdgeControllerFragment : Fragment() {
         return controllerView
     }
 
-    fun addController(button: View?) {
+    fun addController(button: View?, recursionCount: Int = 0) {
 
         var hostnameText = controllerView.findViewById(R.id.hostname) as EditText
         var hostname = hostnameText.text.toString()
@@ -48,7 +50,7 @@ class NewEdgeControllerFragment : Fragment() {
         }
         else {
 
-            val connection = Connection(hostname, 0,"", "", null)
+            val connection = Connection(hostname, useSSL,"", "", null)
             val cropDroidAPI = CropDroidAPI(connection, null)
 
             cropDroidAPI.getPublicKey(object: Callback {
@@ -61,10 +63,27 @@ class NewEdgeControllerFragment : Fragment() {
                 override fun onResponse(call: Call, response: okhttp3.Response) {
                     val responseBody = response.body().string()
                     Log.d("onResponse", responseBody)
-
+                    if(response.code() != 200) {
+                        if(recursionCount > 1) {
+                            Handler(Looper.getMainLooper()).post {
+                                AppError(requireActivity()).error("Invalid server TLS configuration, please contact support for assistance.")
+                            }
+                            Log.e("onResponse", "Recursion loop detected, this should never happen. Aborting request...")
+                            return
+                        }
+                        // TODO: This is an ugly way to enable TLS...
+                        if(responseBody.equals("Client sent an HTTP request to an HTTPS server.\n")) {
+                            useSSL = 1
+                            addController(button, recursionCount + 1)
+                            return
+                        }
+                        Handler(Looper.getMainLooper()).post {
+                            AppError(requireActivity()).error(responseBody)
+                        }
+                        return
+                    }
                     connection.pubkey = responseBody
                     var persistedController = repository.create(connection)
-
                     Handler(Looper.getMainLooper()).post {
                         (activity as MainActivity).navigateToLogin(persistedController)
                     }

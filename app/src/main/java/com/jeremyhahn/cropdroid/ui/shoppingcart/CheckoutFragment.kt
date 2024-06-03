@@ -75,6 +75,7 @@ class CheckoutFragment : Fragment(), CartListener {
         const val ErrInvoiceOustanding = "outstanding invoice"
         const val ErrInvoiceOustandingUserMessage = "You already have an outstanding invoice due. Please " +
                 " satisfy your existing invoice and then complete your checkout."
+        const val ErrRecordNotFound = "record not found"
     }
 
     private lateinit var binding: FragmentCartCheckoutBinding
@@ -513,6 +514,11 @@ class CheckoutFragment : Fragment(), CartListener {
                     }
                     return
                 }
+                if(apiResponse.error == ErrRecordNotFound) {
+                    //createPaymentSheetWithSetupIntent()
+                    createSetupIntent()
+                    return
+                }
                 if(apiResponse.payload != null) {
                     val response = apiResponse.payload as JSONObject
                     customer = CustomerParser.parse(response)
@@ -520,9 +526,6 @@ class CheckoutFragment : Fragment(), CartListener {
                     if(!updateCreditCardLast4()) {
                         showCreditCardWidget()
                     }
-                } else {
-                    //createPaymentSheetWithSetupIntent()
-                    createSetupIntent()
                 }
             }
         })
