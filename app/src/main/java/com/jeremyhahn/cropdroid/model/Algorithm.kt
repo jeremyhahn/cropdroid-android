@@ -1,3 +1,3 @@
 package com.jeremyhahn.cropdroid.model
 
-data class Algorithm(var id: Int, var name: String)
+data class Algorithm(var id: Long, var name: String)

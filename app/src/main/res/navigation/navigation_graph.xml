@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/navigation_graph"
+    app:startDestination="@+id/nav_connections">
+
+    <fragment
+        android:id="@+id/nav_connections"
+        android:name="com.jeremyhahn.cropdroid.ui.edgecontroller.EdgeControllerListFragment"
+        android:label="@string/menu_home"
+        tools:layout="@layout/fragment_edge_controller_list">
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_new_edge_controller"
+        android:name="com.jeremyhahn.cropdroid.ui.edgecontroller.NewEdgeControllerFragment"
+        android:label="@string/title_new_edge_controller"
+        tools:layout="@layout/fragment_new_edge_controller">
+    </fragment>
+
+     <fragment
+        android:id="@+id/nav_login"
+        android:name="com.jeremyhahn.cropdroid.ui.login.LoginFragment"
+        android:label="@string/title_activity_login"
+        tools:layout="@layout/fragment_login" />
+
+    <fragment
+        android:id="@+id/nav_organizations"
+        android:name="com.jeremyhahn.cropdroid.ui.organization.OrganizationListFragment"
+        android:label="@string/menu_organizations"
+        tools:layout="@layout/fragment_organizations">
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_farms"
+        android:name="com.jeremyhahn.cropdroid.ui.farm.FarmListFragment"
+        android:label="@string/menu_farms"
+        tools:layout="@layout/fragment_farms">
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_microcontroller_tabs"
+        android:name="com.jeremyhahn.cropdroid.ui.microcontroller.MicroControllerFragment"
+        android:label="@string/title_activity_microcontrollers"
+        tools:layout="@layout/fragment_microcontroller_tabs" >
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_shoppingcart_cart"
+        android:name="com.jeremyhahn.cropdroid.ui.shoppingcart.ProductListFragment"
+        android:label="@string/menu_store"
+        tools:layout="@layout/fragment_cart_product_list">
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_shoppingcart_checkout"
+        android:name="com.jeremyhahn.cropdroid.ui.shoppingcart.CheckoutFragment"
+        android:label="@string/store_checkout"
+        tools:layout="@layout/fragment_cart_checkout">
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_microcontroller_settings"
+        android:name="com.jeremyhahn.cropdroid.ui.settings.SettingsFragment"
+        android:label="@string/menu_settings"
+        tools:layout="@layout/fragment_settings">
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_user_management_settings"
+        android:name="com.jeremyhahn.cropdroid.ui.farm.useraccounts.UserAccountsListFragment"
+        android:label="@string/menu_settings"
+        tools:layout="@layout/fragment_settings">
+    </fragment>
+
+<!--    <fragment-->
+<!--        android:id="@+id/nav_microcontroller_settings_useraccounts"-->
+<!--        android:name="com.jeremyhahn.cropdroid.ui.farm.useraccounts.UserAccountsListFragment"-->
+<!--        android:label="@string/menu_settings_useraccounts"-->
+<!--        tools:layout="@layout/fragment_settings_useraccounts">-->
+<!--    </fragment>-->
+
+    <fragment
+        android:id="@+id/nav_workflows"
+        android:name="com.jeremyhahn.cropdroid.ui.workflow.WorkflowsFragment"
+        android:label="@string/menu_workflows"
+        tools:layout="@layout/fragment_workflows">
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_quit"
+        android:name="com.jeremyhahn.cropdroid.QuitFragment"
+        android:label="@string/menu_quit"
+        tools:layout="@layout/fragment_quit" />
+
+</navigation>

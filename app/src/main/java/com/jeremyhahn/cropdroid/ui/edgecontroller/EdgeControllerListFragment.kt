@@ -1,31 +1,28 @@
 package com.jeremyhahn.cropdroid.ui.edgecontroller
 
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARM_ID_KEY
-import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ORG_ID_KEY
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
-import com.jeremyhahn.cropdroid.db.MasterControllerRepository
-import com.jeremyhahn.cropdroid.model.MasterController
+import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
+import com.jeremyhahn.cropdroid.model.Connection
 import com.jeremyhahn.cropdroid.ui.edgecontroller.EdgeControllerRecyclerAdapter.OnMasterListener
 import com.jeremyhahn.cropdroid.ui.room.EdgeControllerViewModel
 import com.jeremyhahn.cropdroid.utils.Preferences
-import kotlinx.android.synthetic.main.fragment_edge_controller_list.view.*
-
 
 class EdgeControllerListFragment : Fragment(), OnMasterListener {
 
-    private var controllers = ArrayList<MasterController>()
+    private var controllers = ArrayList<Connection>()
     private lateinit var adapter: EdgeControllerRecyclerAdapter
     private var swipeContainer: SwipeRefreshLayout? = null
     lateinit private var viewModel: EdgeControllerViewModel
@@ -33,16 +30,18 @@ class EdgeControllerListFragment : Fragment(), OnMasterListener {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         super.onCreateView(inflater, container, savedInstanceState)
 
+        var fragmentActivity = requireActivity()
         var fragmentView = inflater.inflate(R.layout.fragment_edge_controller_list, container, false)
 
-        fragmentView.fab.setOnClickListener { view ->
+        val floatingActionButton = fragmentView.findViewById(R.id.fab) as FloatingActionButton
+        floatingActionButton.setOnClickListener { view ->
             (activity as MainActivity).navigateToNewEdgeController()
         }
 
-        val repository = MasterControllerRepository(activity!!.applicationContext)
+        val repository = EdgeDeviceRepository(fragmentActivity.applicationContext)
         viewModel = ViewModelProviders.of(this, EdgeControllerViewModelFactory(repository)).get(EdgeControllerViewModel::class.java)
 
-        adapter = EdgeControllerRecyclerAdapter(controllers, this, activity!!, repository, viewModel)
+        adapter = EdgeControllerRecyclerAdapter(controllers, this, fragmentActivity, repository, viewModel)
 
         var recyclerView = fragmentView.findViewById(R.id.mastersRecyclerView) as RecyclerView
         recyclerView.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
@@ -66,10 +65,11 @@ class EdgeControllerListFragment : Fragment(), OnMasterListener {
             _adapter.setControllers(controllers)
             recyclerView.adapter!!.notifyDataSetChanged()
 
+            val textView = fragmentView.findViewById(R.id.edgeListEmptyText) as TextView
             if(controllers.size <= 0) {
-                fragmentView.edgeListEmptyText.visibility = View.VISIBLE
+                textView.visibility = View.VISIBLE
             } else {
-                fragmentView.edgeListEmptyText.visibility = View.GONE
+                textView.visibility = View.GONE
             }
         })
 

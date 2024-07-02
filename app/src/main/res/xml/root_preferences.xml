@@ -1,5 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:android="http://schemas.android.com/apk/res/android" >
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <Preference
+        app:key="user_management_settings"
+        app:title="User Management"
+        app:fragment="com.jeremyhahn.cropdroid.ui.settings.FarmUserManagementFragment" />
 
     <PreferenceCategory app:title="@string/general_header">
 
@@ -7,13 +14,19 @@
             app:key="name"
             app:title="@string/space_name_title"
             app:useSimpleSummaryProvider="true" />
-
+<!--
         <ListPreference
             app:key="interval"
             app:title="@string/interval_title"
             app:defaultValue="Interval"
             app:entries="@array/interval_entries"
             app:entryValues="@array/interval_values"
+            app:useSimpleSummaryProvider="true" />
+-->
+        <EditTextPreference
+            android:key="interval"
+            android:title="@string/interval_title"
+            android:inputType="number"
             app:useSimpleSummaryProvider="true" />
 
         <ListPreference
@@ -53,7 +66,6 @@
             app:title="@string/video_feed_url"
             app:dependency="room.enable"
             app:useSimpleSummaryProvider="true" />
-
 
         <EditTextPreference
             android:key="room.hardwareVersion"
@@ -129,7 +141,6 @@
             android:shouldDisableView="false"
             android:inputType="number"
             app:useSimpleSummaryProvider="true" />
-
 <!--
         <Preference
             app:key="reservoir.metrics"
@@ -208,6 +219,7 @@
             app:key="smtp.port"
             app:title="@string/smtp_port_title"
             app:dependency="smtp.enable"
+            android:inputType="number"
             app:useSimpleSummaryProvider="true" />
 
         <EditTextPreference

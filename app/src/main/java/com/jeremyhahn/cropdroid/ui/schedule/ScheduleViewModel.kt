@@ -5,15 +5,15 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Schedule
-import com.jeremyhahn.cropdroid.utils.ScheduleParser
+import com.jeremyhahn.cropdroid.config.ScheduleParser
 import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
 
-class ScheduleViewModel(cropDroidAPI: CropDroidAPI, channelId: Int) : ViewModel() {
+class ScheduleViewModel(cropDroidAPI: CropDroidAPI, channelId: Long) : ViewModel() {
 
     private val cropDroidAPI: CropDroidAPI
-    private val channelId: Int
+    private val channelId: Long
     val schedules = MutableLiveData<ArrayList<Schedule>>()
 
     init {
@@ -22,7 +22,7 @@ class ScheduleViewModel(cropDroidAPI: CropDroidAPI, channelId: Int) : ViewModel(
     }
 
     fun getSchedule() {
-        cropDroidAPI.getSchedule(channelId, object : Callback {
+        cropDroidAPI.getSchedules(channelId, object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 Log.d("ScheduleViewModel.getSchedule()", "onFailure response: " + e!!.message)
                 return

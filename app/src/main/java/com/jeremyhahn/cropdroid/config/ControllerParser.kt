@@ -1,0 +1,77 @@
+
+package com.jeremyhahn.cropdroid.config
+
+import android.util.Log
+import com.jeremyhahn.cropdroid.model.Channel
+import com.jeremyhahn.cropdroid.model.Controller
+import com.jeremyhahn.cropdroid.model.Metric
+import org.json.JSONArray
+
+class ControllerParser {
+
+    companion object {
+
+        fun parse(json: String): ArrayList<Controller> {
+            return parse(JSONArray(json))
+        }
+
+        fun parse(jsonControllers : JSONArray) : ArrayList<Controller> {
+            var controllers = ArrayList<Controller>(jsonControllers.length())
+            for (i in 0..jsonControllers.length() - 1) {
+                val jsonController = jsonControllers.getJSONObject(i)
+
+                Log.d("ControllerParser.parse", jsonController.toString())
+
+                val id = jsonController.getLong("id")
+                //val orgId = jsonController.getInt("orgId")
+                val type = jsonController.getString("type")
+                val description = jsonController.getString("description")
+                //val enable = jsonController.getBoolean("enable")
+                //val notify = jsonController.getBoolean("notify")
+                //val uri = jsonController.getString("uri")
+                //val configs = jsonController.getJSONObject("configs")
+
+                val jsonConfigMap = jsonController.getJSONObject("configMap")
+                val configs = HashMap<String, Any>(jsonConfigMap.length())
+
+                for ((i, k) in jsonConfigMap.keys().withIndex()) {
+                    val v = jsonConfigMap.getString(k)
+                    if (v.lowercase() == "true" || v.lowercase() == "false") {
+                        configs[k] = v.toBoolean()
+                    //} else if(k.equals("integer") && v.matches("^[+-]?\\d+$".toRegex())) {
+                    //    configs.put(k, v.toInt())
+                    } else {
+                        configs[k] = v
+                    }
+                    Log.i("ControllerParser.parse", "Parsing config key: " + k + " = value: " + v)
+                }
+
+                var hardwareVersion = jsonController.getString("hwVersion")
+                if(hardwareVersion == "") {
+                    hardwareVersion = "N/A"
+                }
+                var firmwareVersion = jsonController.getString("fwVersion")
+                if(firmwareVersion == "") {
+                    firmwareVersion = "N/A"
+                }
+
+                var parsedMetrics = ArrayList<Metric>()
+                var parsedChannels = ArrayList<Channel>()
+                if(!jsonController.isNull("metrics")) {
+                    val metrics = jsonController.getJSONArray("metrics")
+                    parsedMetrics = MetricParser.parse(metrics)
+                }
+                if(!jsonController.isNull("channels")) {
+                    val channels = jsonController.getJSONArray("channels")
+                    parsedChannels = ChannelParser.parse(channels)
+                }
+
+                //controllers.add(Controller(id, orgId, type, description, enable, notify, uri, hardwareVersion, firmwareVersion, parsedMetrics, parsedChannels))
+                val controller = Controller(id, type, description, hardwareVersion, firmwareVersion, configs, parsedMetrics, parsedChannels)
+
+                controllers.add(controller)
+            }
+            return controllers
+        }
+    }
+}

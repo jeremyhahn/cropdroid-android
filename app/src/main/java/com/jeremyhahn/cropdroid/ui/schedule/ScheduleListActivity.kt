@@ -11,13 +11,13 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
-import com.jeremyhahn.cropdroid.db.MasterControllerRepository
-import com.jeremyhahn.cropdroid.model.MasterController
+import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
+import com.jeremyhahn.cropdroid.model.Connection
 import com.jeremyhahn.cropdroid.model.Schedule
 import com.jeremyhahn.cropdroid.utils.Preferences
-import kotlinx.android.synthetic.main.activity_schedule_list.*
 import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
@@ -27,8 +27,8 @@ class ScheduleListActivity : AppCompatActivity(), ScheduleSelectionListener {
 
     lateinit private var recyclerView: RecyclerView
     lateinit private var swipeContainer: SwipeRefreshLayout
-    lateinit private var controller : MasterController
-    private var channelId = 0
+    lateinit private var controller : Connection
+    private var channelId = 0L
     private var channelName = ""
     private var channelDuration = 0
     private var recyclerItems = ArrayList<Schedule>()
@@ -39,20 +39,20 @@ class ScheduleListActivity : AppCompatActivity(), ScheduleSelectionListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_schedule_list)
 
-        channelId = intent.getIntExtra("channel_id", 0)
-        channelName = intent.getStringExtra("channel_name")
+        channelId = intent.getLongExtra("channel_id", 0)
+        channelName = intent.getStringExtra("channel_name").toString()
         channelDuration = intent.getIntExtra("channel_duration", 0)
 
         val preferences = Preferences(applicationContext)
         val controllerPreferences = preferences.getControllerPreferences()
-        val id = preferences.currentControllerId()
+        val hostname = preferences.currentController()
         val emptyText = findViewById(R.id.scheduleEmptyText) as TextView
 
-        Log.d("ScheduleActivity.onCreateView", "channel_id=$channelId, controller.id=$id, controller.duration=$channelDuration")
+        Log.d("ScheduleActivity.onCreateView", "channel_id=$channelId, controller.hostname=$hostname, controller.duration=$channelDuration")
 
         setTitle(channelName + " Schedule")
 
-        controller = MasterControllerRepository(this).getController(id)
+        controller = EdgeDeviceRepository(this).get(hostname)!!
 
         cropDroidAPI = CropDroidAPI(controller, controllerPreferences)
         viewModel = ViewModelProviders.of(this, ScheduleViewModelFactory(cropDroidAPI, channelId)).get(ScheduleViewModel::class.java)
@@ -88,6 +88,7 @@ class ScheduleListActivity : AppCompatActivity(), ScheduleSelectionListener {
         })
         viewModel.getSchedule()
 
+        val fab = this.findViewById(R.id.fab) as FloatingActionButton
         fab.setOnClickListener { view ->
             val fragmentManager = supportFragmentManager
             var sublimePickerDialogFragment = SublimePickerDialogFragment(this, Schedule(), null)
@@ -97,16 +98,20 @@ class ScheduleListActivity : AppCompatActivity(), ScheduleSelectionListener {
         }
     }
 
+    /**
+     * Called by the sublime date picker component once a schedule has been configured.
+     */
     override fun onScheduleSelected(schedule: Schedule) {
         schedule.channelId = channelId
         cropDroidAPI.createSchedule(schedule, object: Callback {
             override fun onFailure(call: Call, e: IOException) {
-                Log.d("ConditionListActivity.onFailure", "onFailure response: " + e!!.message)
+                Log.e("ScheduleListActivity.onScheduleSelected", "onFailure response: " + e!!.message)
+                //AppError(this).error(e)
                 return
             }
             override fun onResponse(call: Call, response: okhttp3.Response) {
                 val responseBody = response.body().string()
-                Log.d("ConditionListActivity.onResponse", responseBody)
+                Log.d("ScheduleListActivity.onScheduleSelected", responseBody)
                 viewModel.getSchedule()
             }
         })
@@ -115,12 +120,12 @@ class ScheduleListActivity : AppCompatActivity(), ScheduleSelectionListener {
     fun deleteSchedule(schedule: Schedule) {
         cropDroidAPI.deleteSchedule(schedule, object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                Log.d("ConditionListActivity.onFailure", "onFailure response: " + e!!.message)
+                Log.d("ScheduleListActivity.deleteSchedule", "onFailure response: " + e!!.message)
                 return
             }
             override fun onResponse(call: Call, response: okhttp3.Response) {
                 val responseBody = response.body().string()
-                Log.d("ConditionListActivity.onResponse", responseBody)
+                Log.d("ScheduleListActivity.deleteSchedule", responseBody)
                 viewModel.getSchedule()
             }
         })

@@ -6,7 +6,7 @@ import com.jeremyhahn.cropdroid.model.User
  * Authentication result : success (user details) or error message.
  */
 data class LoginResult(
-    val success: User? = null,
+    val user: User? = null,
     val error: String? = null,
     val registered: Boolean = false
 )

@@ -5,6 +5,7 @@ import android.util.Patterns
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.User
@@ -22,14 +23,51 @@ class LoginViewModel() : ViewModel() {
     private val _loginResult = MutableLiveData<LoginResult>()
     val loginResult: LiveData<LoginResult> = _loginResult
 
-    fun login(cropdroid: CropDroidAPI, username: String, password: String) {
+    fun googleLogin(cropdroid: CropDroidAPI, account: GoogleSignInAccount) {
 
-        cropdroid.login(username, password, object : Callback {
+        cropdroid.googleLogin(account.idToken!!, account.serverAuthCode!!, object : Callback {
+            override fun onFailure(call: Call?, e: IOException?) {
+                Log.d("LoginViewModel.googleLogin", "onFailure response: " + e!!.message)
+                _loginResult.postValue(LoginResult(error = e.message))
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+
+                Log.d("LoginViewModel.googleLogin", "login response: " + response)
+
+                var responseBody = response.body().string()
+                Log.d("LoginViewModel.googleLogin", "responseBody: " + responseBody)
+
+                if(response.code() == 404) {
+                    _loginResult.postValue(LoginResult(error = "Google login disabled"))
+                    return
+                }
+
+                var json = JSONObject(responseBody)
+                if (!response.isSuccessful()) {
+                    Log.d("LoginViewModel.googleLogin", "fail: " + responseBody)
+                    _loginResult.postValue(LoginResult(error = json.getString("error")))
+                    return
+                }
+
+                if(!json.isNull("success") && !json.getBoolean("success")) {
+                    _loginResult.postValue(LoginResult(error = json.getString("payload")))
+                    return
+                }
+
+                var token = json.getString("token")
+                _loginResult.postValue(LoginResult(User("0", account.email!!, account.idToken!!, token, "", "")))
+            }
+        })
+    }
+
+    fun login(cropdroid: CropDroidAPI, organizationName: String, username: String, password: String) {
+
+        cropdroid.login(organizationName, username, password, object : Callback {
 
             override fun onFailure(call: Call?, e: IOException?) {
                 Log.d("LoginViewModel.login", "onFailure response: " + e!!.message)
-                _loginResult.postValue(LoginResult(error = e!!.message))
-                return
+                _loginResult.postValue(LoginResult(error = e.message))
             }
 
             override fun onResponse(call: Call, response: Response) {
@@ -39,23 +77,34 @@ class LoginViewModel() : ViewModel() {
                 var responseBody = response.body().string()
                 Log.d("LoginViewModel.login", "responseBody: " + responseBody)
 
-                var json = JSONObject(responseBody)
-                if (!response.isSuccessful()) {
-                    Log.d("LoginViewModel.login", "fail: " + responseBody)
-                    _loginResult.postValue(LoginResult(error = json.getString("error")))
-                    return
-                }
+                try {
+                    var json = JSONObject(responseBody)
+                    if (!response.isSuccessful()) {
+                        Log.d("LoginViewModel.login", "fail: " + responseBody)
+                        _loginResult.postValue(LoginResult(error = json.getString("error")))
+                        return
+                    }
 
-                //var user : LoggedInUserView? = LoggedInUserView(displayName = username)
-                var token = json.getString("token")
-                _loginResult.postValue(LoginResult(User("0", username, "", token, "", "")))
+                    if (!json.isNull("success") && !json.getBoolean("success")) {
+                        _loginResult.postValue(LoginResult(error = json.getString("error")))
+                        return
+                    }
+
+                    //var user : LoggedInUserView? = LoggedInUserView(displayName = username)
+                    var token = json.getString("token")
+                    _loginResult.postValue(LoginResult(User("0", username, "", token, "", "")))
+                }
+                catch(e: Exception) {
+                    Log.e("LoginViewModel", e.message!!)
+                    _loginResult.postValue(LoginResult(null, responseBody, false))
+                }
             }
         })
     }
 
-    fun register(cropdroid: CropDroidAPI, username: String, password: String) {
+    fun register(cropdroid: CropDroidAPI, organizationName: String, username: String, password: String) {
 
-        cropdroid.register(username, password, object : Callback {
+        cropdroid.register(organizationName, username, password, object : Callback {
 
             override fun onFailure(call: Call?, e: IOException?) {
                 Log.d("LoginViewModel.register", "onFailure response: " + e!!.message)
@@ -80,6 +129,9 @@ class LoginViewModel() : ViewModel() {
                 if(json.getBoolean("success")) {
                     _loginResult.postValue(LoginResult(registered = true))
                     return
+                } else if(!json.getBoolean("success")) {
+                    _loginResult.postValue(LoginResult(error = json.getString("error")))
+                    return
                 }
 
                 _loginResult.postValue(LoginResult(error = "Unexpected error"))
@@ -88,15 +140,15 @@ class LoginViewModel() : ViewModel() {
     }
 
 
-    fun loginDataChanged(username: String, password: String) {
-        if (!isUserNameValid(username)) {
-            _loginForm.value = LoginFormState(usernameError = R.string.invalid_username)
-        } else if (!isPasswordValid(password)) {
-            _loginForm.value = LoginFormState(passwordError = R.string.invalid_password)
-        } else {
-            _loginForm.value = LoginFormState(isDataValid = true)
-        }
-    }
+//    fun loginDataChanged(username: String, password: String) {
+//        if (!isUserNameValid(username)) {
+//            _loginForm.value = LoginFormState(usernameError = R.string.invalid_username)
+//        } else if (!isPasswordValid(password)) {
+//            _loginForm.value = LoginFormState(passwordError = R.string.invalid_password)
+//        } else {
+//            _loginForm.value = LoginFormState(isDataValid = true)
+//        }
+//    }
 
 
     // A placeholder username validation check

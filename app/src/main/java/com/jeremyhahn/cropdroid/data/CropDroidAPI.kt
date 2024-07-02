@@ -1,75 +1,308 @@
 package com.jeremyhahn.cropdroid.data
 
+import android.R
+import android.content.Context
 import android.content.SharedPreferences
+import android.net.TrafficStats
 import android.util.Log
-import com.android.billingclient.api.Purchase
 import com.jeremyhahn.cropdroid.Constants
 import com.jeremyhahn.cropdroid.Constants.Companion.API_BASE
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_FARM_ID_KEY
 import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ORG_ID_KEY
-import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
 import com.jeremyhahn.cropdroid.model.*
+import com.jeremyhahn.cropdroid.model.Connection
+import com.jeremyhahn.cropdroid.ui.shoppingcart.model.Customer
+import com.jeremyhahn.cropdroid.ui.shoppingcart.rest.CreateInvoiceRequest
+import com.jeremyhahn.cropdroid.ui.shoppingcart.rest.PaymentIntentRequest
+import com.jeremyhahn.cropdroid.ui.shoppingcart.rest.SetDefaultPaymentMethodRequest
+import com.jeremyhahn.cropdroid.ui.shoppingcart.rest.SetupIntentRequest
 import okhttp3.*
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
+import java.util.concurrent.TimeUnit
 
-class CropDroidAPI(val controller: MasterController, preferences: SharedPreferences) {
 
-    val orgId: Int
-    val farmId: Int
+class CropDroidAPI(private val connection: Connection, preferences: SharedPreferences?) {
+
+    var orgId: Long = 0
+    var farmId: Long = 0
 
     val REST_ENDPOINT: String
     val VERSIONED_ENDPOINT: String
     val ORGANIZATION_ENDPOINT: String
-    val EVENTS_ENDPOINT: String
+    val ORGANIZATIONS_ENDPOINT: String
+    val ORG_USERS_ENDPOINT: String
+    val PUBKEY_ENDPOINT: String
+    val ALGORITHMS_ENDPOINT: String
+    val CHANNEL_ENDPOINT: String
     val CONFIG_ENDPOINT: String
     val CONDITION_ENDPOINT: String
-    val SCHEDULE_ENDPOINT: String
-    val CHANNEL_ENDPOINT: String
-    val METRIC_ENDPOINT: String
-    val VIRTUAL_ENDPOINT: String
-    val ALGORITHMS_ENDPOINT: String
-    val CONTROLLER_ENDPOINT: String
+    val DEVICES_ENDPOINT: String
+    val EVENTS_ENDPOINT: String
+    val FARMS_ENDPOINT: String
     val FARM_ENDPOINT: String
+    val FARM_USERS_ENDPOINT: String
+    val GOOGLE_ENDPOINT: String
     val IAP_ENDPOINT: String
+    val METRICS_ENDPOINT: String
+    val SCHEDULE_ENDPOINT: String
+    val WORKFLOW_ENDPOINT: String
+    val PROVISIONER_ENDPOINT : String
+    val PROVISION_ENDPOINT: String
+    val DEPROVISION_ENDPOINT: String
+    val ROLES_ENDPOINT: String
+    val SHOPPING_CART_ENDPOINT: String
 
     init {
-        orgId = preferences.getInt(CONFIG_ORG_ID_KEY, 0)
-        farmId = preferences.getInt(CONFIG_FARM_ID_KEY, 0)
+        if(preferences != null) {
+            try {
+                orgId = preferences!!.getLong(CONFIG_ORG_ID_KEY, 0)
+                farmId = preferences!!.getLong(CONFIG_FARM_ID_KEY, 0)
+            } catch (e: ClassCastException) {
+            }
+        }
 
-        REST_ENDPOINT = if(controller.secure == 1)
-            "https://".plus(controller.hostname)
-        else "http://".plus(controller.hostname)
+        REST_ENDPOINT = if(connection.secure == 1)
+            "https://${connection.hostname}"
+        else "http://${connection.hostname}"
 
         VERSIONED_ENDPOINT = REST_ENDPOINT.plus(API_BASE)
-        ORGANIZATION_ENDPOINT = VERSIONED_ENDPOINT.plus("/organizations/").plus(orgId)
 
-        FARM_ENDPOINT = ORGANIZATION_ENDPOINT.plus("/farms/").plus(farmId)
-        //FARM_ENDPOINT = VERSIONED_ENDPOINT.plus("/farms/").plus(farmId)
+        PUBKEY_ENDPOINT = VERSIONED_ENDPOINT.plus("/pubkey")
 
+        ORGANIZATIONS_ENDPOINT = VERSIONED_ENDPOINT.plus("/organizations")
+        ORGANIZATION_ENDPOINT = ORGANIZATIONS_ENDPOINT.plus(orgId)
+        ORG_USERS_ENDPOINT = ORGANIZATIONS_ENDPOINT.plus("/users")
+
+        FARMS_ENDPOINT = VERSIONED_ENDPOINT.plus("/farms")
+        FARM_ENDPOINT = FARMS_ENDPOINT.plus("/").plus(farmId)
+        FARM_USERS_ENDPOINT = FARM_ENDPOINT.plus("/users")
+
+        DEVICES_ENDPOINT = FARM_ENDPOINT.plus("/devices")
+        METRICS_ENDPOINT = FARM_ENDPOINT.plus("/metrics")
+        IAP_ENDPOINT = FARM_ENDPOINT.plus("/iap")
         EVENTS_ENDPOINT = FARM_ENDPOINT.plus("/events")
         CONFIG_ENDPOINT = FARM_ENDPOINT.plus("/config")
         CONDITION_ENDPOINT = FARM_ENDPOINT.plus("/conditions")
         SCHEDULE_ENDPOINT = FARM_ENDPOINT.plus("/schedule")
         CHANNEL_ENDPOINT = FARM_ENDPOINT.plus("/channels")
-        METRIC_ENDPOINT = FARM_ENDPOINT.plus("/metrics")
-        VIRTUAL_ENDPOINT = FARM_ENDPOINT.plus( "/virtual")
         ALGORITHMS_ENDPOINT = FARM_ENDPOINT.plus("/algorithms")
-        CONTROLLER_ENDPOINT = FARM_ENDPOINT.plus("/controllers")
-        IAP_ENDPOINT = FARM_ENDPOINT.plus("/iap")
+        WORKFLOW_ENDPOINT = FARM_ENDPOINT.plus("/workflows")
+        GOOGLE_ENDPOINT = VERSIONED_ENDPOINT.plus("/google")
+        PROVISIONER_ENDPOINT = VERSIONED_ENDPOINT.plus("/provisioner")
+        PROVISION_ENDPOINT = PROVISIONER_ENDPOINT.plus("/provision")
+        DEPROVISION_ENDPOINT = PROVISIONER_ENDPOINT.plus("/deprovision")
+        ROLES_ENDPOINT = VERSIONED_ENDPOINT.plus("/roles")
+        SHOPPING_CART_ENDPOINT = VERSIONED_ENDPOINT.plus("/shoppingcart")
     }
 
-    fun verifyPurchase(purchase: Purchase, callback: Callback) {
-        Log.d("CropDropAPI.verifyPurchase", "purchase="+purchase)
+//    // Google play store in-app purchase
+//    fun verifyPurchase(purchase: Purchase, callback: Callback) {
+//        Log.d("CropDropAPI.verifyPurchase", "purchase="+purchase)
+//        var json = JSONObject()
+//        json.put("orderId", purchase.orderId)
+//        //json.put("productId", purchase.sku)
+//        json.put("purchaseToken", purchase.purchaseToken)
+//        json.put("purchaseTime", purchase.purchaseTime)
+//        doPost(IAP_ENDPOINT.plus("/verify"), json, callback)
+//    }
+
+    fun getProducts(callback: Callback) {
+        val args = ArrayList<String>()
+        doGet(SHOPPING_CART_ENDPOINT.plus("/products"), args, callback)
+    }
+
+    fun getPublishableKey(callback: Callback) {
+        val args = ArrayList<String>()
+        doGet(SHOPPING_CART_ENDPOINT.plus("/publishable-key"), args, callback)
+    }
+
+    fun getPublishableKeySynchronous(): SynchronousResponse {
+        val args = ArrayList<String>()
+        return doGetSynchronous(SHOPPING_CART_ENDPOINT.plus("/publishable-key"), args)
+    }
+
+//    fun createSetupIntentForNewCustomer(): SynchronousResponse {
+//        var json = JSONObject()
+//        return doPostSynchronous(SHOPPING_CART_ENDPOINT.plus("/customer/setup-intent"), json)
+//    }
+
+    fun getPaymentMethods(processorId: String, callback: Callback) {
+        val args = ArrayList<String>()
+        args.add(processorId)
+        doGet(SHOPPING_CART_ENDPOINT.plus("/payment-methods"), args, callback)
+    }
+
+    fun attachAndSetDefaultPaymentMethod(setDefaultPaymentMethodRequest: SetDefaultPaymentMethodRequest, callback: Callback) {
+        val json = JSONObject()
+        json.put("customer_id", setDefaultPaymentMethodRequest.customerId)
+        json.put("processor_id", setDefaultPaymentMethodRequest.processorId)
+        json.put("payment_method_id", setDefaultPaymentMethodRequest.paymentMethodId)
+        doPost(SHOPPING_CART_ENDPOINT.plus("/attach-and-set-default-payment-method"), json, callback)
+    }
+
+    fun setDefaultPaymentMethod(setDefaultPaymentMethodRequest: SetDefaultPaymentMethodRequest, callback: Callback) {
+        val json = JSONObject()
+        json.put("customer_id", setDefaultPaymentMethodRequest.customerId)
+        json.put("processor_id", setDefaultPaymentMethodRequest.processorId)
+        json.put("payment_method_id", setDefaultPaymentMethodRequest.paymentMethodId)
+        doPost(SHOPPING_CART_ENDPOINT.plus("/default-payment-method"), json, callback)
+    }
+
+    fun getCustomerWithEphemeralKey(customerId: Long, callback: Callback) {
+        val args = ArrayList<String>()
+        args.add(customerId.toString())
+        doGet(SHOPPING_CART_ENDPOINT.plus("/ephemeral-key"), args, callback)
+    }
+
+    fun getPaymentIntent(paymentIntent: PaymentIntentRequest, callback: Callback) {
         var json = JSONObject()
-        json.put("orderId", purchase.orderId)
-        json.put("productId", purchase.sku)
-        json.put("purchaseToken", purchase.purchaseToken)
-        json.put("purchaseTime", purchase.purchaseTime)
-        doPost(IAP_ENDPOINT.plus("/verify"), json, callback)
+        json.put("customerId", paymentIntent.customerId)
+        json.put("amount", paymentIntent.amount)
+        json.put("currencyCode", paymentIntent.currencyCode)
+        doPost(SHOPPING_CART_ENDPOINT.plus("/payment-intent"), json, callback)
+    }
+
+//    fun createSetupIntentForNewCustomer(): SynchronousResponse {
+//        var json = JSONObject()
+//        return doPostSynchronous(SHOPPING_CART_ENDPOINT.plus("/customer/setup-intent"), json)
+//    }
+//
+//    fun createSetupIntentForNewCustomer(): SynchronousResponse {
+//        var json = JSONObject()
+//        return doPostSynchronous(SHOPPING_CART_ENDPOINT.plus("/customer/setup-intent"), json)
+//    }
+
+    fun createSetupIntent(callback: Callback) {
+        var json = JSONObject()
+        // No need to send user or customer ID because server gets the user id from the users Session
+        return doPost(SHOPPING_CART_ENDPOINT.plus("/setup-intent"), json, callback)
+    }
+
+    // This is GET resource, but doing a POST so the HTTP (Request URI) containing the secret will not get logged.
+    fun getSetupIntent(setupIntentRequest: SetupIntentRequest, callback: Callback) {
+        var json = JSONObject()
+        json.put("client_secret", setupIntentRequest.clientSecret)
+        return doPost(SHOPPING_CART_ENDPOINT.plus("/setup-intent/secret"), json, callback)
+    }
+
+    fun createInvoice(createInvoiceRequest: CreateInvoiceRequest, callback: Callback) {
+        var json = JSONObject()
+        var jsonProducts = JSONArray()
+        json.put("description", createInvoiceRequest.description)
+        for(product in createInvoiceRequest.products) {
+            val jsonProduct = JSONObject()
+            jsonProduct.put("id", product.id)
+            jsonProduct.put("name", product.name)
+            jsonProduct.put("description", product.description)
+            jsonProduct.put("imageUrl", product.imageUrl)
+            jsonProduct.put("price", product.price)
+            jsonProduct.put("quantity", product.quantity)
+            jsonProducts.put(jsonProduct)
+        }
+        json.put("products", jsonProducts)
+        doPost(SHOPPING_CART_ENDPOINT.plus("/invoice"), json, callback)
+    }
+
+    fun getTaxRates(callback: Callback) {
+        val args = ArrayList<String>()
+        doGet(SHOPPING_CART_ENDPOINT.plus("/tax-rate"), args, callback)
+    }
+
+    fun getCustomer(id: Long, callback: Callback) {
+        val args = ArrayList<String>()
+        args.add(id.toString())
+        doGet(SHOPPING_CART_ENDPOINT.plus("/customers"), args, callback)
+    }
+
+    fun createCustomer(customer: Customer, callback: Callback) {
+        val jsonProduct = JSONObject()
+        jsonProduct.put("id", customer.id)
+        jsonProduct.put("processor_id", customer.processorId)
+        jsonProduct.put("description", customer.description)
+        jsonProduct.put("name", customer.name)
+        jsonProduct.put("email", customer.email)
+        jsonProduct.put("phone", customer.phone)
+        if(customer.address != null) {
+            val jsonAddress = JSONObject()
+            jsonAddress.put("id", customer.address?.id)
+            jsonAddress.put("line1", customer.address?.line1)
+            jsonAddress.put("line2", customer.address?.line2)
+            jsonAddress.put("city", customer.address?.city)
+            jsonAddress.put("state", customer.address?.state)
+            jsonAddress.put("postal_code", customer.address?.postalCode)
+            jsonAddress.put("country", customer.address?.country)
+
+            jsonProduct.put("address", jsonAddress)
+        }
+        if(customer.shipping != null) {
+            val jsonShipping = JSONObject()
+            val jsonShippingAddress = JSONObject()
+            jsonShippingAddress.put("line1", customer.shipping?.address?.line1)
+            jsonShippingAddress.put("line2", customer.shipping?.address?.line2)
+            jsonShippingAddress.put("city", customer.shipping?.address?.city)
+            jsonShippingAddress.put("state", customer.shipping?.address?.state)
+            jsonShippingAddress.put("postal_code", customer.shipping?.address?.postalCode)
+            jsonShippingAddress.put("country", customer.shipping?.address?.country)
+
+            jsonShipping.put("id", customer.shipping?.id)
+            jsonShipping.put("name", customer.shipping?.name)
+            jsonShipping.put("phone", customer.shipping?.phone)
+            jsonShipping.put("address", jsonShippingAddress)
+
+            jsonProduct.put("shipping", jsonShipping)
+        }
+
+        Log.d("createCustomer: ", jsonProduct.toString())
+
+        doPost(SHOPPING_CART_ENDPOINT.plus("/customers"), jsonProduct, callback)
+    }
+
+    fun updateCustomer(customer: Customer, callback: Callback) {
+        val jsonProduct = JSONObject()
+        jsonProduct.put("id", customer.id)
+        jsonProduct.put("processor_id", customer.processorId)
+        jsonProduct.put("description", customer.description)
+        jsonProduct.put("name", customer.name)
+        jsonProduct.put("email", customer.email)
+        jsonProduct.put("phone", customer.phone)
+        if(customer.address != null) {
+            val jsonAddress = JSONObject()
+            jsonAddress.put("id", customer.address?.id)
+            jsonAddress.put("line1", customer.address?.line1)
+            jsonAddress.put("line2", customer.address?.line2)
+            jsonAddress.put("city", customer.address?.city)
+            jsonAddress.put("state", customer.address?.state)
+            jsonAddress.put("postal_code", customer.address?.postalCode)
+            jsonAddress.put("country", customer.address?.country)
+
+            jsonProduct.put("address", jsonAddress)
+        }
+        if(customer.shipping != null) {
+            val jsonShipping = JSONObject()
+            val jsonShippingAddress = JSONObject()
+            jsonShippingAddress.put("id", customer.shipping?.address?.id)
+            jsonShippingAddress.put("line1", customer.shipping?.address?.line1)
+            jsonShippingAddress.put("line2", customer.shipping?.address?.line2)
+            jsonShippingAddress.put("city", customer.shipping?.address?.city)
+            jsonShippingAddress.put("state", customer.shipping?.address?.state)
+            jsonShippingAddress.put("postal_code", customer.shipping?.address?.postalCode)
+            jsonShippingAddress.put("country", customer.shipping?.address?.country)
+
+            jsonShipping.put("id", customer.shipping?.id)
+            jsonShipping.put("name", customer.shipping?.name)
+            jsonShipping.put("phone", customer.shipping?.phone)
+            jsonShipping.put("address", jsonShippingAddress)
+
+            jsonProduct.put("shipping", jsonShipping)
+        }
+
+        Log.d("updateCustomer: ", jsonProduct.toString())
+
+        doPut(SHOPPING_CART_ENDPOINT.plus("/customers"), jsonProduct, callback)
     }
 
     fun eventsList(page: String, callback: Callback) {
@@ -78,20 +311,20 @@ class CropDroidAPI(val controller: MasterController, preferences: SharedPreferen
         doGet(EVENTS_ENDPOINT, args, callback)
     }
 
-    fun getMetricHistory(controllerType: ControllerType, metric: String, callback: Callback) {
+    fun getMetricHistory(serverType: String, metric: String, callback: Callback) {
         var args = ArrayList<String>(2)
         args.add("history")
         args.add(metric)
-        doGet(FARM_ENDPOINT.plus("/").plus(controllerType.name.toLowerCase()), args, callback)
+        doGet(DEVICES_ENDPOINT.plus("/${serverType}"), args, callback)
     }
 
-    fun getState(controllerType: ControllerType, callback: Callback) {
+    fun getState(serverType: String, callback: Callback) {
         var args = ArrayList<String>(0)
-        doGet(FARM_ENDPOINT.plus("/").plus(controllerType.name.toLowerCase()).plus("/view"), args, callback)
+        doGet(DEVICES_ENDPOINT.plus("/${serverType}/view"), args, callback)
     }
 
-    fun timerSwitch(controllerType: ControllerType, channelId: Int, seconds: Int, callback: Callback) {
-        val resource = FARM_ENDPOINT.plus("/").plus(controllerType.name.toLowerCase())
+    fun timerSwitch(serverType: String, channelId: Long, seconds: Int, callback: Callback) {
+        val resource = DEVICES_ENDPOINT.plus("/${serverType}")
         var args = ArrayList<String>(4)
         args.add("timerSwitch")
         args.add(channelId.toString())
@@ -99,8 +332,8 @@ class CropDroidAPI(val controller: MasterController, preferences: SharedPreferen
         doGet(resource, args, callback)
     }
 
-    fun switch(controllerType: ControllerType, channelId: Int, state: Boolean, callback: Callback) {
-        val resource = FARM_ENDPOINT.plus("/").plus(controllerType.name.toLowerCase())
+    fun switch(serverType: String, channelId: Long, state: Boolean, callback: Callback) {
+        val resource = DEVICES_ENDPOINT.plus("/${serverType}")
         var state = if(state) "1" else "0"
         var args = ArrayList<String>(4)
         args.add("switch")
@@ -109,15 +342,15 @@ class CropDroidAPI(val controller: MasterController, preferences: SharedPreferen
         doGet(resource, args, callback)
     }
 
-    fun setConfig(controllerId: Int, key: String, value: String, callback: Callback) {
+    fun setConfig(serverId: String, key: String, value: String, callback: Callback) {
         var args = ArrayList<String>(3)
-        args.add(controllerId.toString())
+        args.add(serverId)
         args.add(key)
         args.add("?value="+URLEncoder.encode(value, "utf-8"))
         doGet(CONFIG_ENDPOINT, args, callback)
     }
 
-    fun getConditions(channelId: Int, callback: Callback) {
+    fun getConditions(channelId: Long, callback: Callback) {
         var args = ArrayList<String>(1)
         args.add("channel")
         args.add(channelId.toString())
@@ -127,8 +360,9 @@ class CropDroidAPI(val controller: MasterController, preferences: SharedPreferen
     fun createCondition(condition: ConditionConfig, callback: Callback) {
         Log.d("CropDropAPI.createCondition", "condition="+condition)
         var json = JSONObject()
-        json.put("channelID", condition.channelId)
-        json.put("metricID", condition.metricId)
+        json.put("workflow_id", condition.workflowId)
+        json.put("channel_id", condition.channelId)
+        json.put("metric_id", condition.metricId)
         json.put("comparator", condition.comparator)
         json.put("threshold", condition.threshold)
         doPost(CONDITION_ENDPOINT, json, callback)
@@ -138,8 +372,9 @@ class CropDroidAPI(val controller: MasterController, preferences: SharedPreferen
         Log.d("CropDropAPI.createCondition", "condition="+condition)
         var json = JSONObject()
         json.put("id", condition.id)
-        json.put("channelID", condition.channelId)
-        json.put("metricID", condition.metricId)
+        json.put("workflow_id", condition.workflowId)
+        json.put("channel_id", condition.channelId)
+        json.put("metric_id", condition.metricId)
         json.put("comparator", condition.comparator)
         json.put("threshold", condition.threshold)
         doPut(CONDITION_ENDPOINT, json, callback)
@@ -152,8 +387,8 @@ class CropDroidAPI(val controller: MasterController, preferences: SharedPreferen
         doDelete(CONDITION_ENDPOINT, args, callback)
     }
 
-    fun getSchedule(channelId: Int, callback: Callback) {
-        var args = ArrayList<String>(1)
+    fun getSchedules(channelId: Long, callback: Callback) {
+        var args = ArrayList<String>(2)
         args.add("channel")
         args.add(channelId.toString())
         doGet(SCHEDULE_ENDPOINT, args, callback)
@@ -165,9 +400,13 @@ class CropDroidAPI(val controller: MasterController, preferences: SharedPreferen
         val formatter = SimpleDateFormat(Constants.DATE_FORMAT_RFC3339)
         formatter.calendar = schedule.startDate
 
+        var days: String? = schedule.days.joinToString(",")
+        days = if(days == "") null else days
+
         var json = JSONObject()
         json.put("id", schedule.id)
-        json.put("channelId", schedule.channelId)
+        json.put("workflow_id", schedule.workflowId)
+        json.put("channel_id", schedule.channelId)
         json.put("startDate", formatter.format(schedule.startDate.time))
         if(schedule.endDate != null) {
             formatter.calendar = schedule.endDate
@@ -176,7 +415,10 @@ class CropDroidAPI(val controller: MasterController, preferences: SharedPreferen
         json.put("frequency", schedule.frequency)
         json.put("interval", schedule.interval)
         json.put("count", schedule.count)
-        json.put("days", JSONArray(schedule.days))
+        json.put("days", days)
+
+        Log.e("CropDroidAPI.createSchedule", json.toString())
+
         doPost(SCHEDULE_ENDPOINT, json, callback)
     }
 
@@ -186,9 +428,13 @@ class CropDroidAPI(val controller: MasterController, preferences: SharedPreferen
         val formatter = SimpleDateFormat(Constants.DATE_FORMAT_RFC3339)
         formatter.calendar = schedule.startDate
 
+        var days: String? = schedule.days.joinToString(",")
+        days = if(days == "") null else days
+
         var json = JSONObject()
         json.put("id", schedule.id)
-        json.put("channelId", schedule.channelId)
+        json.put("workflow_id", schedule.workflowId)
+        json.put("channel_id", schedule.channelId)
         json.put("startDate", formatter.format(schedule.startDate.time))
         if(schedule.endDate != null) {
             formatter.calendar = schedule.endDate
@@ -196,8 +442,7 @@ class CropDroidAPI(val controller: MasterController, preferences: SharedPreferen
         }
         json.put("frequency", schedule.frequency)
         json.put("interval", schedule.interval)
-        json.put("count", schedule.count)
-        json.put("days", JSONArray(schedule.days))
+        json.put("days", days)
         doPut(SCHEDULE_ENDPOINT, json, callback)
     }
 
@@ -208,10 +453,97 @@ class CropDroidAPI(val controller: MasterController, preferences: SharedPreferen
         doDelete(SCHEDULE_ENDPOINT, args, callback)
     }
 
+    fun getWorkflows(callback: Callback) {
+        var args = ArrayList<String>(0)
+        doGet(WORKFLOW_ENDPOINT, args, callback)
+    }
+
+    fun getWorkflowsView(callback: Callback) {
+        var args = ArrayList<String>(0)
+        args.add("view")
+        doGet(WORKFLOW_ENDPOINT, args, callback)
+    }
+
+    fun createWorkflow(workflow: Workflow, callback: Callback) {
+        Log.d("CropDropAPI.createWorkflow", "workflow="+workflow)
+        var json = JSONObject()
+        json.put("farm_id", workflow.farmId)
+        json.put("name", workflow.name)
+        //json.put("conditions", workflow.conditions)
+        //json.put("schedules", workflow.schedules)
+        json.put("steps", workflow.steps)
+        doPost(WORKFLOW_ENDPOINT, json, callback)
+    }
+
+    fun updateWorkflow(workflow: Workflow, callback: Callback) {
+        Log.d("CropDropAPI.createWorkflow", "workflow="+workflow)
+        var json = JSONObject()
+        json.put("id", workflow.id)
+        json.put("farm_id", workflow.farmId)
+        json.put("name", workflow.name)
+        //json.put("conditions", workflow.conditions)
+        //json.put("schedules", workflow.schedules)
+        //json.put("steps", workflow.steps)
+        doPut(WORKFLOW_ENDPOINT.plus("/${workflow.id}"), json, callback)
+    }
+
+    fun deleteWorkflow(workflow: Workflow, callback: Callback) {
+        Log.d("CropDropAPI.deleteWorkflow", "workflow="+workflow)
+        val args = ArrayList<String>(1)
+        args.add(workflow.id.toString())
+        doDelete(WORKFLOW_ENDPOINT, args, callback)
+    }
+
+    fun createWorkflowStep(workflowStep: WorkflowStep, callback: Callback) {
+        Log.d("CropDropAPI.createWorkflowStep", "workflowStep="+workflowStep)
+        var json = JSONObject()
+        json.put("workflow_id", workflowStep.workflowId)
+        json.put("device_id", workflowStep.deviceId)
+        json.put("channel_id", workflowStep.channelId)
+        json.put("webhook", workflowStep.webhook)
+        json.put("duration", workflowStep.duration)
+        json.put("wait", workflowStep.wait)
+        val createEndpoint = WORKFLOW_ENDPOINT.plus("/${workflowStep.workflowId}/steps")
+        doPost(createEndpoint, json, callback)
+    }
+
+    fun updateWorkflowStep(workflowStep: WorkflowStep, callback: Callback) {
+        Log.d("CropDropAPI.createWorkflowStep", "workflowStep="+workflowStep)
+        var json = JSONObject()
+        json.put("id", workflowStep.id)
+        json.put("workflow_id", workflowStep.workflowId)
+        json.put("device_id", workflowStep.deviceId)
+        json.put("channel_id", workflowStep.channelId)
+        json.put("webhook", workflowStep.webhook)
+        json.put("duration", workflowStep.duration)
+        json.put("wait", workflowStep.wait)
+        //json.put("conditions", workflow.conditions)
+        //json.put("schedules", workflow.schedules)
+        //json.put("steps", workflow.steps)
+        val updateEndpoint = WORKFLOW_ENDPOINT.plus("/${workflowStep.workflowId}/steps/${workflowStep.id}")
+        doPut(updateEndpoint, json, callback)
+    }
+
+    fun deleteWorkflowStep(workflowStep: WorkflowStep, callback: Callback) {
+        Log.d("CropDropAPI.deleteWorkflowStep", "workflowStep="+workflowStep)
+        val args = ArrayList<String>(0)
+        val deleteEndpoint = WORKFLOW_ENDPOINT.plus("/${workflowStep.workflowId}/steps/${workflowStep.id}")
+        doDelete(deleteEndpoint, args, callback)
+    }
+
+    fun runWorkflow(workflow: Workflow, callback: Callback) {
+        Log.d("CropDropAPI.runWorkflow", "workflow="+workflow)
+        val args = ArrayList<String>(0)
+        args.add(workflow.id.toString())
+        args.add("run")
+        doGet(WORKFLOW_ENDPOINT, args, callback)
+    }
+
     fun setMetricConfig(metric: Metric, callback: Callback) {
         Log.d("CropDropAPI.setMetricConfig", "metric="+metric)
         var json = JSONObject()
         json.put("id", metric.id)
+        json.put("deviceId", metric.controllerId)
         json.put("key", metric.key)
         json.put("name", metric.name)
         json.put("enable", metric.enable)
@@ -219,22 +551,24 @@ class CropDroidAPI(val controller: MasterController, preferences: SharedPreferen
         json.put("unit", metric.unit)
         json.put("alarmLow", metric.alarmLow)
         json.put("alarmHigh", metric.alarmHigh)
-        doPut(METRIC_ENDPOINT, json, callback)
+        doPut(METRICS_ENDPOINT, json, callback)
     }
 
-    fun setVirtualMetricValue(controllerType: ControllerType, metric: Metric, callback: Callback) {
-        Log.d("CropDropAPI.setVirtualMetricValue", "metric="+metric)
+    fun setMetricValue(serverType: String, metric: Metric, callback: Callback) {
+        Log.d("CropDropAPI.setMetricValue", "metric="+metric)
         var args = ArrayList<String>(4)
-        args.add(controllerType.name.toLowerCase())
+        args.add(serverType)
+        args.add("metrics")
         args.add(metric.key)
         args.add(metric.value.toString())
-        doGet(VIRTUAL_ENDPOINT, args, callback)
+        doGet(DEVICES_ENDPOINT, args, callback)
     }
 
     fun setChannelConfig(channel: Channel, callback: Callback) {
         Log.d("CropDropAPI.setChannelConfig", "channel="+channel)
         var json = JSONObject()
         json.put("id", channel.id)
+        json.put("deviceId", channel.controllerId)
         json.put("channelId", channel.channelId)
         json.put("name", channel.name)
         json.put("enable", channel.enable)
@@ -247,23 +581,43 @@ class CropDroidAPI(val controller: MasterController, preferences: SharedPreferen
         doPut(CHANNEL_ENDPOINT, json, callback)
     }
 
-    fun getFarm(callback: Callback) {
-        val args = ArrayList<String>()
-        doGet(FARM_ENDPOINT, args, callback)
+    fun provision(orgId: Long, farmName: String, callback: Callback) {
+        Log.d("CropDropAPI.provision", "orgId="+orgId)
+        var json = JSONObject()
+        doPost(PROVISION_ENDPOINT.plus("/${orgId}/${farmName}"), json, callback)
     }
 
-    fun getConfig(callback: Callback) {
-        val args = ArrayList<String>()
-        doGet(CONFIG_ENDPOINT, args, callback)
+    fun deprovision(farmId: Long, callback: Callback) {
+        Log.d("CropDropAPI.deprovision", "farmId="+farmId)
+        val args = ArrayList<String>(0)
+        args.add(farmId.toString())
+        doDelete(DEPROVISION_ENDPOINT, args, callback)
     }
 
-    fun getControllers(callback: Callback) {
+    fun getOrganizations(callback: Callback) {
         val args = ArrayList<String>()
-        doGet(CONTROLLER_ENDPOINT, args, callback)
+        args.add("1") // TODO: remove hard coded page number
+        doGet(ORGANIZATIONS_ENDPOINT, args, callback)
     }
 
-    fun getMetrics(controllerId: Int, callback: Callback) {
-        val endpoint = METRIC_ENDPOINT.plus("/").plus(controllerId)
+    fun getFarms(callback: Callback) {
+        val args = ArrayList<String>()
+        doGet(FARMS_ENDPOINT, args, callback)
+    }
+
+    fun getDevices(callback: Callback) {
+        val args = ArrayList<String>()
+        doGet(DEVICES_ENDPOINT, args, callback)
+    }
+
+    fun getMetrics(deviceId: Long, callback: Callback) {
+        val endpoint = METRICS_ENDPOINT.plus("/${deviceId}")
+        val args = ArrayList<String>()
+        doGet(endpoint, args, callback)
+    }
+
+    fun getChannels(deviceId: Long, callback: Callback) {
+        val endpoint = CHANNEL_ENDPOINT.plus("/${deviceId}")
         val args = ArrayList<String>()
         doGet(endpoint, args, callback)
     }
@@ -273,43 +627,144 @@ class CropDroidAPI(val controller: MasterController, preferences: SharedPreferen
         doGet(ALGORITHMS_ENDPOINT, args, callback)
     }
 
-    fun login(username: String, password: String, callback: Callback) {
+    fun getPublicKey(callback: Callback) {
+        val args = ArrayList<String>()
+        doGet(PUBKEY_ENDPOINT, args, callback)
+    }
+
+    fun getRoles(callback: Callback) {
+        val args = ArrayList<String>()
+        doGet(ROLES_ENDPOINT, args, callback)
+    }
+
+    fun getOrganizationUsers(callback: Callback) {
+        val args = ArrayList<String>()
+        doGet(ORG_USERS_ENDPOINT, args, callback)
+    }
+
+    fun setFarmRole(orgId: Long, farmId: Long, userId: Long, role: RoleConfig, callback: Callback) {
+        var json = JSONObject()
+        json.put("orgId", orgId)
+        json.put("farmId", farmId)
+        json.put("userId", userId)
+        json.put("roleId", role.id)
+        val endpoint = FARM_USERS_ENDPOINT.plus("/${userId}/role")
+        doPost(endpoint, json, callback)
+    }
+
+    fun getFarmUsers(callback: Callback) {
+        val args = ArrayList<String>()
+        doGet(FARM_USERS_ENDPOINT, args, callback)
+    }
+
+//    Use the registration process instead creating users directly
+//
+//    fun createUser(user: UserConfig, callback: Callback) {
+//        var json = JSONObject()
+//        json.put("id", user.id.toString())
+//        json.put("email", user.email)
+//        json.put("password", user.password)
+//        doPost(FARM_USERS_ENDPOINT, json, callback)
+//    }
+
+    fun deleteFarmUser(userId: Long, callback: Callback) {
+        val args = ArrayList<String>()
+        args.add(userId.toString())
+        doDelete(FARM_USERS_ENDPOINT, args, callback)
+    }
+
+    fun resetPassword(user: UserConfig, callback: Callback) {
+        var json = JSONObject()
+        json.put("email", user.email)
+        json.put("password", user.password)
+        doPost(FARM_USERS_ENDPOINT.plus("/${user.id}"), json, callback)
+    }
+
+    fun login(organizationName: String, username: String, password: String, callback: Callback) {
         if(username.isEmpty()) return fail(callback, "Username required")
         if(password.isEmpty()) return fail(callback, "Password required")
         var json = JSONObject()
+        json.put("orgName", organizationName)
         json.put("email", username)
         json.put("password", password)
+        json.put("authType", 0)
         doPost(VERSIONED_ENDPOINT.plus("/login"), json, callback)
     }
 
-    fun register(username: String, password: String, callback: Callback) {
+    fun refreshToken(userId: Long, callback: Callback) {
+        var args = ArrayList<String>()
+        doGet(VERSIONED_ENDPOINT.plus("/login/refresh"), args, callback)
+    }
+
+    fun googleLogin(idToken: String, serverAuthCode: String, callback: Callback) {
+        var json = JSONObject()
+        json.put("email", idToken)
+        json.put("password", serverAuthCode)
+        json.put("authType", 1)
+        doPost(GOOGLE_ENDPOINT.plus("/login"), json, callback)
+    }
+
+    fun register(organizationName: String, username: String, password: String, callback: Callback) {
         if(username.isEmpty()) return fail(callback, "Username required")
         if(password.isEmpty()) return fail(callback, "Password required")
         var json = JSONObject()
+        //json.put("orgId", FNV.fnv1a_64(organizationName.toByteArray(Charsets.UTF_8)))
+        json.put("orgName", organizationName)
         json.put("email", username)
         json.put("password", password)
         doPost(VERSIONED_ENDPOINT.plus("/register"), json, callback)
     }
 
-    fun doGet(endpoint: String, args: ArrayList<String>, callback: Callback) {
-        if(controller.hostname.isEmpty()) return fail(callback, "Hostname required")
+    private fun doGetSynchronous(endpoint: String, args: ArrayList<String>): SynchronousResponse {
+        if(connection.hostname.isEmpty()) return SynchronousResponse(null, Exception("Hostname required"))
+        var endpoint = endpoint
+        if(args.size > 0) {
+            for(arg in args) {
+                endpoint = endpoint.plus("/${arg}")
+            }
+        }
+        Log.d("CropDroidAPI.doGet", "[GET SYNC] endpoint: " + endpoint)
+        Log.d("CropDroidAPI.doGet", "token: " + connection.token)
+        val client = OkHttpClient()
+        var request = Request.Builder()
+            .header("Authorization","Bearer " + connection.token)
+            .url(endpoint)
+            .get()
+            .build();
+
+        try {
+            return SynchronousResponse(client.newCall(request).execute(), null)
+        }
+        catch(e: java.net.ConnectException) {
+            return SynchronousResponse(null, e)
+        }
+        catch(e: IOException) {
+            e.printStackTrace()
+            return SynchronousResponse(null, e)
+        }
+    }
+
+    private fun doGet(endpoint: String, args: ArrayList<String>, callback: Callback) {
+
+        if(connection.hostname.isEmpty()) return fail(callback, "Hostname required")
         //var endpoint = REST_ENDPOINT.plus(resource)
         var endpoint = endpoint
         if(args.size > 0) {
             for(arg in args) {
-                endpoint = endpoint.plus("/").plus(arg)
+                endpoint = endpoint.plus("/${arg}")
             }
         }
-        Log.d("CropDroidAPI.doGet", "endpoint: " + endpoint)
-        Log.d("CropDroidAPI.doGet", "token: " + controller.token)
+        Log.d("CropDroidAPI.doGet", "[GET] endpoint: " + endpoint)
+        Log.d("CropDroidAPI.doGet", "token: " + connection.token)
         //val logging = HttpLoggingInterceptor()
         //logging.setLevel(HttpLoggingInterceptor.Level.BASIC)
         //val client = OkHttpClient.Builder()
         //.addInterceptor(logging)
         //  .build()
+        TrafficStats.setThreadStatsTag(532);
         val client = OkHttpClient()
         var request = Request.Builder()
-            .header("Authorization","Bearer " + controller.token)
+            .header("Authorization","Bearer " + connection.token)
             .url(endpoint)
             .get()
             .build();
@@ -325,15 +780,58 @@ class CropDroidAPI(val controller: MasterController, preferences: SharedPreferen
         }
     }
 
-    fun doPost(endpoint: String, json: JSONObject, callback: Callback) {
-        if(controller.hostname.isEmpty()) return fail(callback, "Hostname required")
+    private fun doPost(endpoint: String, json: JSONObject, callback: Callback) {
+        if(connection.hostname.isEmpty()) return fail(callback, "Hostname required")
+        //var endpoint = REST_ENDPOINT.plus(resource)
+        Log.d("CropDroidAPI.doPost", "[POST] endpoint: " + endpoint)
+        var client = OkHttpClient.Builder()
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .writeTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
+            .build()
+        var JSON = MediaType.parse("application/json; charset=utf-8")
+        var body = RequestBody.create(JSON, json.toString())
+        var request: Request? = null
+        if(connection.token.isEmpty()) {
+            request = Request.Builder()
+                .url(endpoint)
+                .post(body)
+                .build();
+        }
+        else {
+            request = Request.Builder()
+                .url(endpoint)
+                .post(body)
+                .header("Authorization","Bearer " + connection.token)
+                .build();
+        }
+        try {
+            client.newCall(request).enqueue(callback)
+        }
+        catch(e: java.net.ConnectException) {
+            fail(callback, e.message!!)
+        }
+        catch(e: IOException) {
+            e.printStackTrace()
+            fail(callback, e.message!!)
+        }
+    }
+
+    private fun doPostSynchronous(endpoint: String, json: JSONObject): SynchronousResponse {
+        if(connection.hostname.isEmpty()) return SynchronousResponse(null, Exception("Hostname required"))
         //var endpoint = REST_ENDPOINT.plus(resource)
         Log.d("CropDroidAPI.doPost", "endpoint: " + endpoint)
-        var client = OkHttpClient()
+        var client = OkHttpClient.Builder()
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .writeTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
+            .build()
         var JSON = MediaType.parse("application/json; charset=utf-8")
         var body = RequestBody.create(JSON, json.toString())
         var request: Request? = null
-        if(controller.token.isEmpty()) {
+        if(connection.token.isEmpty()) {
             request = Request.Builder()
                 .url(endpoint)
                 .post(body)
@@ -343,30 +841,31 @@ class CropDroidAPI(val controller: MasterController, preferences: SharedPreferen
             request = Request.Builder()
                 .url(endpoint)
                 .post(body)
-                .header("Authorization","Bearer " + controller.token)
+                .header("Authorization","Bearer " + connection.token)
                 .build();
         }
+        var response: Response? = null
         try {
-            client.newCall(request).enqueue(callback)
+            return SynchronousResponse(client.newCall(request).execute(), null)
         }
         catch(e: java.net.ConnectException) {
-            fail(callback, e.message!!)
+            return SynchronousResponse(null, e)
         }
         catch(e: IOException) {
             e.printStackTrace()
-            fail(callback, e.message!!)
+            return SynchronousResponse(null, e)
         }
     }
 
-    fun doPut(endpoint: String, json: JSONObject, callback: Callback) {
-        if(controller.hostname.isEmpty()) return fail(callback, "Hostname required")
+    private fun doPut(endpoint: String, json: JSONObject, callback: Callback) {
+        if(connection.hostname.isEmpty()) return fail(callback, "Hostname required")
         //var endpoint = REST_ENDPOINT.plus(resource)
-        Log.d("CropDroidAPI.doPut", "endpoint: " + endpoint)
+        Log.d("CropDroidAPI.doPut", "[PUT] endpoint: " + endpoint)
         var client = OkHttpClient()
         var JSON = MediaType.parse("application/json; charset=utf-8")
         var body = RequestBody.create(JSON, json.toString())
         var request: Request? = null
-        if(controller.token.isEmpty()) {
+        if(connection.token.isEmpty()) {
             request = Request.Builder()
                 .url(endpoint)
                 .put(body)
@@ -376,7 +875,7 @@ class CropDroidAPI(val controller: MasterController, preferences: SharedPreferen
             request = Request.Builder()
                 .url(endpoint)
                 .put(body)
-                .header("Authorization","Bearer " + controller.token)
+                .header("Authorization","Bearer " + connection.token)
                 .build();
         }
         try {
@@ -391,19 +890,19 @@ class CropDroidAPI(val controller: MasterController, preferences: SharedPreferen
         }
     }
 
-    fun doDelete(endpoint: String,  args: ArrayList<String>, callback: Callback) {
-        if(controller.hostname.isEmpty()) return fail(callback, "Hostname required")
+    private fun doDelete(endpoint: String,  args: ArrayList<String>, callback: Callback) {
+        if(connection.hostname.isEmpty()) return fail(callback, "Hostname required")
         //var endpoint = REST_ENDPOINT.plus(resource)
         var endpoint = endpoint
-        Log.d("CropDroidAPI.doDelete", "endpoint: " + endpoint)
         if(args.size > 0) {
             for(arg in args) {
                 endpoint = endpoint.plus("/").plus(arg)
             }
         }
+        Log.d("CropDroidAPI.doDelete", "[DELETE] endpoint: " + endpoint)
         var client = OkHttpClient()
         var request: Request? = null
-        if(controller.token.isEmpty()) {
+        if(connection.token.isEmpty()) {
             request = Request.Builder()
                 .url(endpoint)
                 .delete()
@@ -413,7 +912,7 @@ class CropDroidAPI(val controller: MasterController, preferences: SharedPreferen
             request = Request.Builder()
                 .url(endpoint)
                 .delete()
-                .header("Authorization","Bearer " + controller.token)
+                .header("Authorization","Bearer " + connection.token)
                 .build();
         }
         try {
@@ -428,6 +927,41 @@ class CropDroidAPI(val controller: MasterController, preferences: SharedPreferen
         }
     }
 
+    fun createWebsocket(context: Context, resource: String, listener: WebSocketListener): WebSocket? {
+        Log.d("CropDroidAPI.createWebSocket", "resource: " + resource)
+        try {
+            val client = OkHttpClient()
+            val protocol = if (connection.secure == 1) "wss://" else "ws://"
+            var url = protocol.plus(connection.hostname).plus(API_BASE).plus(resource)
+            Log.d("CropDroidAPI.createWebsocket", "Created WebSocket: " + url)
+            val request = Request.Builder()
+                .url(url)
+                .addHeader("Authorization", "Bearer " + connection.token)
+                .build()
+
+            val websocket = client.newWebSocket(request, listener)
+            //websockets[server] = HashMap()
+            //websockets[server]!!.put(server.hostname, websocket)
+            client.dispatcher().executorService().shutdown()
+            client.retryOnConnectionFailure()
+            return websocket
+        }
+        catch(e: java.lang.IllegalArgumentException) {
+            com.jeremyhahn.cropdroid.AppError(context).toast(e.message!!)
+        }
+        return null
+    }
+
+/*
+    fun getController(webSocket: WebSocket) : Connection? {
+        for((k, v) in websockets) {
+            if(v.equals(webSocket)) {
+                return k
+            }
+        }
+        return null
+    }
+*/
     /*
     fun doFormPost(resource: String, args: Map<String, String>, callback: Callback) {
         val client = OkHttpClient()
@@ -437,7 +971,7 @@ class CropDroidAPI(val controller: MasterController, preferences: SharedPreferen
         }
         val request: Request = Request.Builder()
             .url(REST_ENDPOINT.plus(resource))
-            .header("Authorization","Bearer " + controller.token)
+            .header("Authorization","Bearer " + server.token)
             .post(formBuilder.build())
             .build()
         try {

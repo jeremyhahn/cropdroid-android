@@ -17,42 +17,34 @@ import com.jeremyhahn.cropdroid.model.Condition
 import com.jeremyhahn.cropdroid.model.ConditionConfig
 import com.jeremyhahn.cropdroid.model.Controller
 import com.jeremyhahn.cropdroid.model.Metric
-import com.jeremyhahn.cropdroid.utils.ControllerParser
-import com.jeremyhahn.cropdroid.utils.MetricParser
-import kotlinx.android.synthetic.main.dialog_condition.view.*
+import com.jeremyhahn.cropdroid.config.ControllerParser
+import com.jeremyhahn.cropdroid.config.MetricParser
 import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
 import java.util.*
 
-class ConditionDialogFragment(cropDroidAPI: CropDroidAPI, condition: Condition, channelId: Int, dialogHandler: ConditionDialogHandler) : DialogFragment() {
+class ConditionDialogFragment(cropDroidAPI: CropDroidAPI, condition: Condition, channelId: Long, dialogHandler: ConditionDialogHandler) : DialogFragment() {
 
-    private val handler: ConditionDialogHandler
-    private val condition: Condition
-    private val channelId: Int
-    private val cropDroidAPI: CropDroidAPI
-
-    init {
-        this.handler = dialogHandler
-        this.condition = condition
-        this.channelId = channelId
-        this.cropDroidAPI = cropDroidAPI
-    }
+    private val handler: ConditionDialogHandler = dialogHandler
+    private val condition: Condition = condition
+    private val channelId: Long = channelId
+    private val cropDroidAPI: CropDroidAPI = cropDroidAPI
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         super.onCreateDialog(savedInstanceState)
 
         Log.d("onCreateDialog", "condition:" + condition.toString())
 
-        val controllerMap = HashMap<Int, Controller>()
+        val controllerMap = HashMap<Long, Controller>()
         val metricMap = HashMap<Int, Metric>()
 
         val inflater: LayoutInflater = LayoutInflater.from(activity)
         val dialogView: View = inflater.inflate(R.layout.dialog_condition, null)
 
         // Populate metric spinner
-        val metricArray: MutableList<String> = java.util.ArrayList()
-        val metricAdapter = ArrayAdapter<String>(activity, android.R.layout.simple_spinner_item, metricArray)
+        val metricArray: MutableList<String> = ArrayList()
+        val metricAdapter = ArrayAdapter<String>(requireActivity(), android.R.layout.simple_spinner_item, metricArray)
         metricAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         val metricSpinner = dialogView.findViewById<View>(R.id.metricSpinner) as Spinner
         metricSpinner.adapter = metricAdapter
@@ -62,14 +54,14 @@ class ConditionDialogFragment(cropDroidAPI: CropDroidAPI, condition: Condition, 
         // Populate controller spinner
         val controllerArray: MutableList<String> = java.util.ArrayList()
         val controllerSpinner = dialogView.findViewById<View>(R.id.controllerSpinner) as Spinner
-        val controllerAdapter = ArrayAdapter<String>(activity, android.R.layout.simple_spinner_item, controllerArray)
+        val controllerAdapter = ArrayAdapter<String>(requireActivity(), android.R.layout.simple_spinner_item, controllerArray)
         controllerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         controllerSpinner.adapter = controllerAdapter
         controllerSpinner.onItemSelectedListener = object: AdapterView.OnItemSelectedListener {
             override fun onNothingSelected(parent: AdapterView<*>?) {
             }
             override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
-                val selectedController = controllerMap.get(id.toInt())
+                val selectedController = controllerMap.get(id)
                 cropDroidAPI.getMetrics(selectedController!!.id, object: Callback {
                     override fun onFailure(call: Call, e: IOException) {
                         Log.d("onFailure", "onFailure response: " + e!!.message)
@@ -107,7 +99,7 @@ class ConditionDialogFragment(cropDroidAPI: CropDroidAPI, condition: Condition, 
         }
 
         // Load the controller list
-        cropDroidAPI.getControllers(object: Callback {
+        cropDroidAPI.getDevices(object: Callback {
             override fun onFailure(call: Call, e: IOException) {
                 Log.d("onCreateContextMenu.Condition", "onFailure response: " + e!!.message)
                 return
@@ -119,15 +111,15 @@ class ConditionDialogFragment(cropDroidAPI: CropDroidAPI, condition: Condition, 
                 for((i, controller) in controllers.withIndex()) {
                     val display = controller.type.capitalize()
                     controllerArray.add(display)
-                    controllerMap[i] = controller
-                    if(condition.controllerType.isEmpty()) {
-                        if(controller.type == condition.controllerType) {
+                    controllerMap[i.toLong()] = controller
+                    if(condition.deviceType.isEmpty()) {
+                        if(controller.type == condition.deviceType) {
                             activity!!.runOnUiThread{
                                 controllerSpinner.setSelection(controllerAdapter.getPosition(display))
                             }
                         }
                     } else {
-                        if(controller.type == condition.controllerType) {
+                        if(controller.type == condition.deviceType) {
                             activity!!.runOnUiThread{
                                 controllerSpinner.setSelection(controllerAdapter.getPosition(display))
                             }
@@ -147,7 +139,7 @@ class ConditionDialogFragment(cropDroidAPI: CropDroidAPI, condition: Condition, 
         operatorArray.add("<")
         operatorArray.add("<=")
         operatorArray.add("=")
-        val operatorAdapter = ArrayAdapter(activity, android.R.layout.simple_spinner_item, operatorArray)
+        val operatorAdapter = ArrayAdapter(requireActivity(), android.R.layout.simple_spinner_item, operatorArray)
         operatorAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         val operatorSpinner = dialogView.findViewById<View>(R.id.operatorSpinner) as Spinner
         operatorSpinner.adapter = operatorAdapter
@@ -155,7 +147,7 @@ class ConditionDialogFragment(cropDroidAPI: CropDroidAPI, condition: Condition, 
         operatorSpinner.setSelection(operatorPosition)
 
         // Populate condition value
-        dialogView.conditionValue.setText(condition.threshold.toString())
+        //dialogView.conditionValue.setText(condition.threshold.toString())
 
         // Show the dialog box / condition view
         val d = AlertDialog.Builder(activity)
@@ -172,7 +164,7 @@ class ConditionDialogFragment(cropDroidAPI: CropDroidAPI, condition: Condition, 
             val threshold = _conditionValue.text.toString()
 
             handler.onConditionDialogApply(
-                ConditionConfig(condition.id, selectedMetric!!.id, channelId, comparisonOperator, threshold.toDouble()))
+                ConditionConfig(condition.id.toLong(), selectedMetric!!.id, 0, channelId, comparisonOperator, threshold.toDouble()))
         }
         d.setNegativeButton("Cancel") { dialogInterface, i ->
         }

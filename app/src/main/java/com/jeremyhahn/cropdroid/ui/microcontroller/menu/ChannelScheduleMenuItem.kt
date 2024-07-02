@@ -10,7 +10,7 @@ import com.jeremyhahn.cropdroid.ui.schedule.ScheduleListActivity
 class ChannelScheduleMenuItem(context: Context, menu: ContextMenu, channel: Channel) {
 
     init {
-        menu!!.add(0, channel.id, 0, "Schedule")
+        menu!!.add(0, channel.id.toInt(), 0, "Schedule")
             .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
 
                 //activity.startActivity(Intent(activity, WeekViewActivity::class.java))

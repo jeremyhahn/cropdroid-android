@@ -6,18 +6,18 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.jeremyhahn.cropdroid.Clearable
-import com.jeremyhahn.cropdroid.Constants.Companion.ControllerType
+import com.jeremyhahn.cropdroid.Constants
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Metric
 import com.jeremyhahn.cropdroid.model.MicroControllerRecyclerModel
 
 class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: CropDroidAPI,
-           val recyclerItems: ArrayList<MicroControllerRecyclerModel>, controllerType: ControllerType,
+           val recyclerItems: ArrayList<MicroControllerRecyclerModel>, controllerType: String,
            val mode: String) : Clearable, RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     var metricCount: Int = 0
-    val controllerType: ControllerType
+    val controllerType: String
 
     init {
         this.controllerType = controllerType
@@ -38,7 +38,7 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val view: View
         if (viewType == MicroControllerRecyclerModel.CHANNEL_TYPE) {
-            if(controllerType === ControllerType.Doser) {
+            if(controllerType == Constants.CONFIG_DOSER_KEY) {
                 view = LayoutInflater.from(parent.context).inflate(R.layout.doser_switch_cardview, parent, false)
             }
             else {
@@ -60,7 +60,7 @@ class MicroControllerRecyclerAdapter(val activity: Activity, val cropDroidAPI: C
         if (model != null) {
             if (model.type == MicroControllerRecyclerModel.CHANNEL_TYPE) {
                 val switchTypeViewHolder = (holder as SwitchTypeViewHolder)
-                if(controllerType === ControllerType.Doser) {
+                if(controllerType === Constants.CONFIG_DOSER_KEY) {
                     switchTypeViewHolder.bindDispenseButton(model.channel!!)
                 }
                 switchTypeViewHolder.bind(controllerType, model.channel!!)

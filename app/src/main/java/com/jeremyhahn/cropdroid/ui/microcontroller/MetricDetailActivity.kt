@@ -22,7 +22,7 @@ class MetricDetailActivity : AppCompatActivity() {
         setTitle(metric)
 
         val values = intent.getDoubleArrayExtra("values")
-        for(value in values) {
+        for(value in values!!.iterator()) {
             series.addPoint(ValueLinePoint("", value.toFloat()))
         }
 /*

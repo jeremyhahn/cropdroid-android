@@ -1,26 +1,30 @@
 package com.jeremyhahn.cropdroid.ui.room
 
+import android.os.StrictMode
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.jeremyhahn.cropdroid.db.MasterControllerRepository
-import com.jeremyhahn.cropdroid.model.MasterController
+import androidx.lifecycle.viewModelScope
+import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
+import com.jeremyhahn.cropdroid.model.Connection
+import kotlinx.coroutines.launch
 
-class EdgeControllerViewModel(repository: MasterControllerRepository) : ViewModel() {
+class EdgeControllerViewModel(repository: EdgeDeviceRepository) : ViewModel() {
 
-    private val repository: MasterControllerRepository
-    val controllers = MutableLiveData<ArrayList<MasterController>>()
+    private val repository: EdgeDeviceRepository
+    val controllers = MutableLiveData<ArrayList<Connection>>()
 
     init {
         this.repository = repository
     }
 
     fun getMasterControllers() {
-        var savedControllers = repository.allControllers
-        for(controller in savedControllers) {
-            Log.d("savedController", controller.toString())
+        viewModelScope.launch {
+            var savedControllers = repository.allControllers
+            for(controller in savedControllers) {
+                Log.d("savedController", controller.toString())
+            }
+            controllers.postValue(savedControllers)
         }
-        controllers.postValue(savedControllers)
     }
-
 }

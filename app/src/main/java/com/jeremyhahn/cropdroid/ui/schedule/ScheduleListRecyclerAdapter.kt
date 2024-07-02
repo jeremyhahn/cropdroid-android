@@ -3,6 +3,8 @@ package com.jeremyhahn.cropdroid.ui.schedule
 import android.os.Bundle
 import android.util.Log
 import android.view.*
+import android.widget.TableRow
+import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.appeaser.sublimepickerlibrary.helpers.SublimeOptions
 import com.appeaser.sublimepickerlibrary.recurrencepicker.SublimeRecurrencePicker
@@ -15,8 +17,7 @@ import com.jeremyhahn.cropdroid.Constants.Companion.SCHEDULE_TYPE_ONCE
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
 import com.jeremyhahn.cropdroid.model.Schedule
-import com.jeremyhahn.cropdroid.utils.ScheduleParser
-import kotlinx.android.synthetic.main.microcontroller_schedule_cardview.view.*
+import com.jeremyhahn.cropdroid.config.ScheduleParser
 import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
@@ -82,16 +83,25 @@ class ScheduleListRecyclerAdapter(val activity: ScheduleListActivity, val cropDr
                 }
             }
 
-            itemView.frequency.text = frequencyText
+            val frequency = itemView.findViewById(R.id.frequency) as TextView
+            val startDateValue = itemView.findViewById(R.id.startDateValue) as TextView
+            val endDateValue = itemView.findViewById(R.id.startDateValue) as TextView
+            val tableRowEndDate = itemView.findViewById(R.id.tableRowEndDate) as TableRow
+            val tableRowDays = itemView.findViewById(R.id.tableRowDays) as TableRow
+            val daysValue = itemView.findViewById(R.id.daysValue) as TextView
+            val tableRowTimer = itemView.findViewById(R.id.tableRowTimer) as TableRow
+            val timerValue = itemView.findViewById(R.id.timerValue) as TextView
+
+            frequency.text = frequencyText
 
             formatter.calendar = schedule.startDate
-            itemView.startDateValue.text = formatter.format(schedule.startDate.time)
+            startDateValue.text = formatter.format(schedule.startDate.time)
 
             if(schedule.endDate != null) {
                 formatter.calendar = schedule.endDate
-                itemView.endDateValue.text = formatter.format(schedule.endDate!!.time)
+                endDateValue.text = formatter.format(schedule.endDate!!.time)
 
-                itemView.tableRowEndDate.visibility = View.VISIBLE
+                tableRowEndDate.visibility = View.VISIBLE
                 //itemView.endDateTitle.visibility = View.VISIBLE
                 //itemView.endDateValue.visibility = View.VISIBLE
             }
@@ -105,13 +115,13 @@ class ScheduleListRecyclerAdapter(val activity: ScheduleListActivity, val cropDr
                     }
                     days.add(SCHEDULE_DAY_MAP[_day]!!)
                 }
-                itemView.tableRowDays.visibility = View.VISIBLE
-                itemView.daysValue.text = days.joinToString(", ")
+                tableRowDays.visibility = View.VISIBLE
+                daysValue.text = days.joinToString(", ")
             }
 
             if (timerDuration > 0) {
-                itemView.tableRowTimer.visibility = View.VISIBLE
-                itemView.timerValue.text = ScheduleParser.timerToText(activity.resources, timerDuration)
+                tableRowTimer.visibility = View.VISIBLE
+                timerValue.text = ScheduleParser.timerToText(activity.resources, timerDuration)
 
                 if(schedule.endDate == null) {
                     val endDate = Calendar.getInstance()
@@ -122,8 +132,8 @@ class ScheduleListRecyclerAdapter(val activity: ScheduleListActivity, val cropDr
                     var formatter = SimpleDateFormat(SCHEDULE_TIME_ONLY_FORMAT)
                     formatter.calendar = endDate
 
-                    itemView.endDateValue.text = formatter.format(endDate.time)
-                    itemView.tableRowEndDate.visibility = View.VISIBLE
+                    endDateValue.text = formatter.format(endDate.time)
+                    tableRowEndDate.visibility = View.VISIBLE
                 }
             }
         }
@@ -134,7 +144,9 @@ class ScheduleListRecyclerAdapter(val activity: ScheduleListActivity, val cropDr
 
             Log.d("onCreateContextMenu", "schedule: " + schedule)
 
-            menu!!.add(0, schedule.id, 0, "Edit")
+            menu!!.setHeaderTitle(R.string.menu_header_schedule_options)
+
+            menu!!.add(0, schedule.id.toInt(), 0, "Edit")
                 .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
 
                     val _adapter = this.adapter
@@ -184,7 +196,7 @@ class ScheduleListRecyclerAdapter(val activity: ScheduleListActivity, val cropDr
                     true
                 })
 
-            menu!!.add(0, schedule.id, 0, "Delete")
+            menu!!.add(0, schedule.id.toInt(), 0, "Delete")
                 .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener() {
                     activity.deleteSchedule(schedule)
                     true

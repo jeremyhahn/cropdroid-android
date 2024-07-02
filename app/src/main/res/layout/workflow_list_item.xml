@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/expandedListItemErrorIcon"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:paddingTop="10dp"
+            android:paddingLeft="12dp"
+            android:tint="@color/holo_red_light"
+            android:src="@drawable/cancel_medium_ff" />
+
+        <ImageView
+            android:id="@+id/expandedListItemCompletedIcon"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:paddingTop="10dp"
+            android:paddingLeft="12dp"
+            android:tint="@color/holo_green_light"
+            android:src="@drawable/ic_check_circle" />
+
+        <ProgressBar
+            android:id="@+id/expandedListItemProgressBar"
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="10dp"
+            android:paddingLeft="12dp"
+            android:progressDrawable="@drawable/circular_progress_bar"/>
+
+        <TextView
+            android:id="@+id/expandedListItem"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/expandedListItemProgressBar"
+            android:paddingLeft="?android:attr/expandableListPreferredChildPaddingLeft"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp" />
+
+</RelativeLayout>

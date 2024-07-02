@@ -1,0 +1,43 @@
+package com.jeremyhahn.cropdroid.config
+
+import com.jeremyhahn.cropdroid.model.Metric
+import org.json.JSONArray
+import org.json.JSONObject
+
+class MetricParser {
+
+    companion object {
+        fun parse(json: String): ArrayList<Metric> {
+            return parse(
+                JSONArray(json)
+            )
+        }
+
+        fun parse(jsonMetrics : JSONArray) : ArrayList<Metric> {
+            var metrics = ArrayList<Metric>(jsonMetrics.length())
+            for (i in 0..jsonMetrics.length() - 1) {
+                val jsonMetric = jsonMetrics.getJSONObject(i)
+
+                //Log.d("MetricParser.parse", jsonMetric.toString())
+
+                metrics.add(parse(jsonMetric))
+            }
+            return metrics
+        }
+
+        fun parse(jsonMetric: JSONObject): Metric {
+            val id = jsonMetric.getLong("id")
+            val controllerId = if(!jsonMetric.isNull("device_id")) jsonMetric.getLong("device_id") else jsonMetric.getLong("deviceId")
+            val datatype = jsonMetric.getInt("datatype")
+            val enabled = jsonMetric.getBoolean("enable")
+            val notify = jsonMetric.getBoolean("notify")
+            val key = jsonMetric.getString("key")
+            val name = jsonMetric.getString("name")
+            val unit = jsonMetric.getString("unit")
+            val alarmLow = jsonMetric.getDouble("alarmLow")
+            val alarmHigh = jsonMetric.getDouble("alarmHigh")
+            var value: Double = if(!jsonMetric.isNull("value")) jsonMetric.getDouble("value") else 0.0
+            return Metric(id, controllerId, datatype, key, name, enabled, notify, unit, alarmLow, alarmHigh, value)
+        }
+    }
+}

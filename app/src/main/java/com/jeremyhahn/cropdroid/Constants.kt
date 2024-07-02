@@ -7,6 +7,7 @@ class Constants {
     companion object {
 
         const val APP_NAME = "cropdroid"
+        const val APP_SERVER_CLIENT_ID = "44940630804-4sffn1rb0salhkgk1j2cgrl667tis49s.apps.googleusercontent.com"
         const val DATABASE_NAME = APP_NAME
         //const val DATE_FORMAT_RFC3339 = "yyyy-MM-dd'T'HH:mm:ssz"
           const val DATE_FORMAT_RFC3339 = "yyyy-MM-dd'T'HH:mm:ssXXX"
@@ -15,9 +16,8 @@ class Constants {
         const val CONFIG_CONTROLLER_PREFIX_KEY = "controller_"
 
         const val PREF_KEY_CONTROLLER_ID = "controller_id"
-        const val PREF_KEY_CONTROLLER_SERVER_ID = "controller_server_id"
-        const val PREF_KEY_CONTROLLER_NAME = "controller_name"
         const val PREF_KEY_CONTROLLER_HOSTNAME = "controller_hostname"
+        const val PREF_KEY_CONTROLLER_PUBKEY = "controller_pubkey"
         const val PREF_KEY_USER_ID = "user_id"
         const val PREF_KEY_JWT = "jwt"
         const val API_VERSION = "v1"
@@ -45,13 +45,14 @@ class Constants {
         const val CONFIG_ORG_ID_KEY = "org.id"
         const val CONFIG_ORG_NAME_KEY = "org.name"
 
-        const val CONFIG_FARM_ID_KEY = "farm.id"
-        const val CONFIG_FARM_NAME_KEY = "farm.name"
-        const val CONFIG_FARM_MODE_KEY = "farm.mode"
-        const val CONFIG_FARM_INTERVAL_KEY = "farm.interval"
+        const val CONFIG_FARM_ID_KEY = "id"
+        const val CONFIG_FARM_ORG_ID_KEY = "orgId"
+        const val CONFIG_FARM_NAME_KEY = "name"
+        const val CONFIG_FARM_MODE_KEY = "mode"
+        const val CONFIG_FARM_INTERVAL_KEY = "interval"
 
         const val CONFIG_MODE_VIRTUAL = "virtual"
-        const val CONFIG_MODE_SERVER = "server"
+        const val CONFIG_MODE_SERVER = "serverConnection"
         const val CONFIG_MODE_CLOUD = "cloud"
         const val CONFIG_MODE_MAINTENANCE = "maintenance"
 
@@ -160,5 +161,12 @@ class Constants {
         const val SECONDS_IN_WEEK = 604800
         const val SECONDS_IN_MONTH = 2629800
         const val SECONDS_IN_YEAR = 31557600
+
+        const val ErrNoControllerState = "No controller state"
+
+        const val WORKFLOW_STATE_READY     = 0
+        const val WORKFLOW_STATE_EXECUTING = 1
+        const val WORKFLOW_STATE_COMPLETED = 2
+        const val WORKFLOW_STATE_ERROR     = 3
     }
 }

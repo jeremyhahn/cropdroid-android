@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <PreferenceCategory app:title="@string/general_header">
+
+        <EditTextPreference
+            app:key="name"
+            app:title="@string/space_name_title"
+            app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
+            android:key="interval"
+            android:title="@string/interval_title"
+            android:inputType="number"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:key="mode"
+            app:title="@string/mode"
+            app:defaultValue="Virtual"
+            app:entries="@array/mode_entries"
+            app:entryValues="@array/mode_values"
+            app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
+            app:key="timezone"
+            app:title="@string/timezone"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

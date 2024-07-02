@@ -46,7 +46,7 @@
                     android:layout_weight=".10"
                     android:background="#FFFFFF"
                     android:paddingBottom="12dp"
-                    android:src="@drawable/ic_btn_hourglass"
+                    android:src="@drawable/baseline_access_time_24"
                     android:text="Dispense"/>
 
                 <Switch

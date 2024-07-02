@@ -1,0 +1,12 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".ui.shoppingcart.CheckoutFragment">
+
+    <item android:id="@+id/item_cart"
+        android:icon="@drawable/ic_fast_cart"
+        app:actionLayout="@layout/badge_shopping_cart"
+        android:tooltipText="@string/store_checkout"
+        app:showAsAction="always" />
+
+</menu>

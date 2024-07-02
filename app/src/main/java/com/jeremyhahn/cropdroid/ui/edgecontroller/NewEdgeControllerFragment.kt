@@ -1,21 +1,30 @@
 package com.jeremyhahn.cropdroid.ui.edgecontroller
 
-import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import com.jeremyhahn.cropdroid.AppError
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
-import com.jeremyhahn.cropdroid.db.MasterControllerRepository
-import com.jeremyhahn.cropdroid.model.MasterController
+import com.jeremyhahn.cropdroid.data.CropDroidAPI
+import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
+import com.jeremyhahn.cropdroid.model.Connection
+import okhttp3.Call
+import okhttp3.Callback
+import java.io.IOException
 
 class NewEdgeControllerFragment : Fragment() {
 
+    var useSSL = 0
     private lateinit var controllerView: View
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle? ): View? {
@@ -28,24 +37,58 @@ class NewEdgeControllerFragment : Fragment() {
         return controllerView
     }
 
-    fun addController(button: View?) {
-
-        var nameText = view!!.findViewById(R.id.name) as EditText
-        var name = nameText.text.toString()
+    fun addController(button: View?, recursionCount: Int = 0) {
 
         var hostnameText = controllerView.findViewById(R.id.hostname) as EditText
         var hostname = hostnameText.text.toString()
 
-        val repository = MasterControllerRepository(activity!!.applicationContext)
-        var controller = repository.getControllerByHostname(hostname)
+        val repository = EdgeDeviceRepository(requireContext())
+        var controller = repository.getByHostname(hostname)
         if(controller != null) {
-            Toast.makeText(activity!!.applicationContext, "Controller already exists!", Toast.LENGTH_SHORT).show()
-
+            Toast.makeText(requireContext(), "Connection already exists!", Toast.LENGTH_SHORT).show()
             (activity as MainActivity).navigateToHome()
         }
         else {
-            var persistedController = repository.addController(MasterController(0, 0, name, hostname, 0, 0,""))
-            (activity as MainActivity).navigateToLogin(persistedController)
+
+            val connection = Connection(hostname, useSSL,"", "", null)
+            val cropDroidAPI = CropDroidAPI(connection, null)
+
+            cropDroidAPI.getPublicKey(object: Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    Log.d("onFailure", "onFailure response: " + e.message)
+                    Handler(Looper.getMainLooper()).post {
+                        AppError(requireActivity()).alert(e.message!!, null, null)
+                    }
+                }
+                override fun onResponse(call: Call, response: okhttp3.Response) {
+                    val responseBody = response.body().string()
+                    Log.d("onResponse", responseBody)
+                    if(response.code() != 200) {
+                        if(recursionCount > 1) {
+                            Handler(Looper.getMainLooper()).post {
+                                AppError(requireActivity()).error("Invalid server TLS configuration, please contact support for assistance.")
+                            }
+                            Log.e("onResponse", "Recursion loop detected, this should never happen. Aborting request...")
+                            return
+                        }
+                        // TODO: This is an ugly way to enable TLS...
+                        if(responseBody.equals("Client sent an HTTP request to an HTTPS server.\n")) {
+                            useSSL = 1
+                            addController(button, recursionCount + 1)
+                            return
+                        }
+                        Handler(Looper.getMainLooper()).post {
+                            AppError(requireActivity()).error(responseBody)
+                        }
+                        return
+                    }
+                    connection.pubkey = responseBody
+                    var persistedController = repository.create(connection)
+                    Handler(Looper.getMainLooper()).post {
+                        (activity as MainActivity).navigateToLogin(persistedController)
+                    }
+                }
+            })
         }
     }
 }

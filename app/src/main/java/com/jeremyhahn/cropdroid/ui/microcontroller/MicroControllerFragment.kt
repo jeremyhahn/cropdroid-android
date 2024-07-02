@@ -14,30 +14,29 @@ import com.jeremyhahn.cropdroid.Constants.Companion.CONFIG_ROOM_VIDEO_KEY
 import com.jeremyhahn.cropdroid.MainActivity
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.TabAdapter
-import com.jeremyhahn.cropdroid.db.MasterControllerRepository
-import com.jeremyhahn.cropdroid.model.MasterController
 import com.jeremyhahn.cropdroid.utils.Preferences
-import kotlinx.android.synthetic.main.app_bar_navigation.*
 
 class MicroControllerFragment: Fragment() {
 
     private val TAG = "MicroControllerFragment"
     private var tabLayout: TabLayout? = null
     private var viewPager: ViewPager? = null
-    private var controller: MasterController? = null
+    //private var controller: Connection? = null
     private var videoUrl: String? = null
     private var fragmentView: View? = null
-    private lateinit var tabAdapter: TabAdapter
     lateinit private var preferences: Preferences
-    lateinit private var defaultPreferences: SharedPreferences
     lateinit private var controllerPreferences: SharedPreferences
+    private var viewGroupContainer: ViewGroup? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle? ): View? {
         super.onCreateView(inflater, container, savedInstanceState)
         setHasOptionsMenu(true)
 
-        val fragmentActivity = requireActivity()
-        val ctx = fragmentActivity.applicationContext
+        val mainActivity = requireActivity() as MainActivity
+        val ctx = mainActivity.applicationContext
+
+        //layoutInflater = inflater
+        viewGroupContainer = container
 
         fragmentView = inflater.inflate(R.layout.fragment_microcontroller_tabs, container, false)
 
@@ -46,10 +45,12 @@ class MicroControllerFragment: Fragment() {
 
         videoUrl = controllerPreferences.getString(CONFIG_ROOM_VIDEO_KEY, "")
 
-        controller = MasterControllerRepository(ctx).getController(preferences.currentControllerId())
+        //controller = EdgeDeviceRepository(ctx).get(preferences.currentController())
+        //controller = mainActivity.connection
 
-        fragmentActivity.toolbar.title = controllerPreferences.getString(CONFIG_FARM_NAME_KEY, "undefined (microcontroller fragment)")
+        //fragmentActivity.toolbar.title = controllerPreferences.getString(CONFIG_FARM_NAME_KEY, "undefined")
 
+        /*
         val tabs = ArrayList<String>(4)
         tabs.add(0, resources.getString(R.string.room_fragment))
         tabs.add(1, resources.getString(R.string.reservoir_fragment))
@@ -58,11 +59,26 @@ class MicroControllerFragment: Fragment() {
 
         viewPager = fragmentView!!.findViewById(R.id.viewPager) as ViewPager
         viewPager!!.adapter = TabAdapter(childFragmentManager, tabs)
+         */
+        viewPager = fragmentView!!.findViewById(R.id.viewPager) as ViewPager
+
+        configureTabs(mainActivity)
 
         tabLayout = fragmentView!!.findViewById(R.id.tabLayout)
         tabLayout!!.setupWithViewPager(viewPager)
 
         return fragmentView
+    }
+
+    fun configureTabs(mainActivity: MainActivity) {
+        var i = 0
+        val tabs = ArrayList<String>(mainActivity.controllerFragments.size)
+        for ((k, controller) in mainActivity.controllerViewModels) {
+            tabs.add(i, k.capitalize())
+            i++
+        }
+        tabs.add(i, resources.getString(R.string.events_fragment))
+        viewPager!!.adapter = TabAdapter(childFragmentManager, tabs, mainActivity.controllerFragments)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, menuInflater: MenuInflater) {
@@ -88,24 +104,14 @@ class MicroControllerFragment: Fragment() {
                 }
                 true
             }
+            R.id.action_workflows -> {
+//                var intent = Intent(context, WorkflowExpandableListActivity::class.java)
+//                requireActivity().startActivity(intent)
+                (activity as MainActivity).navigateToWorkflows()
+                true
+            }
             R.id.action_logout -> {
-
-                Log.d("MainActivity.OnOptionsItemSelected", "action_logout caught")
-
-                controller!!.token = ""
-                val repo = MasterControllerRepository(requireActivity().applicationContext)
-                repo.updateController(controller!!)
-
-                val editor = preferences.getControllerPreferences().edit()
-                editor.remove("controller_id")
-                editor.remove("controller_name")
-                editor.remove("controller_hostname")
-                editor.remove("user_id")
-                editor.remove("jwt")
-                if(!editor.commit()) {
-                    Log.e("MainActivity.Logout", "Unable to commit session invalidation to shared preferences")
-                }
-                (activity as MainActivity).navigateToHome()
+                (activity as MainActivity).logout()
                 return true
             }
             else -> super.onOptionsItemSelected(item)
@@ -113,9 +119,10 @@ class MicroControllerFragment: Fragment() {
     }
 
     override fun onResume() {
-        Log.d(TAG, "onResume called!")
-        requireActivity().toolbar.title = controllerPreferences.getString(CONFIG_FARM_NAME_KEY, "undefined farm name")
         super.onResume()
+        Log.d(TAG, "onResume called!")
+        val mainActivity = requireActivity() as MainActivity
+        mainActivity.toolbar.title = controllerPreferences.getString(CONFIG_FARM_NAME_KEY, "undefined farm name")
     }
 
     override fun onDestroy() {

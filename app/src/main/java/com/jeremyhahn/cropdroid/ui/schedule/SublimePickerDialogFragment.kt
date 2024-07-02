@@ -44,7 +44,7 @@ class SublimePickerDialogFragment(listener: ScheduleSelectionListener, schedule:
 
                     schedule.endDate = null
 
-                    if(selectedDate.firstDate.time != selectedDate.secondDate.time) {
+                    if(selectedDate.secondDate != null) {
                         schedule.endDate = selectedDate.secondDate
                         schedule.endDate!!.set(Calendar.HOUR_OF_DAY, hourOfDay)
                         schedule.endDate!!.set(Calendar.MINUTE, minute)

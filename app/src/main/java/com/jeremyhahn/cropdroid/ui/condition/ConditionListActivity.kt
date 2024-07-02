@@ -11,51 +11,47 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.jeremyhahn.cropdroid.R
 import com.jeremyhahn.cropdroid.data.CropDroidAPI
-import com.jeremyhahn.cropdroid.db.MasterControllerRepository
+import com.jeremyhahn.cropdroid.db.EdgeDeviceRepository
 import com.jeremyhahn.cropdroid.model.Condition
 import com.jeremyhahn.cropdroid.model.ConditionConfig
-import com.jeremyhahn.cropdroid.model.MasterController
+import com.jeremyhahn.cropdroid.model.Connection
 import com.jeremyhahn.cropdroid.utils.Preferences
-import kotlinx.android.synthetic.main.activity_condition_list.*
 import okhttp3.Call
 import okhttp3.Callback
 import java.io.IOException
-import java.lang.reflect.Array.newInstance
 import java.util.*
 
 class ConditionListActivity : AppCompatActivity(), ConditionDialogHandler {
 
     lateinit private var recyclerView: RecyclerView
     lateinit private var swipeContainer: SwipeRefreshLayout
-    lateinit private var controller : MasterController
-    private var channelId = 0
+    lateinit private var controller : Connection
+    private var channelId = 0L
     private var channelName = ""
-    private var channelDuration = 0
     private var recyclerItems = ArrayList<Condition>()
     lateinit private var viewModel: ConditionViewModel
     lateinit private var cropDroidAPI: CropDroidAPI
-    private var conditionFragment: ConditionDialogFragment? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_condition_list)
 
-        channelId = intent.getIntExtra("channel_id", 0)
-        channelName = intent.getStringExtra("channel_name")
+        channelId = intent.getLongExtra("channel_id", 0)
+        channelName = intent.getStringExtra("channel_name").toString()
 
         val preferences = Preferences(applicationContext)
         val controllerSharedPrefs = preferences.getControllerPreferences()
-        val id = preferences.currentControllerId()
-        val farmId = preferences.currentFarmId()
+        val hostname = preferences.currentController()
         val emptyText = findViewById(R.id.conditionEmptyText) as TextView
 
-        Log.d("ConditionActivity.onCreateView", "channel_id=$channelId, controller.id=$id")
+        Log.d("ConditionActivity.onCreateView", "channel_id=$channelId, controller.hostname=$hostname")
 
         setTitle(channelName + " Condition")
 
-        controller = MasterControllerRepository(this).getController(id)
+        controller = EdgeDeviceRepository(this).get(hostname)!!
 
         cropDroidAPI = CropDroidAPI(controller, controllerSharedPrefs)
 
@@ -81,7 +77,7 @@ class ConditionListActivity : AppCompatActivity(), ConditionDialogHandler {
             recyclerItems = viewModel.conditions.value!!
 
             recyclerView.itemAnimator = DefaultItemAnimator()
-            recyclerView.adapter = ConditionListRecyclerAdapter(this, cropDroidAPI, recyclerItems)
+            recyclerView.adapter = ConditionListRecyclerAdapter(this, recyclerItems)
             recyclerView.adapter!!.notifyDataSetChanged()
 
             if(recyclerItems.size <= 0) {
@@ -92,7 +88,8 @@ class ConditionListActivity : AppCompatActivity(), ConditionDialogHandler {
         })
         viewModel.getConditions()
 
-        fab.setOnClickListener { view ->
+        val floatingActionButton = findViewById(R.id.fab) as FloatingActionButton
+        floatingActionButton.setOnClickListener { view ->
             showConditionDialog(Condition())
         }
     }
@@ -106,7 +103,7 @@ class ConditionListActivity : AppCompatActivity(), ConditionDialogHandler {
     }
 
     override fun onConditionDialogApply(condition: ConditionConfig) {
-        if(condition.id == 0) {
+        if(condition.id.equals("0")) {
             createCondition(condition)
         } else {
             updateCondition(condition)
